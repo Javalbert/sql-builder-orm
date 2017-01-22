@@ -54,6 +54,8 @@ import chan.shundat.albert.utils.string.Strings;
 
 @SuppressWarnings("rawtypes")
 public class ANSI implements Vendor {
+	public static final ANSI INSTANCE = new ANSI();
+	
 	protected static void appendAsKeyword(StringBuilder builder, Aliasable aliasable) {
 		String alias = aliasable.getAlias();
 		if (Strings.isNullOrEmpty(alias)) {
