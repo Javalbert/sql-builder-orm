@@ -13,8 +13,6 @@
 package chan.shundat.albert.orm;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,186 +34,11 @@ import chan.shundat.albert.sqlbuilder.Update;
 import chan.shundat.albert.sqlbuilder.Where;
 import chan.shundat.albert.sqlbuilder.vendor.ANSI;
 import chan.shundat.albert.sqlbuilder.vendor.Vendor;
-import chan.shundat.albert.utils.reflection.FieldMemberAccess;
 import chan.shundat.albert.utils.reflection.MemberAccess;
-import chan.shundat.albert.utils.reflection.PropertyMemberAccess;
 import chan.shundat.albert.utils.string.Strings;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class ClassRowMapping {
-	private static void addFieldAccessMappings(Class clazz, List<FieldColumnMapping> fieldColumnMappings) {
-		addFieldAccessMappings(clazz, fieldColumnMappings, null, null, null);
-	}
-	
-	private static void addFieldAccessMappings(Class clazz, 
-			List<FieldColumnMapping> fieldColumnMappingList, 
-			Map<String, FieldColumnMapping> fieldColumnMappings, 
-			Map<String, FieldColumnMapping> fieldAliasMappings, 
-			Map<String, MemberAccess> relatedMemberAccessMap) {
-		Field[] fields = clazz.getDeclaredFields();
-		
-		for (Field field : fields) {
-			field.setAccessible(true);
-			
-			addRelatedFieldMember(relatedMemberAccessMap, field);
-			
-			Column column = field.getAnnotation(Column.class);
-			Alias aliasAnnotation = field.getAnnotation(Alias.class);
-			
-			String columnName = column != null ? Strings.safeTrim(column.value()) : null;
-			String alias = aliasAnnotation != null ? aliasAnnotation.value() : null;
-			
-			if (column != null && Strings.isNullOrEmpty(columnName)) {
-				columnName = field.getName();
-			}
-			if (Strings.isNullOrEmpty(columnName) && Strings.isNullOrEmpty(alias)) {
-				continue;
-			}
-			
-			boolean primaryKey = field.isAnnotationPresent(Id.class);
-			boolean version = field.isAnnotationPresent(Version.class);
-			if (primaryKey && primaryKey == version) {
-				throw new IllegalArgumentException("field (" + field.getName() 
-						+ ") cannot have @Id and @Version annotations at the same time");
-			}
-			
-			int jdbcType = 0;
-			
-			boolean timestamp = field.isAnnotationPresent(IsTimestamp.class);
-			if (timestamp) {
-				jdbcType = FieldColumnMapping.JDBC_TYPE_TIMESTAMP;
-			} else {
-				jdbcType = FieldColumnMapping.getJdbcType(field.getType());
-			}
-			
-			FieldColumnMapping mapping = new FieldAccessMapping(columnName, 
-					alias, 
-					field, 
-					jdbcType, 
-					primaryKey, 
-					field.getAnnotation(GeneratedValue.class), 
-					version);
-			
-			if (!Strings.isNullOrEmpty(columnName)) {
-				fieldColumnMappingList.add(mapping);
-				
-				if (fieldColumnMappings != null) {
-					fieldColumnMappings.put(mapping.getColumn(), mapping);
-				}
-			}
-			if (!Strings.isNullOrEmpty(alias) && fieldAliasMappings != null) {
-				fieldAliasMappings.put(alias, mapping);
-			}
-		}
-	}
-
-	private static void addPropertyAccessMappings(Class clazz, List<FieldColumnMapping> fieldColumnMappings) {
-		addPropertyAccessMappings(clazz, fieldColumnMappings, null, null, null);
-	}
-	
-	private static void addPropertyAccessMappings(Class clazz, 
-			List<FieldColumnMapping> fieldColumnMappingList, 
-			Map<String, FieldColumnMapping> fieldColumnMappings, 
-			Map<String, FieldColumnMapping> fieldAliasMappings, 
-			Map<String, MemberAccess> relatedMemberAccessMap) {
-		Method[] methods = clazz.getDeclaredMethods();
-		
-		for (Method method : methods) {
-			method.setAccessible(true);
-
-			Method getter = getPropertyMethod(method, true, clazz);
-			Method setter = getPropertyMethod(method, false, clazz);
-
-			addRelatedPropertyMember(relatedMemberAccessMap, method, getter, setter);
-			
-			Column column = method.getAnnotation(Column.class);
-			Alias aliasAnnotation = method.getAnnotation(Alias.class);
-
-			final String columnName = column != null ? Strings.safeTrim(column.value()) : null;
-			final String alias = aliasAnnotation != null ? aliasAnnotation.value() : null;
-			
-			if (column != null && Strings.isNullOrEmpty(columnName)) {
-				throw new IllegalArgumentException("property (" + method.getName() 
-						+ ")'s @Column annotation's name is null or empty");
-			}
-			if (Strings.isNullOrEmpty(columnName) && Strings.isNullOrEmpty(alias)) {
-				continue;
-			}
-			
-			if (fieldColumnMappings.containsKey(columnName)) {
-				throw new IllegalArgumentException("clazz (" + clazz 
-						+ ") defines column name (" + columnName + ") twice");
-			}
-			
-			boolean primaryKey = method.isAnnotationPresent(Id.class);
-			boolean version = method.isAnnotationPresent(Version.class);
-			if (primaryKey && primaryKey == version) {
-				throw new IllegalArgumentException("method (" + method.getName() 
-						+ ") cannot have @Id and @Version annotations at the same time");
-			}
-			
-			int jdbcType = 0;
-			
-			boolean timestamp = method.isAnnotationPresent(IsTimestamp.class);
-			if (timestamp) {
-				jdbcType = FieldColumnMapping.JDBC_TYPE_TIMESTAMP;
-			} else {
-				jdbcType = FieldColumnMapping.getJdbcType(getter.getReturnType());
-			}
-
-			FieldColumnMapping mapping = new PropertyAccessMapping(columnName, 
-					alias, 
-					getter, 
-					setter, 
-					jdbcType, 
-					primaryKey, 
-					method.getAnnotation(GeneratedValue.class), 
-					version);
-			
-			if (!Strings.isNullOrEmpty(columnName)) {
-				fieldColumnMappingList.add(mapping);
-				
-				if (fieldColumnMappings != null) {
-					fieldColumnMappings.put(mapping.getColumn(), mapping);
-				}
-			}
-			if (!Strings.isNullOrEmpty(alias)) {
-				fieldAliasMappings.put(alias, mapping);
-			}
-		}
-	}
-	
-	private static void addRelatedFieldMember(Map<String, MemberAccess> relatedMemberAccessMap, Field field) {
-		if (relatedMemberAccessMap == null) {
-			return;
-		}
-		
-		Related related = field.getAnnotation(Related.class);
-		if (related == null) {
-			return;
-		}
-		
-		FieldMemberAccess fieldMember = new FieldMemberAccess(field);
-		relatedMemberAccessMap.put(related.value(), fieldMember);
-	}
-	
-	private static void addRelatedPropertyMember(Map<String, MemberAccess> relatedMemberAccessMap, 
-			Method method, 
-			Method getter, 
-			Method setter) {
-		if (relatedMemberAccessMap == null) {
-			return;
-		}
-		
-		Related related = method.getAnnotation(Related.class);
-		if (related == null) {
-			return;
-		}
-		
-		PropertyMemberAccess propertyMember = new PropertyMemberAccess(getter, setter);
-		relatedMemberAccessMap.put(related.value(), propertyMember);
-	}
-	
 	private static void appendColumnEqualsParam(Where where, FieldColumnMapping fieldColumnMapping, boolean appendAnd) {
 		if (appendAnd) {
 			where.and();
@@ -224,28 +47,6 @@ public class ClassRowMapping {
 		where.predicate(new Predicate()
 			.column(fieldColumnMapping.getColumn()).eq().param(fieldColumnMapping.getColumn())
 		);
-	}
-	
-	private static Method getPropertyMethod(Method method, boolean findGetter, Class clazz) {
-		String methodName = method.getName();
-		String methodPrefixToFind = findGetter ? "get" : "set";
-		
-		boolean found = methodName.startsWith(methodPrefixToFind);
-		if (found) {
-			return method;
-		}
-		
-		try {
-			String prefixReplacement = findGetter ? "set" : "get";
-			methodName = methodPrefixToFind + methodName.replaceFirst(prefixReplacement, "");
-			
-			method = findGetter ? clazz.getDeclaredMethod(methodName) 
-					: clazz.getDeclaredMethod(methodName, method.getReturnType());
-			method.setAccessible(true);
-			return method;
-		} catch (NoSuchMethodException | SecurityException e) {
-			return null;
-		}
 	}
 	
 	private FieldColumnMapping autoIncrementIdMapping;
@@ -298,26 +99,13 @@ public class ClassRowMapping {
 		this.clazz = clazz;
 		this.vendor = vendor;
 
-		List<FieldColumnMapping> fieldColumnMappingList = new ArrayList<>();
-		Map<String, FieldColumnMapping> fieldColumnMappings = new HashMap<>();
-		Map<String, FieldColumnMapping> fieldAliasMappings = new HashMap<>();
-		Map<String, MemberAccess> relatedMemberAccessMap = new HashMap<>();
+		FieldColumnMapper fieldColumnMapper = new FieldColumnMapper(clazz);
+		fieldColumnMapper.mapAll();
 		
-		addFieldAccessMappings(clazz, 
-				fieldColumnMappingList, 
-				fieldColumnMappings, 
-				fieldAliasMappings, 
-				relatedMemberAccessMap);
-		addPropertyAccessMappings(clazz, 
-				fieldColumnMappingList, 
-				fieldColumnMappings, 
-				fieldAliasMappings, 
-				relatedMemberAccessMap);
-		
-		this.fieldAliasMappings = Collections.unmodifiableMap(fieldAliasMappings);
-		this.fieldColumnMappingList = Collections.unmodifiableList(fieldColumnMappingList);
-		this.fieldColumnMappings = Collections.unmodifiableMap(fieldColumnMappings);
-		this.relatedMemberAccessMap = Collections.unmodifiableMap(relatedMemberAccessMap);
+		this.fieldAliasMappings = fieldColumnMapper.getFieldAliasMappings();
+		this.fieldColumnMappingList = fieldColumnMapper.getFieldColumnMappingList();
+		this.fieldColumnMappings = fieldColumnMapper.getFieldColumnMappings();
+		this.relatedMemberAccessMap = fieldColumnMapper.getRelatedMemberAccessMap();
 		
 		Table tableAnno = (Table)clazz.getAnnotation(Table.class);
 		if (tableAnno != null) {
@@ -510,9 +298,9 @@ public class ClassRowMapping {
 		Class idClass = idClassAnno.value();
 		this.idClass = idClass;
 		
-		idClassMappings = new ArrayList<>();
-		addFieldAccessMappings(idClass, idClassMappings);
-		addPropertyAccessMappings(idClass, idClassMappings);
+		FieldColumnMapper fieldColumnMapper = new FieldColumnMapper(idClass);
+		fieldColumnMapper.mapAll();
+		idClassMappings = fieldColumnMapper.getFieldColumnMappingList();
 	}
 	
 	private void initInsert() {
