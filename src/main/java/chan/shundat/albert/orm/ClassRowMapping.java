@@ -34,6 +34,7 @@ import chan.shundat.albert.sqlbuilder.SetValue;
 import chan.shundat.albert.sqlbuilder.SetValues;
 import chan.shundat.albert.sqlbuilder.Update;
 import chan.shundat.albert.sqlbuilder.Where;
+import chan.shundat.albert.sqlbuilder.vendor.ANSI;
 import chan.shundat.albert.sqlbuilder.vendor.Vendor;
 import chan.shundat.albert.utils.reflection.FieldMemberAccess;
 import chan.shundat.albert.utils.reflection.MemberAccess;
@@ -288,6 +289,10 @@ public class ClassRowMapping {
 	public String getTableIdentifier() { return tableIdentifier; }
 	public Update getUpdateById() { return updateById; }
 	public Vendor getVendor() { return vendor; }
+	
+	public ClassRowMapping(Class clazz) {
+		this(clazz, ANSI.INSTANCE);
+	}
 	
 	public ClassRowMapping(Class clazz, Vendor vendor) {
 		this.clazz = clazz;
