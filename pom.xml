@@ -77,7 +77,8 @@
 			<groupId>org.codehaus.groovy</groupId>
 			<artifactId>groovy-all</artifactId>
 			<version>${groovy.version}</version>
-			<scope>test</scope>
+			<!-- The scope should not be test because JUnit will not recognize updates unless mvn is run -->
+<!-- 			<scope>test</scope> -->
 		</dependency>
 		
 		<dependency>

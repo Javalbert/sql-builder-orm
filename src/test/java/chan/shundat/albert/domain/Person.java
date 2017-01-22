@@ -21,11 +21,13 @@ import chan.shundat.albert.orm.Table;
 public class Person {
 	@Column("person_key")
 	private int personKey;
-	@Column("name")
-	private String name;
+	@Column("first_name")
+	private String firstName;
+	@Column("last_name")
+	private String lastName;
 	@Column("date_of_birth")
 	private Date dateOfBirth;
-	@Column("version")
+	@Column
 	private int version;
 	
 	public int getPersonKey() {
@@ -34,11 +36,17 @@ public class Person {
 	public void setPersonKey(int personKey) {
 		this.personKey = personKey;
 	}
-	public String getName() {
-		return name;
+	public String getFirstName() {
+		return firstName;
 	}
-	public void setName(String name) {
-		this.name = name;
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+	public String getLastName() {
+		return lastName;
+	}
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
 	}
 	public Date getDateOfBirth() {
 		return dateOfBirth;
@@ -51,48 +59,5 @@ public class Person {
 	}
 	public void setVersion(int version) {
 		this.version = version;
-	}
-	
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((dateOfBirth == null) ? 0 : dateOfBirth.hashCode());
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		result = prime * result + personKey;
-		result = prime * result + version;
-		return result;
-	}
-	
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Person other = (Person) obj;
-		if (dateOfBirth == null) {
-			if (other.dateOfBirth != null)
-				return false;
-		} else if (!dateOfBirth.equals(other.dateOfBirth))
-			return false;
-		if (name == null) {
-			if (other.name != null)
-				return false;
-		} else if (!name.equals(other.name))
-			return false;
-		if (personKey != other.personKey)
-			return false;
-		if (version != other.version)
-			return false;
-		return true;
-	}
-	
-	@Override
-	public String toString() {
-		return "Person [personKey=" + personKey + ", name=" + name + ", dateOfBirth=" + dateOfBirth + ", version="
-				+ version + "]";
 	}
 }
