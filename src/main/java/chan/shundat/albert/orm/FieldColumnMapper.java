@@ -111,19 +111,19 @@ public class FieldColumnMapper {
 	}
 	
 	public boolean isPrimaryKeyColumn(Field field) {
-		return field.isAnnotationPresent(Version.class);
-	}
-	
-	public boolean isPrimaryKeyColumn(Method method) {
-		return method.isAnnotationPresent(Version.class);
-	}
-	
-	public boolean isVersionColumn(Field field) {
 		return field.isAnnotationPresent(Id.class);
 	}
 	
-	public boolean isVersionColumn(Method method) {
+	public boolean isPrimaryKeyColumn(Method method) {
 		return method.isAnnotationPresent(Id.class);
+	}
+	
+	public boolean isVersionColumn(Field field) {
+		return field.isAnnotationPresent(Version.class);
+	}
+	
+	public boolean isVersionColumn(Method method) {
+		return method.isAnnotationPresent(Version.class);
 	}
 	
 	public void mapAll() {

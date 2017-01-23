@@ -762,7 +762,7 @@ public class BatchResolver extends ObjectGraphResolver {
 						map = factory.newInstance();
 						relatedMemberAccess.set(owner, map);
 					}
-					Object key = relatedClassMapping.getMapKeyValue(relationship.getMapKeyName(), relatedObject);
+					Object key = relatedClassMapping.getMapKeyValue(relatedObject, relationship.getMapKeyName());
 					map.put(key, relatedObject);
 					
 					mapValues.add(relatedObject);

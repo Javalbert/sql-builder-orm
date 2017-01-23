@@ -603,7 +603,7 @@ public class NPlusOneResolver extends ObjectGraphResolver {
 				
 				while (rs.next()) {
 					Object object = relatedEntityColumns.createFromResultSet(rs);
-					Object key = relatedClassMapping.getMapKeyValue(relationship.getMapKeyName(), object);
+					Object key = relatedClassMapping.getMapKeyValue(object, relationship.getMapKeyName());
 					map.put(key, object);
 					assignOwnerField(object, owner);
 				}

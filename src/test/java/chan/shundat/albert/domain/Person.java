@@ -14,14 +14,18 @@ package chan.shundat.albert.domain;
 
 import java.util.Date;
 
+import chan.shundat.albert.orm.Alias;
 import chan.shundat.albert.orm.Column;
+import chan.shundat.albert.orm.GeneratedValue;
 import chan.shundat.albert.orm.Id;
+import chan.shundat.albert.orm.MapKey;
 import chan.shundat.albert.orm.Table;
 import chan.shundat.albert.orm.Version;
 
 @Table(catalog = "Albert", schema = "dbo", name = "Person")
 public class Person {
 	@Id
+	@GeneratedValue
 	@Column("person_key")
 	private int personKey;
 	@Column("first_name")
@@ -32,6 +36,12 @@ public class Person {
 	@Version
 	@Column
 	private int version;
+	
+	// Aliased columns
+	//
+	@MapKey("Full Name")
+	@Alias("full_name")
+	private String fullName;
 	
 	// Non-database fields
 	//
@@ -67,6 +77,15 @@ public class Person {
 	}
 	public void setVersion(int version) {
 		this.version = version;
+	}
+	
+	// Aliased columns
+	//
+	public String getFullName() {
+		return fullName;
+	}
+	public void setFullName(String fullName) {
+		this.fullName = fullName;
 	}
 	
 	// Non-database accessors

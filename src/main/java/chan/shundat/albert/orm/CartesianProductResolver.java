@@ -810,7 +810,7 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 			}
 
 			Object key = classColumns.getClassRowMapping()
-					.getMapKeyValue(relationship.getMapKeyName(), object);
+					.getMapKeyValue(object, relationship.getMapKeyName());
 			map.put(key, object);
 		}
 		

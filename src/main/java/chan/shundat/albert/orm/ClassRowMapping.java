@@ -124,7 +124,11 @@ public class ClassRowMapping {
 		initUpdateById();
 	}
 
-	public <K> K getMapKeyValue(String mapKeyName, Object object) {
+	public <K> K getMapKeyValue(Object object) {
+		return getMapKeyValue(object, null);
+	}
+	
+	public <K> K getMapKeyValue(Object object, String mapKeyName) {
 		boolean pkMapKey = mapKeyName == null;
 		
 		if (pkMapKey) {
