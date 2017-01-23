@@ -15,41 +15,18 @@ package chan.shundat.albert.sqlbuilder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import chan.shundat.albert.sqlbuilder.parser.ParseToken;
+import chan.shundat.albert.sqlbuilder.parser.ParseTree;
+import chan.shundat.albert.sqlbuilder.parser.StringLiteralParseToken;
 import chan.shundat.albert.utils.collections.CollectionUtils;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class SqlParser {
-	private static final Set<String> BEFORE_FROM = CollectionUtils.immutableHashSet(
-			Keywords.SELECT
-			);
-	private static final Set<String> BEFORE_GROUP_BY = CollectionUtils.immutableHashSet(
-			Keywords.FROM,
-			Keywords.SELECT,
-			Keywords.WHERE
-			);
-	private static final Set<String> BEFORE_HAVING = CollectionUtils.immutableHashSet(
-			Keywords.FROM,
-			Keywords.GROUP_BY,
-			Keywords.SELECT,
-			Keywords.WHERE
-			);
-	private static final Set<String> BEFORE_ORDER_BY = CollectionUtils.immutableHashSet(
-			Keywords.GROUP_BY,
-			Keywords.FROM,
-			Keywords.HAVING,
-			Keywords.SELECT,
-			Keywords.WHERE
-			);
-	private static final Set<String> BEFORE_WHERE = CollectionUtils.immutableHashSet(
-			Keywords.FROM,
-			Keywords.SELECT
-			);
+	public static final String REGEX_SPLIT = "\\s|%|'|\\(|\\)|\\*|\\+|,|-|\\.|\\/|<=|<>|<|=|>=|>";
 
-	private static final String REGEX_SPLIT = "\\s|%|'|\\(|\\)|\\*|\\+|,|-|\\.|\\/|<=|<>|<|=|>=|>";
 	private static final Pattern PATTERN = Pattern.compile(REGEX_SPLIT);
 
 	private static final int PARENTHESES_MODE_INSERT_COLUMNS = 1;
@@ -357,10 +334,64 @@ public class SqlParser {
 		statementType = 0;
 		
 		tokenize(sql);
-		parseTree(new Parser().parseTokens());
+		parseTree(new ParseTree(tokens).parseTokens());
 		return this;
 	}
 
+	/* START Protected methods */
+	
+	void tokenize(String sql) {
+		tokens.clear();
+		
+		Matcher matcher = PATTERN.matcher(sql);
+
+		int index = 0;
+		int quoteCount = 0;
+		boolean stringLiteral = false;
+		
+		while (matcher.find()) {
+			String token = sql.substring(index, matcher.start()).trim();
+			if (!token.isEmpty()) {
+				tokens.add(token);
+			}
+			
+			String delimiter = sql.substring(matcher.start(), matcher.end());
+			if (!delimiter.isEmpty()) {
+				if (delimiter.equals("'")) {
+					int nextSingleQuote = matcher.end() + 1;
+					
+					if (stringLiteral 
+							&& quoteCount <= 0
+							&& nextSingleQuote < sql.length() 
+							&& sql.subSequence(matcher.start(), nextSingleQuote).equals("''")) {
+						quoteCount = 2;
+					}
+
+					if (quoteCount <= 0) {
+						stringLiteral = !stringLiteral;
+					}
+					quoteCount--;
+				}
+				
+				if (!stringLiteral) {
+					delimiter = delimiter.trim();
+				}
+				if (!delimiter.isEmpty()) {
+					tokens.add(delimiter);
+				}
+			}
+			
+			index = matcher.end();
+		}
+		
+		String lastToken = sql.substring(index);
+		if (!lastToken.isEmpty()) {
+			tokens.add(lastToken);
+		}
+	}
+	
+	/* END Protected methods */
+	
 	/* BEGIN Private methods */
 	
 	private int addConditionOrPredicate(Case sqlCase, List<ParseToken> nodes, final int start, Set<String> endTokens) {
@@ -427,7 +458,7 @@ public class SqlParser {
 					sqlCase.then();
 					i = addConditionOrPredicate(sqlCase, nodes, i, TOKEN_SET_AFTER_THEN);
 					break;
-				case Parser.TOKEN_PARENTHESES_GROUP:
+				case ParseTree.TOKEN_PARENTHESES_GROUP:
 					helper.caseParenthesesGroup(node);
 					break;
 				case Keywords.WHEN:
@@ -453,8 +484,8 @@ public class SqlParser {
 	}
 	
 	private void parseColumnParenthesesGroup(ParseToken groupToken, ExpressionBuilding parent) {
-		if (!groupToken.getToken().equals(Parser.TOKEN_PARENTHESES_GROUP)) {
-			throw new IllegalArgumentException("groupToken's token must be " + Parser.TOKEN_PARENTHESES_GROUP);
+		if (!groupToken.getToken().equals(ParseTree.TOKEN_PARENTHESES_GROUP)) {
+			throw new IllegalArgumentException("groupToken's token must be " + ParseTree.TOKEN_PARENTHESES_GROUP);
 		}
 		
 		List<ParseToken> nodes = groupToken.getNodes();
@@ -490,7 +521,7 @@ public class SqlParser {
 				case Keywords.CASE:
 					helper.caseCase(node);
 					break;
-				case Parser.TOKEN_PARENTHESES_GROUP:
+				case ParseTree.TOKEN_PARENTHESES_GROUP:
 					helper.caseParenthesesGroup(node);
 					break;
 				case Keywords.SELECT:
@@ -521,7 +552,7 @@ public class SqlParser {
 				case Keywords.OR:
 					condition.or();
 					break;
-				case Parser.TOKEN_PARENTHESES_GROUP:
+				case ParseTree.TOKEN_PARENTHESES_GROUP:
 					if (getConditionIndex(node.getNodes(), 0) > -1) {
 						conditionGroup = new Condition();
 						condition.group(conditionGroup);
@@ -642,7 +673,7 @@ public class SqlParser {
 					helper.caseComma();
 					expression.plus();
 					break;
-				case Parser.TOKEN_PARENTHESES_GROUP:
+				case ParseTree.TOKEN_PARENTHESES_GROUP:
 					helper.caseParenthesesGroup(node);
 					break;
 				default:
@@ -698,7 +729,7 @@ public class SqlParser {
 					addPendingTable(from, tableName);
 					from.rightOuterJoin();
 					break;
-				case Parser.TOKEN_PARENTHESES_GROUP:
+				case ParseTree.TOKEN_PARENTHESES_GROUP:
 					parseFromParenthesesGroup(from, node.getNodes());
 					break;
 				default:
@@ -777,7 +808,7 @@ public class SqlParser {
 				case Keywords.VALUES:
 					parenthesesMode = PARENTHESES_MODE_INSERT_VALUES;
 					break;
-				case Parser.TOKEN_PARENTHESES_GROUP:
+				case ParseTree.TOKEN_PARENTHESES_GROUP:
 					if (table.length() > 0) {
 						insert.into(table.toString());
 						table.setLength(0);
@@ -975,7 +1006,7 @@ public class SqlParser {
 					helper.caseComma();
 					predicate.notLike();
 					break;
-				case Parser.TOKEN_PARENTHESES_GROUP:
+				case ParseTree.TOKEN_PARENTHESES_GROUP:
 					function = helper.createFunction();
 					
 					if (function instanceof Function) {
@@ -1026,7 +1057,7 @@ public class SqlParser {
 				case ",":
 					helper.caseComma();
 					break;
-				case Parser.TOKEN_PARENTHESES_GROUP:
+				case ParseTree.TOKEN_PARENTHESES_GROUP:
 					helper.caseParenthesesGroup(valueNode);
 					break;
 				default:
@@ -1082,7 +1113,7 @@ public class SqlParser {
 				case Keywords.DISTINCT:
 					list.distinct();
 					break;
-				case Parser.TOKEN_PARENTHESES_GROUP:
+				case ParseTree.TOKEN_PARENTHESES_GROUP:
 					helper.caseParenthesesGroup(node);
 					break;
 				default:
@@ -1143,7 +1174,7 @@ public class SqlParser {
 				case Keywords.UNION:
 				case Keywords.UNION_ALL:
 					ParseToken nextNode = getNextNode(nodes, i);
-					boolean parenthesizedQuery = nextNode != null && nextNode.getToken().equals(Parser.TOKEN_PARENTHESES_GROUP);
+					boolean parenthesizedQuery = nextNode != null && nextNode.getToken().equals(ParseTree.TOKEN_PARENTHESES_GROUP);
 					if (nextNode == null 
 							|| !nextNode.getToken().toUpperCase().equals(Keywords.SELECT) 
 							&& !parenthesizedQuery) {
@@ -1213,7 +1244,7 @@ public class SqlParser {
 				case "=":
 					helper.caseComma();
 					break;
-				case Parser.TOKEN_PARENTHESES_GROUP:
+				case ParseTree.TOKEN_PARENTHESES_GROUP:
 					parseColumnParenthesesGroup(node, value);
 					break;
 				default:
@@ -1344,7 +1375,7 @@ public class SqlParser {
 					break;
 				case Keywords.AS:
 					ParseToken selectNode = nodes.get(++i);
-					if (!selectNode.getToken().equals(Parser.TOKEN_PARENTHESES_GROUP)) {
+					if (!selectNode.getToken().equals(ParseTree.TOKEN_PARENTHESES_GROUP)) {
 						throw new IllegalArgumentException("expected parentheses for common table expression query");
 					}
 					
@@ -1357,7 +1388,7 @@ public class SqlParser {
 					return i - 1;
 				case Keywords.WITH:
 					break;
-				case Parser.TOKEN_PARENTHESES_GROUP:
+				case ParseTree.TOKEN_PARENTHESES_GROUP:
 					List<ParseToken> columns = node.getNodes();
 					
 					for (int j = 0; j < columns.size(); j++) {
@@ -1377,86 +1408,10 @@ public class SqlParser {
 		throw new IllegalArgumentException("could not find " + Keywords.SELECT + " keyword after common table expression(s)");
 	}
 	
-	private void tokenize(String sql) {
-		tokens.clear();
-		
-		Matcher matcher = PATTERN.matcher(sql);
-
-		int index = 0;
-		int quoteCount = 0;
-		boolean stringLiteral = false;
-		
-		while (matcher.find()) {
-			String token = sql.substring(index, matcher.start()).trim();
-			if (!token.isEmpty()) {
-				tokens.add(token);
-			}
-			
-			String delimiter = sql.substring(matcher.start(), matcher.end());
-			if (!delimiter.isEmpty()) {
-				if (delimiter.equals("'")) {
-					int nextSingleQuote = matcher.end() + 1;
-					
-					if (stringLiteral 
-							&& quoteCount <= 0
-							&& nextSingleQuote < sql.length() 
-							&& sql.subSequence(matcher.start(), nextSingleQuote).equals("''")) {
-						quoteCount = 2;
-					}
-
-					if (quoteCount <= 0) {
-						stringLiteral = !stringLiteral;
-					}
-					quoteCount--;
-				}
-				
-				if (!stringLiteral) {
-					delimiter = delimiter.trim();
-				}
-				if (!delimiter.isEmpty()) {
-					tokens.add(delimiter);
-				}
-			}
-			
-			index = matcher.end();
-		}
-		
-		String lastToken = sql.substring(index);
-		if (!lastToken.isEmpty()) {
-			tokens.add(lastToken);
-		}
-	}
-	
 	/* END Private methods */
 
 	/* BEGIN Classes */
 	
-	private static class ParseToken {
-		private final List<ParseToken> nodes = new ArrayList<>();
-		private final String token;
-		
-		public List<ParseToken> getNodes() { return nodes; }
- 		public String getToken() { return token; }
-		
-		public ParseToken(String token) {
-			this(token, false);
-		}
-		
-		public ParseToken(String token, boolean keyword) {
-			this.token = keyword ? token.toUpperCase() : token;
-		}
-		
-		public void addNode(ParseToken node) {
-			nodes.add(node);
-		}
-		
-		@Override
-		public String toString() {
-			return token + (nodes != null && !nodes.isEmpty() 
-					? " (" + nodes.get(nodes.size() - 1).getToken() + ")" : "");
-		}
-	}
-
 	private class ExpressionCaseHelper {
 		private final ExpressionBuilding builder;
 		private boolean expectingDot;
@@ -1557,260 +1512,6 @@ public class SqlParser {
 				builder.append(getPendingString(pendingString), isNextNodeAnExpression);
 				expectingDot = false;
 			}
-		}
-	}
-	
-	private class Parser {
-		public static final String TOKEN_PARENTHESES_GROUP = "SQL PARENTHESES GROUP";
-		public static final String TOKEN_ROOT = "SQL ROOT";
-		
-		private ParseToken currentToken;
-		private final Stack<Integer> parenthesesStack = new Stack<>();
-		private StringBuilder stringLiteral;
-		private final Stack<ParseToken> tokenStack = new Stack<>();
-		
-		public Parser() {
-			currentToken = new ParseToken(TOKEN_ROOT);
-			tokenStack.push(currentToken);
-		}
-		
-		public ParseToken parseTokens() {
-			for (int i = 0; i < tokens.size(); i++) {
-				currentToken = tokenStack.peek();
-
- 				ParseToken parseToken = null;
-				final String token = tokens.get(i);
-				
-				if (stringLiteral != null) {
-					String nextToken = i + 1 < tokens.size() ? tokens.get(i + 1) : null;
-					
-					if (token.equals("'")) {
-						if ("'".equals(nextToken)) {
-							stringLiteral.append("'");
-							i++;
-						} else {
-							parseToken = new StringLiteralParseToken(stringLiteral.toString());
-							currentToken.addNode(parseToken);
-							stringLiteral = null;
-						}
-					} else {
-						stringLiteral.append(token);
-					}
-					
-					continue;
-				}
-				
-				final String tokenUpperCase = token.toUpperCase();
-	  			switch (tokenUpperCase) {
-					case "":
-						break;
-					case "'":
-						if (stringLiteral == null) {
-							stringLiteral = new StringBuilder();
-						}
-						break;
-					case "(":
-						parseToken = new ParseToken(TOKEN_PARENTHESES_GROUP);
-						addAndPush(parseToken);
-						break;
-					case ")":
-						popParenthesesStack();
-						break;
-					case Keywords.END:
-						parseToken = new ParseToken(token, true);
-						currentToken.addNode(parseToken);
-						popStack();
-						break;
-					case Keywords.GROUP:
-						assertAhead(tokens, i, Keywords.BY);
-						i++;
-						popBackToBefore(BEFORE_GROUP_BY);
-						
-						parseToken = new ParseToken(Keywords.GROUP_BY, true);
-						addAndPush(parseToken);
-						break;
-					case Keywords.HAVING:
-						popBackToBefore(BEFORE_HAVING);
-						parseToken = new ParseToken(Keywords.HAVING, true);
-						addAndPush(parseToken);
-						break;
-					case Keywords.IS:
-						if (tokenAhead(tokens, i, Keywords.NOT)) {
-							if (tokenAhead(tokens, i + 1, Keywords.NULL)) {
-								i += 2;
-								parseToken = new ParseToken(Keywords.IS_NOT_NULL, true);
-							} else {
-								throwExpectTokenException(Keywords.NULL, Keywords.NOT);
-							}
-						} else if (tokenAhead(tokens, i, Keywords.NULL)) {
-							i++;
-							parseToken = new ParseToken(Keywords.IS_NULL, true);
-						} else {
-							throwExpectTokenException(Keywords.NULL, tokenUpperCase);
-						}
-						currentToken.addNode(parseToken);
-						break;
-					case Keywords.INNER:
-						assertAhead(tokens, i++, Keywords.JOIN);
-						// Fall through to JOIN
-					case Keywords.JOIN:
-						parseToken = new ParseToken(Keywords.INNER_JOIN, true);
-						currentToken.addNode(parseToken);
-						break;
-					case Keywords.NOT:
-						if (tokenAhead(tokens, i, Keywords.BETWEEN)) {
-							parseToken = new ParseToken(Keywords.NOT_BETWEEN, true);
-						} else if (tokenAhead(tokens, i, Keywords.EXISTS)) {
-							parseToken = new ParseToken(Keywords.NOT_EXISTS, true);
-						} else if (tokenAhead(tokens, i, Keywords.IN)) {
-							parseToken = new ParseToken(Keywords.NOT_IN, true);
-						} else if (tokenAhead(tokens, i, Keywords.LIKE)) {
-							parseToken = new ParseToken(Keywords.NOT_LIKE, true);
-						} else {
-							throw new IllegalArgumentException("Expecting { " + Keywords.BETWEEN 
-									+ " | " + Keywords.EXISTS 
-									+ " | " + Keywords.IN 
-									+ " | " + Keywords.LIKE 
-									+ " } after " + tokenUpperCase);
-						}
-						i++;
-						currentToken.addNode(parseToken);
-						break;
-					case Keywords.ORDER:
-						assertAhead(tokens, i, Keywords.BY);
-						i++;
-						popBackToBefore(BEFORE_ORDER_BY);
-						
-						parseToken = new ParseToken(Keywords.ORDER_BY, true);
-						addAndPush(parseToken);
-						break;
-					case Keywords.FULL:
-					case Keywords.LEFT:
-					case Keywords.RIGHT:
-						if (tokenAhead(tokens, i, Keywords.OUTER)) {
-							if (tokenAhead(tokens, i + 1, Keywords.JOIN)) {
-								i += 2;
-							} else {
-								throwExpectTokenException(Keywords.JOIN, Keywords.OUTER);
-							}
-						} else if (tokenAhead(tokens, i, Keywords.JOIN)) {
-							i++;
-						} else {
-							throwExpectTokenException(Keywords.JOIN, tokenUpperCase);
-						}
-
-						switch (tokenUpperCase) {
-							case Keywords.FULL: parseToken = new ParseToken(Keywords.FULL_OUTER_JOIN, true); break;
-							case Keywords.LEFT: parseToken = new ParseToken(Keywords.LEFT_OUTER_JOIN, true); break;
-							case Keywords.RIGHT: parseToken = new ParseToken(Keywords.RIGHT_OUTER_JOIN, true); break;
-						}
-						currentToken.addNode(parseToken);
-						break;
-					case Keywords.CASE:
-					case Keywords.SELECT:
-					case Keywords.SET:
-						parseToken = new ParseToken(token, true);
-						addAndPush(parseToken);
-						break;
-					case Keywords.EXCEPT:
-					case Keywords.INTERSECT:
-					case Keywords.UNION:
-						popBackToBefore(BEFORE_ORDER_BY);
-						
-						if (tokenUpperCase.equals(Keywords.UNION) 
-								&& tokenAhead(tokens, i, Keywords.ALL)) {
-							parseToken = new ParseToken(Keywords.UNION_ALL, true);
-							i++;
-						} else {
-							parseToken = new ParseToken(token, true);
-						}
-						
-						currentToken.addNode(parseToken);
-						break;
-					case Keywords.FROM:
-					case Keywords.WHERE:
-						switch (tokenUpperCase) {
-							case Keywords.FROM: popBackToBefore(BEFORE_FROM); break;
-							case Keywords.WHERE: popBackToBefore(BEFORE_WHERE); break;
-						}
-						parseToken = new ParseToken(token, true);
-						addAndPush(parseToken);
-						break;
-					default:
-						parseToken = new ParseToken(token, Keywords.KEYWORD_SET.contains(token));
-						currentToken.addNode(parseToken);
-						break;
-				}
-			}
-			
-			return returnRoot();
-		}
-
-		private void addAndPush(ParseToken token) {
-			currentToken.addNode(token);
-			tokenStack.push(token);
-			
-			if (token.getToken().equals(TOKEN_PARENTHESES_GROUP)) {
-				parenthesesStack.push(1);
-			} else if (!parenthesesStack.isEmpty()) {
-				int size = parenthesesStack.pop();
-				parenthesesStack.push(size + 1);
-			}
-		}
-		
-		private void downsizeCurrentParentheses() {
-			if (!parenthesesStack.isEmpty()) {
-				int size = parenthesesStack.pop();
-				size--;
-				
-				if (size > 0) {
-					parenthesesStack.push(size);
-				}
-			}
-		}
-		
-		private void popBackToBefore(Set<String> tokens) {
-			if (tokenStack.size() == 1) {
-				return;
-			}
-			
-			ParseToken poppedToken = null;
-			do {
-				poppedToken = popStack();
-				currentToken = tokenStack.peek();
-			} while (!tokens.contains(poppedToken.getToken()) 
-					&& !currentToken.getToken().equals(TOKEN_ROOT));
-		}
-		
-		private void popParenthesesStack() {
-			int len = !parenthesesStack.isEmpty() ? parenthesesStack.pop() : 1;
-			for (int i = 0; i < len; i++) {
-				tokenStack.pop();
-			}
-		}
-		
-		private ParseToken popStack() {
-			ParseToken poppedToken = tokenStack.pop();
-			downsizeCurrentParentheses();
-			return poppedToken;
-		}
-		
-		private ParseToken returnRoot() {
-			while (tokenStack.size() > 1) {
-				tokenStack.pop();
-			}
-			return tokenStack.pop();
-		}
-	}
-	
-	private class StringLiteralParseToken extends ParseToken {
-		private String value;
-
-		public String getValue() { return value; }
-		
-		public StringLiteralParseToken(String str) {
-			super(SqlStringUtils.createLiteralToken(str), false);
-			value = str;
 		}
 	}
 	
