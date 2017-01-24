@@ -57,192 +57,40 @@ public class ParseTree {
 		return tokenAhead.equals(token);
 	}
 	
-	private ParseToken currentToken;
+	private ParseToken currentParseToken;
+	private String currentToken;
+	private int currentTokenIndex = -1;
 	private final Stack<Integer> parenthesesStack = new Stack<>();
 	private StringBuilder stringLiteral;
 	private List<String> tokens;
 	private final Stack<ParseToken> tokenStack = new Stack<>();
 	
 	public ParseTree(List<String> tokens) {
-		currentToken = new ParseToken(TOKEN_ROOT);
+		currentParseToken = new ParseToken(TOKEN_ROOT);
 		this.tokens = Collections.unmodifiableList(tokens);
-		tokenStack.push(currentToken);
+		tokenStack.push(currentParseToken);
 	}
 	
 	public ParseToken parseTokens() {
-		for (int i = 0; i < tokens.size(); i++) {
-			currentToken = tokenStack.peek();
-
-				ParseToken parseToken = null;
-			final String token = tokens.get(i);
-			
-			if (stringLiteral != null) {
-				String nextToken = i + 1 < tokens.size() ? tokens.get(i + 1) : null;
-				
-				if (token.equals("'")) {
-					if ("'".equals(nextToken)) {
-						stringLiteral.append("'");
-						i++;
-					} else {
-						parseToken = new StringLiteralParseToken(stringLiteral.toString());
-						currentToken.addNode(parseToken);
-						stringLiteral = null;
-					}
-				} else {
-					stringLiteral.append(token);
-				}
-				
-				continue;
-			}
-			
-			final String tokenUpperCase = token.toUpperCase();
-  			switch (tokenUpperCase) {
-				case "":
-					break;
-				case "'":
-					if (stringLiteral == null) {
-						stringLiteral = new StringBuilder();
-					}
-					break;
-				case "(":
-					parseToken = new ParseToken(TOKEN_PARENTHESES_GROUP);
-					addAndPush(parseToken);
-					break;
-				case ")":
-					popParenthesesStack();
-					break;
-				case Keywords.END:
-					parseToken = new ParseToken(token, true);
-					currentToken.addNode(parseToken);
-					popStack();
-					break;
-				case Keywords.GROUP:
-					assertAhead(tokens, i, Keywords.BY);
-					i++;
-					popBackToBefore(BEFORE_GROUP_BY);
-					
-					parseToken = new ParseToken(Keywords.GROUP_BY, true);
-					addAndPush(parseToken);
-					break;
-				case Keywords.HAVING:
-					popBackToBefore(BEFORE_HAVING);
-					parseToken = new ParseToken(Keywords.HAVING, true);
-					addAndPush(parseToken);
-					break;
-				case Keywords.IS:
-					if (tokenAhead(tokens, i, Keywords.NOT)) {
-						if (tokenAhead(tokens, i + 1, Keywords.NULL)) {
-							i += 2;
-							parseToken = new ParseToken(Keywords.IS_NOT_NULL, true);
-						} else {
-							throwExpectTokenException(Keywords.NULL, Keywords.NOT);
-						}
-					} else if (tokenAhead(tokens, i, Keywords.NULL)) {
-						i++;
-						parseToken = new ParseToken(Keywords.IS_NULL, true);
-					} else {
-						throwExpectTokenException(Keywords.NULL, tokenUpperCase);
-					}
-					currentToken.addNode(parseToken);
-					break;
-				case Keywords.INNER:
-					assertAhead(tokens, i++, Keywords.JOIN);
-					// Fall through to JOIN
-				case Keywords.JOIN:
-					parseToken = new ParseToken(Keywords.INNER_JOIN, true);
-					currentToken.addNode(parseToken);
-					break;
-				case Keywords.NOT:
-					if (tokenAhead(tokens, i, Keywords.BETWEEN)) {
-						parseToken = new ParseToken(Keywords.NOT_BETWEEN, true);
-					} else if (tokenAhead(tokens, i, Keywords.EXISTS)) {
-						parseToken = new ParseToken(Keywords.NOT_EXISTS, true);
-					} else if (tokenAhead(tokens, i, Keywords.IN)) {
-						parseToken = new ParseToken(Keywords.NOT_IN, true);
-					} else if (tokenAhead(tokens, i, Keywords.LIKE)) {
-						parseToken = new ParseToken(Keywords.NOT_LIKE, true);
-					} else {
-						throw new IllegalArgumentException("Expecting { " + Keywords.BETWEEN 
-								+ " | " + Keywords.EXISTS 
-								+ " | " + Keywords.IN 
-								+ " | " + Keywords.LIKE 
-								+ " } after " + tokenUpperCase);
-					}
-					i++;
-					currentToken.addNode(parseToken);
-					break;
-				case Keywords.ORDER:
-					assertAhead(tokens, i, Keywords.BY);
-					i++;
-					popBackToBefore(BEFORE_ORDER_BY);
-					
-					parseToken = new ParseToken(Keywords.ORDER_BY, true);
-					addAndPush(parseToken);
-					break;
-				case Keywords.FULL:
-				case Keywords.LEFT:
-				case Keywords.RIGHT:
-					if (tokenAhead(tokens, i, Keywords.OUTER)) {
-						if (tokenAhead(tokens, i + 1, Keywords.JOIN)) {
-							i += 2;
-						} else {
-							throwExpectTokenException(Keywords.JOIN, Keywords.OUTER);
-						}
-					} else if (tokenAhead(tokens, i, Keywords.JOIN)) {
-						i++;
-					} else {
-						throwExpectTokenException(Keywords.JOIN, tokenUpperCase);
-					}
-
-					switch (tokenUpperCase) {
-						case Keywords.FULL: parseToken = new ParseToken(Keywords.FULL_OUTER_JOIN, true); break;
-						case Keywords.LEFT: parseToken = new ParseToken(Keywords.LEFT_OUTER_JOIN, true); break;
-						case Keywords.RIGHT: parseToken = new ParseToken(Keywords.RIGHT_OUTER_JOIN, true); break;
-					}
-					currentToken.addNode(parseToken);
-					break;
-				case Keywords.CASE:
-				case Keywords.SELECT:
-				case Keywords.SET:
-					parseToken = new ParseToken(token, true);
-					addAndPush(parseToken);
-					break;
-				case Keywords.EXCEPT:
-				case Keywords.INTERSECT:
-				case Keywords.UNION:
-					popBackToBefore(BEFORE_ORDER_BY);
-					
-					if (tokenUpperCase.equals(Keywords.UNION) 
-							&& tokenAhead(tokens, i, Keywords.ALL)) {
-						parseToken = new ParseToken(Keywords.UNION_ALL, true);
-						i++;
-					} else {
-						parseToken = new ParseToken(token, true);
-					}
-					
-					currentToken.addNode(parseToken);
-					break;
-				case Keywords.FROM:
-				case Keywords.WHERE:
-					switch (tokenUpperCase) {
-						case Keywords.FROM: popBackToBefore(BEFORE_FROM); break;
-						case Keywords.WHERE: popBackToBefore(BEFORE_WHERE); break;
-					}
-					parseToken = new ParseToken(token, true);
-					addAndPush(parseToken);
-					break;
-				default:
-					parseToken = new ParseToken(token, Keywords.KEYWORD_SET.contains(token));
-					currentToken.addNode(parseToken);
-					break;
-			}
-		}
-		
+		while (parseNextToken());
 		return returnRoot();
 	}
-
+	
+	boolean parseNextToken() {
+		if (!hasNextToken()) {
+			return false;
+		}
+		nextToken();
+		parseCurrentToken();
+		return true;
+	}
+	
+	private boolean hasNextToken() {
+		return currentTokenIndex + 1 < tokens.size();
+	}
+	
 	private void addAndPush(ParseToken token) {
-		currentToken.addNode(token);
+		currentParseToken.addNode(token);
 		tokenStack.push(token);
 		
 		if (token.getToken().equals(TOKEN_PARENTHESES_GROUP)) {
@@ -264,6 +112,183 @@ public class ParseTree {
 		}
 	}
 	
+	private boolean handleStringLiteral() {
+		if (stringLiteral == null) {
+			return false;
+		}
+		String nextToken = hasNextToken() ? tokens.get(currentTokenIndex + 1) : null;
+		
+		if (!currentToken.equals("'")) {
+			stringLiteral.append(currentToken);
+		} else if ("'".equals(nextToken)) {
+			stringLiteral.append("'");
+			currentTokenIndex++;
+		} else {
+			ParseToken parseToken = new StringLiteralParseToken(stringLiteral.toString());
+			currentParseToken.addNode(parseToken);
+			stringLiteral = null;
+		}
+		
+		return true;
+	}
+	
+	private void nextToken() {
+		currentTokenIndex++;
+
+		currentParseToken = tokenStack.peek();
+		currentToken = tokens.get(currentTokenIndex);
+	}
+	
+	private void parseCurrentToken() {
+		ParseToken parseToken = null;
+		
+		if (handleStringLiteral()) {
+			return;
+		}
+		
+		final String tokenUpperCase = currentToken.toUpperCase();
+		switch (tokenUpperCase) {
+			case "":
+				break;
+			case "'":
+				if (stringLiteral == null) {
+					stringLiteral = new StringBuilder();
+				}
+				break;
+			case "(":
+				parseToken = new ParseToken(TOKEN_PARENTHESES_GROUP);
+				addAndPush(parseToken);
+				break;
+			case ")":
+				popParenthesesStack();
+				break;
+			case Keywords.END:
+				parseToken = new ParseToken(currentToken, true);
+				currentParseToken.addNode(parseToken);
+				popStack();
+				break;
+			case Keywords.GROUP:
+				assertAhead(tokens, currentTokenIndex, Keywords.BY);
+				currentTokenIndex++;
+				popBackToBefore(BEFORE_GROUP_BY);
+				
+				parseToken = new ParseToken(Keywords.GROUP_BY, true);
+				addAndPush(parseToken);
+				break;
+			case Keywords.HAVING:
+				popBackToBefore(BEFORE_HAVING);
+				parseToken = new ParseToken(Keywords.HAVING, true);
+				addAndPush(parseToken);
+				break;
+			case Keywords.IS:
+				if (tokenAhead(tokens, currentTokenIndex, Keywords.NOT)) {
+					if (tokenAhead(tokens, currentTokenIndex + 1, Keywords.NULL)) {
+						currentTokenIndex += 2;
+						parseToken = new ParseToken(Keywords.IS_NOT_NULL, true);
+					} else {
+						throwExpectTokenException(Keywords.NULL, Keywords.NOT);
+					}
+				} else if (tokenAhead(tokens, currentTokenIndex, Keywords.NULL)) {
+					currentTokenIndex++;
+					parseToken = new ParseToken(Keywords.IS_NULL, true);
+				} else {
+					throwExpectTokenException(Keywords.NULL, tokenUpperCase);
+				}
+				currentParseToken.addNode(parseToken);
+				break;
+			case Keywords.INNER:
+				assertAhead(tokens, currentTokenIndex++, Keywords.JOIN);
+				// Fall through to JOIN
+			case Keywords.JOIN:
+				parseToken = new ParseToken(Keywords.INNER_JOIN, true);
+				currentParseToken.addNode(parseToken);
+				break;
+			case Keywords.NOT:
+				if (tokenAhead(tokens, currentTokenIndex, Keywords.BETWEEN)) {
+					parseToken = new ParseToken(Keywords.NOT_BETWEEN, true);
+				} else if (tokenAhead(tokens, currentTokenIndex, Keywords.EXISTS)) {
+					parseToken = new ParseToken(Keywords.NOT_EXISTS, true);
+				} else if (tokenAhead(tokens, currentTokenIndex, Keywords.IN)) {
+					parseToken = new ParseToken(Keywords.NOT_IN, true);
+				} else if (tokenAhead(tokens, currentTokenIndex, Keywords.LIKE)) {
+					parseToken = new ParseToken(Keywords.NOT_LIKE, true);
+				} else {
+					throw new IllegalArgumentException("Expecting { " + Keywords.BETWEEN 
+							+ " | " + Keywords.EXISTS 
+							+ " | " + Keywords.IN 
+							+ " | " + Keywords.LIKE 
+							+ " } after " + tokenUpperCase);
+				}
+				currentTokenIndex++;
+				currentParseToken.addNode(parseToken);
+				break;
+			case Keywords.ORDER:
+				assertAhead(tokens, currentTokenIndex, Keywords.BY);
+				currentTokenIndex++;
+				popBackToBefore(BEFORE_ORDER_BY);
+				
+				parseToken = new ParseToken(Keywords.ORDER_BY, true);
+				addAndPush(parseToken);
+				break;
+			case Keywords.FULL:
+			case Keywords.LEFT:
+			case Keywords.RIGHT:
+				if (tokenAhead(tokens, currentTokenIndex, Keywords.OUTER)) {
+					if (tokenAhead(tokens, currentTokenIndex + 1, Keywords.JOIN)) {
+						currentTokenIndex += 2;
+					} else {
+						throwExpectTokenException(Keywords.JOIN, Keywords.OUTER);
+					}
+				} else if (tokenAhead(tokens, currentTokenIndex, Keywords.JOIN)) {
+					currentTokenIndex++;
+				} else {
+					throwExpectTokenException(Keywords.JOIN, tokenUpperCase);
+				}
+
+				switch (tokenUpperCase) {
+					case Keywords.FULL: parseToken = new ParseToken(Keywords.FULL_OUTER_JOIN, true); break;
+					case Keywords.LEFT: parseToken = new ParseToken(Keywords.LEFT_OUTER_JOIN, true); break;
+					case Keywords.RIGHT: parseToken = new ParseToken(Keywords.RIGHT_OUTER_JOIN, true); break;
+				}
+				currentParseToken.addNode(parseToken);
+				break;
+			case Keywords.CASE:
+			case Keywords.SELECT:
+			case Keywords.SET:
+				parseToken = new ParseToken(currentToken, true);
+				addAndPush(parseToken);
+				break;
+			case Keywords.EXCEPT:
+			case Keywords.INTERSECT:
+			case Keywords.UNION:
+				popBackToBefore(BEFORE_ORDER_BY);
+				
+				if (tokenUpperCase.equals(Keywords.UNION) 
+						&& tokenAhead(tokens, currentTokenIndex, Keywords.ALL)) {
+					parseToken = new ParseToken(Keywords.UNION_ALL, true);
+					currentTokenIndex++;
+				} else {
+					parseToken = new ParseToken(currentToken, true);
+				}
+				
+				currentParseToken.addNode(parseToken);
+				break;
+			case Keywords.FROM:
+			case Keywords.WHERE:
+				switch (tokenUpperCase) {
+					case Keywords.FROM: popBackToBefore(BEFORE_FROM); break;
+					case Keywords.WHERE: popBackToBefore(BEFORE_WHERE); break;
+				}
+				parseToken = new ParseToken(currentToken, true);
+				addAndPush(parseToken);
+				break;
+			default:
+				parseToken = new ParseToken(currentToken, Keywords.KEYWORD_SET.contains(currentToken));
+				currentParseToken.addNode(parseToken);
+				break;
+		}
+	}
+	
 	private void popBackToBefore(Set<String> tokens) {
 		if (tokenStack.size() == 1) {
 			return;
@@ -272,9 +297,9 @@ public class ParseTree {
 		ParseToken poppedToken = null;
 		do {
 			poppedToken = popStack();
-			currentToken = tokenStack.peek();
+			currentParseToken = tokenStack.peek();
 		} while (!tokens.contains(poppedToken.getToken()) 
-				&& !currentToken.getToken().equals(TOKEN_ROOT));
+				&& !currentParseToken.getToken().equals(TOKEN_ROOT));
 	}
 	
 	private void popParenthesesStack() {

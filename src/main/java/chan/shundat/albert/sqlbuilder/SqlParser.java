@@ -104,15 +104,6 @@ public class SqlParser {
 		tableName.setLength(0);
 	}
 	
-	private static void assertAhead(List<String> tokens, int i, String tokenAhead) {
-		int nextIndex = i + 1;
-		String token = nextIndex < tokens.size() ? tokens.get(nextIndex) : null;
-		
-		if (token == null || !token.toUpperCase().equals(tokenAhead)) {
-			throwExpectTokenException(tokenAhead, tokens.get(i));
-		}
-	}
-	
 	private static String combineTableNameParts(String[] parts) {
 		StringBuilder builder = new StringBuilder();
 		for (int i = 0; i < parts.length - 1; i++) {
@@ -308,16 +299,6 @@ public class SqlParser {
 		}
 		
 		return true;
-	}
-	
-	private static void throwExpectTokenException(String expectedToken, String tokenBeforeExpectedToken) {
-		throw new IllegalArgumentException("Expecting a " + expectedToken + " after " + tokenBeforeExpectedToken);
-	}
-
-	private static boolean tokenAhead(List<String> tokens, int i, String tokenAhead) {
-		int nextIndex = i + 1;
-		String token = nextIndex < tokens.size() ? tokens.get(nextIndex) : null;
-		return tokenAhead.equals(token);
 	}
 	
 	/* END Static methods */
