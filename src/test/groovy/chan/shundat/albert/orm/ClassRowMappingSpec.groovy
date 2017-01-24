@@ -21,14 +21,14 @@ class ClassRowMappingSpec extends Specification {
 		given: 'ClassRowMapping of Person'
 		ClassRowMapping mapping = new ClassRowMapping(Person.class)
 		
-		and: 'Person object with personKey set'
+		and: 'Person object with personKey set to 123'
 		Person person = new Person()
 		person.setPersonKey(123)
 		
-		when: 'Getting primary key of Person object'
+		when: 'getting primary key of Person object'
 		Object id = mapping.getOrCreateId(person)
 		
-		then: 'Primary key is correct'
+		then: 'primary key is 123'
 		id == 123
 	}
 	
@@ -36,14 +36,14 @@ class ClassRowMappingSpec extends Specification {
 		given: 'ClassRowMapping of Person'
 		ClassRowMapping mapping = new ClassRowMapping(Person.class)
 		
-		and: 'Person object with personKey set'
+		and: 'Person object with personKey set to 123'
 		Person person = new Person()
 		person.setPersonKey(123)
 		
-		when: 'Getting primary key of Person object'
+		when: 'getting primary key of Person object via map key'
 		Object id = mapping.getMapKeyValue(person)
 		
-		then: 'Primary key is correct'
+		then: 'primary key is 123'
 		id == 123
 	}
 	
@@ -55,30 +55,30 @@ class ClassRowMappingSpec extends Specification {
 		Person person = new Person()
 		person.setFullName('Albert Chan')
 		
-		when: 'Getting full name of Person object via "Full Name" map key'
+		when: 'getting full name of Person object via "Full Name" map key'
 		String fullName = mapping.getMapKeyValue(person, "Full Name")
 		
-		then: 'Primary key is correct'
+		then: 'returned full name is "Albert Chan"'
 		fullName == 'Albert Chan'
 	}
 	
-	def 'Get Book Page composite PK object'() {
+	def 'Get composite PK object of an instance of a class that uses composite primary key'() {
 		given: 'ClassRowMapping of BookPage'
 		ClassRowMapping mapping = new ClassRowMapping(BookPage.class)
 		
-		and: 'Book Page object'
+		and: 'BookPage object with ISBN 1234567890 and page number 321'
 		BookPage page = new BookPage();
 		page.setIsbn('1234567890')
 		page.setPageNumber(321)
 		
-		expect: 'Class row mapping to know BookPage uses a composite primary key, not scalar'
+		expect: 'class row mapping of BookPage to know that BookPage class uses a composite primary key, not scalar'
 		mapping.isCompositePrimaryKey()
 		!mapping.isScalarPrimaryKey()
 		
-		when: 'Get the composite PK object BookPagePK'
+		when: 'getting the composite PK object BookPagePK'
 		BookPagePK pk = mapping.getOrCreateId(page)
 		
-		then: 'Primary key contains ISBN 1234567890 and page number 321'
+		then: 'primary key object contains ISBN 1234567890 and page number 321'
 		pk.isbn == '1234567890'
 		pk.pageNumber == 321
 	}

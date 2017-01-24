@@ -140,11 +140,11 @@ public class ParseTree {
 	}
 	
 	private void parseCurrentToken() {
-		ParseToken parseToken = null;
-		
 		if (handleStringLiteral()) {
 			return;
 		}
+		
+		ParseToken parseToken = null;
 		
 		final String tokenUpperCase = currentToken.toUpperCase();
 		switch (tokenUpperCase) {
