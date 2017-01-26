@@ -726,6 +726,9 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 			}
 			
 			switch (relationship.getFieldType()) {
+				case Relationship.FIELD_DEQUE:
+					addToCollection(ownerColumns, owner, classColumns, object, CollectionUtils.FACTORY_DEQUE);
+					break;
 				case Relationship.FIELD_LINKED_LIST:
 					addToCollection(ownerColumns, owner, classColumns, object, CollectionUtils.FACTORY_LINKED_LIST);
 					break;
@@ -743,9 +746,6 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 					break;
 				case Relationship.FIELD_SET:
 					addToCollection(ownerColumns, owner, classColumns, object, CollectionUtils.FACTORY_SET);
-					break;
-				case Relationship.FIELD_STACK:
-					addToCollection(ownerColumns, owner, classColumns, object, CollectionUtils.FACTORY_STACK);
 					break;
 				case Relationship.FIELD_UNIQUE:
 					addToField(ownerColumns, owner, classColumns, object);

@@ -25,13 +25,13 @@ import chan.shundat.albert.sqlbuilder.SortType;
  */
 @SuppressWarnings({ "unchecked" })
 public class Relationship {
+	public static final int FIELD_DEQUE = 7;
 	public static final int FIELD_LINKED_LIST = 1;
 	public static final int FIELD_LINKED_MAP = 2;
 	public static final int FIELD_LINKED_SET = 3;
 	public static final int FIELD_LIST = 4;
 	public static final int FIELD_MAP = 5;
 	public static final int FIELD_SET = 6;
-	public static final int FIELD_STACK = 7;
 	public static final int FIELD_UNIQUE = 8;
 	
 	public static final int TYPE_N_TO_ONE = 1;
@@ -280,7 +280,7 @@ public class Relationship {
 		 */
 		public Builder inStack(String fieldName) {
 			this.fieldName = fieldName;
-			fieldType = FIELD_STACK;
+			fieldType = FIELD_DEQUE;
 			return this;
 		}
 		

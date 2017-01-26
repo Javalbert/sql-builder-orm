@@ -314,14 +314,13 @@ public class SqlParser {
 		sqlStatement = null;
 		statementType = 0;
 		
-		tokenize(sql);
-		parseTree(new ParseTree(tokens).parseTokens());
+		parseTree(new ParseTree(tokenize(sql)).parseTokens());
 		return this;
 	}
 
 	/* START Protected methods */
 	
-	void tokenize(String sql) {
+	List<String> tokenize(String sql) {
 		tokens.clear();
 		
 		Matcher matcher = PATTERN.matcher(sql);
@@ -369,6 +368,7 @@ public class SqlParser {
 		if (!lastToken.isEmpty()) {
 			tokens.add(lastToken);
 		}
+		return tokens;
 	}
 	
 	/* END Protected methods */

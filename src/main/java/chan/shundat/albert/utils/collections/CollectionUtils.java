@@ -13,6 +13,7 @@
 package chan.shundat.albert.utils.collections;
 
 import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -24,10 +25,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 
 @SuppressWarnings({ "unchecked" })
 public final class CollectionUtils {
+	public static final CollectionFactory FACTORY_DEQUE = new CollectionFactory() {
+		@Override
+		public <T> Collection<T> newInstance() { return new ArrayDeque<>(); }
+	};
+	
 	public static final CollectionFactory FACTORY_LINKED_LIST = new CollectionFactory() {
 		@Override
 		public <T> Collection<T> newInstance() { return new LinkedList<>(); }
@@ -56,11 +61,6 @@ public final class CollectionUtils {
 	public static final CollectionFactory FACTORY_SET = new CollectionFactory() {
 		@Override
 		public <T> Collection<T> newInstance() { return new HashSet<>(); }
-	};
-
-	public static final CollectionFactory FACTORY_STACK = new CollectionFactory() {
-		@Override
-		public <T> Collection<T> newInstance() { return new Stack<>(); }
 	};
 
 	public static <T> List<T> arrayList(T... items) {

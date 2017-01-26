@@ -1,12 +1,22 @@
 package chan.shundat.albert.sqlbuilder.parser
 
+import chan.shundat.albert.sqlbuilder.SqlParser
 import spock.lang.Specification
 
 class ParseTreeSpec extends Specification {
+	private SqlParser parser
+	
+	def setup() {
+		parser = new SqlParser()
+	}
+	
+	private ParseTree newTree(String sql) {
+		return new ParseTree(parser.tokenize(sql))
+	}
+	
 	def 'Create string literal parse token'() {
-		given: "list of tokens that represent the string 'abc''', and a parse tree to parse the tokens"
-		List<String> tokens = [ "'", 'abc', "'", "'", "'" ]
-		ParseTree tree = new ParseTree(tokens)
+		given: "list of tokens that represent the string 'abc'''"
+		ParseTree tree = newTree("'abc'''")
 		
 		when: 'parsed token by token'
 		tree.parseNextToken()
@@ -35,5 +45,78 @@ class ParseTreeSpec extends Specification {
 		
 		and: 'finally, a parse token is created with value "abc\'", after detecting the ending quote'
 		literalToken.value == "abc'"
+	}
+	
+	def 'Test token stacks and child nodes using SELECT and FROM clauses'() {
+		given: 'SQL string "SELECT col1 FROM tbl"'
+		String sql = 'SELECT col1 FROM tbl'
+		ParseTree tree = newTree(sql)
+		
+		when: 'parsing "SELECT"'
+		tree.parseNextToken()
+		ParseToken selectToken = tree.rootToken.nodes[0]
+		boolean addedSelectToRoot = selectToken.token == 'SELECT'
+		boolean addedSelectToTokenStack = tree.tokenStack.peek() == selectToken
+		
+		and: 'then parsing column "col1"'
+		tree.parseNextToken()
+		boolean col1IsNodeOfSelect = selectToken.nodes[0].token == 'col1'
+		
+		and: 'then parsing "FROM"'
+		tree.parseNextToken()
+		ParseToken fromToken = tree.rootToken.nodes[1]
+		boolean addedFromToRoot = fromToken.token == 'FROM'
+		boolean selectPoppedFromTokenStack = tree.tokenStack.stream().allMatch{ it.token != 'SELECT' }
+		boolean addedFromToTokenStack = tree.tokenStack.peek() == fromToken
+		
+		and: 'then parsing "tbl"'
+		tree.parseNextToken()
+		boolean tblIsNodeOfFrom = fromToken.nodes[0].token == 'tbl'
+		
+		then: 'SELECT is added as a node of SQL ROOT and pushed onto the token stack'
+		addedSelectToRoot
+		addedSelectToTokenStack
+		
+		and: 'then col1 is added as a node of SELECT token'
+		col1IsNodeOfSelect
+		
+		and: 'then SELECT is popped from token stack with FROM replacing it, and FROM is added as a node of SQL ROOT'
+		selectPoppedFromTokenStack
+		addedFromToTokenStack
+		addedFromToRoot
+		
+		and: 'then tbl is added as a node of FROM token'
+		tblIsNodeOfFrom
+	}
+	
+	def 'Verify that GROUP should be followed by BY, otherwise throw an error'() {
+		given: '"GROUP BY"'
+		ParseTree groupByTree = newTree('GROUP BY')
+		
+		and: '"GROUP" without the "BY"'
+		ParseTree groupTree = newTree('GROUP')
+		
+		when: 'parsing "GROUP BY"'
+		groupByTree.parseTokens()
+		boolean addedGroupByToTokenStack = groupByTree.rootToken.nodes[0].token == 'GROUP BY'
+		
+		and: 'parsing "GROUP"'
+		groupTree.parseTokens()
+		
+		then: '"GROUP BY" works, but "GROUP" throws error'
+		addedGroupByToTokenStack
+		thrown(IllegalArgumentException)
+	}
+	
+	def 'Test the state of parentheses stack'() {
+		given: 'SQL string "(SELECT col1 FROM tbl)"'
+		ParseTree tree = newTree('(SELECT col1 FROM tbl)')
+		
+		when: 'parsing "("'
+		tree.parseNextToken()
+		boolean addedParenthesesGroupToTokenStack = tree.tokenStack.peek().token == ParseTree.TOKEN_PARENTHESES_GROUP
+		
+		then: 'parentheses group token is added to token stack'
+		addedParenthesesGroupToTokenStack
 	}
 }

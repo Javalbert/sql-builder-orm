@@ -1,9 +1,11 @@
 package chan.shundat.albert.sqlbuilder.parser;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
 import java.util.Set;
-import java.util.Stack;
 
 import chan.shundat.albert.sqlbuilder.Keywords;
 import chan.shundat.albert.utils.collections.CollectionUtils;
@@ -60,20 +62,22 @@ public class ParseTree {
 	private ParseToken currentParseToken;
 	private String currentToken;
 	private int currentTokenIndex = -1;
-	private final Stack<Integer> parenthesesStack = new Stack<>();
+	private final Deque<Integer> parenthesesStack = new ArrayDeque<>();
+	private final ParseToken rootToken;
 	private StringBuilder stringLiteral;
 	private List<String> tokens;
-	private final Stack<ParseToken> tokenStack = new Stack<>();
+	private final Deque<ParseToken> tokenStack = new ArrayDeque<>();
 	
 	public ParseTree(List<String> tokens) {
-		currentParseToken = new ParseToken(TOKEN_ROOT);
-		this.tokens = Collections.unmodifiableList(tokens);
+		rootToken = new ParseToken(TOKEN_ROOT);
+		currentParseToken = rootToken;
+		this.tokens = Collections.unmodifiableList(new ArrayList<>(tokens));
 		tokenStack.push(currentParseToken);
 	}
 	
 	public ParseToken parseTokens() {
 		while (parseNextToken());
-		return returnRoot();
+		return rootToken;
 	}
 	
 	boolean parseNextToken() {
@@ -94,6 +98,7 @@ public class ParseTree {
 		tokenStack.push(token);
 		
 		if (token.getToken().equals(TOKEN_PARENTHESES_GROUP)) {
+			// 1 is the TOKEN_PARENTHESES_GROUP token itself
 			parenthesesStack.push(1);
 		} else if (!parenthesesStack.isEmpty()) {
 			int size = parenthesesStack.pop();
@@ -305,6 +310,8 @@ public class ParseTree {
 	private void popParenthesesStack() {
 		int len = !parenthesesStack.isEmpty() ? parenthesesStack.pop() : 1;
 		for (int i = 0; i < len; i++) {
+			// Pop every token that was pushed into tokenStack that was inside parentheses
+			// including the TOKEN_PARENTHESES_GROUP token
 			tokenStack.pop();
 		}
 	}
@@ -313,12 +320,5 @@ public class ParseTree {
 		ParseToken poppedToken = tokenStack.pop();
 		downsizeCurrentParentheses();
 		return poppedToken;
-	}
-	
-	private ParseToken returnRoot() {
-		while (tokenStack.size() > 1) {
-			tokenStack.pop();
-		}
-		return tokenStack.pop();
 	}
 }
