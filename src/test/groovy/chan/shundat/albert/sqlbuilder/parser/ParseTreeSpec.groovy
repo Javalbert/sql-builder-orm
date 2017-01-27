@@ -2,6 +2,7 @@ package chan.shundat.albert.sqlbuilder.parser
 
 import chan.shundat.albert.sqlbuilder.SqlParser
 import spock.lang.Specification
+import spock.lang.Unroll
 
 class ParseTreeSpec extends Specification {
 	private SqlParser parser
@@ -147,5 +148,76 @@ class ParseTreeSpec extends Specification {
 		and: 'then parentheses stack is empty, and token stack size is 1 after popping out FROM and parentheses group'
 		parenthesesStackIsEmpty
 		tokenStackSizeAfterEndingParenthesis == 1
+	}
+	
+	@Unroll('Test OUTER JOIN syntax "#sql" to produce error "#errorMessage"')
+	def 'Test <[FULL] | <LEFT | RIGHT>> [OUTER] JOIN syntax'() {
+		given: 'parse tree'
+		ParseTree tree = newTree(sql)
+		
+		expect: 'exceptionMessage matches errorMessage'
+		String exceptionMessage = ''
+		try {
+			tree.parseTokens()
+		} catch (IllegalArgumentException e) {
+			exceptionMessage = e.message
+		}
+		exceptionMessage == errorMessage
+		
+		where: 'sql may produce an error message'
+		sql 				|| errorMessage
+		'LEFT JOIN'			|| ''
+		'LEFT OUTER JOIN'	|| ''
+		'RIGHT JOIN'		|| ''
+		'RIGHT OUTER JOIN'	|| ''
+		'FULL JOIN'			|| ''
+		'FULL OUTER JOIN'	|| ''
+		'LEFT OURER'		|| 'Expecting a JOIN after LEFT'
+		'LEFT OUTER JON'	|| 'Expecting a JOIN after OUTER'
+	}
+	
+	@Unroll('Test IS [NOT] NULL syntax "#sql" to produce error "#errorMessage"')
+	def 'Test IS [NOT] NULL syntax'() {
+		given: 'parse tree'
+		ParseTree tree = newTree(sql)
+		
+		expect: 'exceptionMessage matches errorMessage'
+		String exceptionMessage = ''
+		try {
+			tree.parseTokens()
+		} catch (IllegalArgumentException e) {
+			exceptionMessage = e.message
+		}
+		exceptionMessage == errorMessage
+		
+		where: 'sql may produce an error message'
+		sql 			|| errorMessage
+		'IS NULL'		|| ''
+		'IS NOT NULL'	|| ''
+		'IS NYLL'		|| 'Expecting a NULL after IS'
+		'IS NOT NIL'	|| 'Expecting a NULL after NOT'
+	}
+	
+	@Unroll('Test NOT syntax "#sql" to throw error? #throwError')
+	def 'Test NOT <BETWEEN | EXISTS | IN | LIKE> syntax'() {
+		given: 'parse tree'
+		ParseTree tree = newTree(sql)
+		
+		expect: 'error may be thrown'
+		boolean errorThrown = false
+		try {
+			tree.parseTokens()
+		} catch (IllegalArgumentException e) {
+			errorThrown = true
+		}
+		errorThrown == throwError
+		
+		where: 'sql may throw error'
+		sql 			|| throwError
+		'NOT BETWEEN'	|| false
+		'NOT EXISTS'	|| false
+		'NOT IN'		|| false
+		'NOT LIKE'		|| false
+		'NOT NULL'		|| true
 	}
 }
