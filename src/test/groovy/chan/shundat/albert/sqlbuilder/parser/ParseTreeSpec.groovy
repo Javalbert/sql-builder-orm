@@ -115,8 +115,37 @@ class ParseTreeSpec extends Specification {
 		when: 'parsing "("'
 		tree.parseNextToken()
 		boolean addedParenthesesGroupToTokenStack = tree.tokenStack.peek().token == ParseTree.TOKEN_PARENTHESES_GROUP
+		int parenthesesGroupSizeAfterAddingGroup = tree.parenthesesStack.peek()
 		
-		then: 'parentheses group token is added to token stack'
+		and: 'then parsing "SELECT"'
+		tree.parseNextToken()
+		int parenthesesGroupSizeAfterAddingSelect = tree.parenthesesStack.peek()
+		int tokenStackSizeAfterAddingSelect = tree.tokenStack.size()
+		
+		and: 'then parsing "col1 FROM tbl"'
+		tree.parseNextTokensUntil(')')
+		int parenthesesGroupSizeAfterAddingFrom = tree.parenthesesStack.peek()
+		int tokenStackSizeAfterAddingFrom = tree.tokenStack.size()
+		
+		and: 'then parsing ")"'
+		tree.parseNextToken()
+		boolean parenthesesStackIsEmpty = tree.parenthesesStack.isEmpty()
+		int tokenStackSizeAfterEndingParenthesis = tree.tokenStack.size()
+		
+		then: 'parentheses group token is added to token stack, and parentheses group size is 1'
 		addedParenthesesGroupToTokenStack
+		parenthesesGroupSizeAfterAddingGroup == 1
+		
+		and: 'then parentheses group size is 2 after adding SELECT, and token stack size is 3'
+		parenthesesGroupSizeAfterAddingSelect == 2
+		tokenStackSizeAfterAddingSelect == 3
+		
+		and: 'then parentheses group size is still 2 after adding FROM, and token stack size is still 3'
+		parenthesesGroupSizeAfterAddingFrom == 2
+		tokenStackSizeAfterAddingFrom == 3
+		
+		and: 'then parentheses stack is empty, and token stack size is 1 after popping out FROM and parentheses group'
+		parenthesesStackIsEmpty
+		tokenStackSizeAfterEndingParenthesis == 1
 	}
 }

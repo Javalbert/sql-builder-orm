@@ -89,6 +89,15 @@ public class ParseTree {
 		return true;
 	}
 	
+	void parseNextTokensUntil(String token) {
+		while (parseNextToken()) {
+			if (!hasNextToken() 
+					|| token.equals(tokens.get(currentTokenIndex + 1))) {
+				break;
+			}
+		}
+	}
+	
 	private boolean hasNextToken() {
 		return currentTokenIndex + 1 < tokens.size();
 	}
