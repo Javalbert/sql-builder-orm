@@ -343,7 +343,7 @@ public class SqlParser {
 		sqlStatement = null;
 		statementType = 0;
 		
-		parseTree(new ParseTree(tokenize(sql)).parseTokens());
+		parseTree(sqlToParseTree(sql));
 		return this;
 	}
 
@@ -598,43 +598,45 @@ public class SqlParser {
 		
 		int i = start;
 		for (; i < nodes.size(); i++) {
-			ParseToken node = nodes.get(i);
-
-			final String token = node.getToken();
-			
-			switch (token.toUpperCase()) {
-				case Keywords.DELETE:
-					break;
-				case Keywords.FROM:
-					for (ParseToken tablePart : node.getNodes()) {
-						tableName.append(tablePart.getToken());
-					}
-					addPendingTable(delete, tableName);
-					
-					/* DELETE FROM syntax not ANSI standard */
-					
-//					if (tableName.length() > 0) {
-//						delete.tableAlias(tableName.toString());
-//						tableName.setLength(0);
-//					}
-//					
-//					From from = new From();
-//					delete.from(from);
-//					parseFrom(from, node.getNodes());
-					break;
-				case Keywords.WHERE:
-					addPendingTable(delete, tableName);
-					
-					Where where = new Where();
-					delete.where(where);
-					parseCondition(where, node.getNodes(), 0, node.getNodes().size());
-					break;
-				default:
-					tableName.append(token);
-					break;
-			}
+			parseDeleteNode(delete, nodes.get(i), tableName);
 		}
 		return i - 1;
+	}
+	
+	private void parseDeleteNode(final Delete delete, final ParseToken node, final StringBuilder tableName) {
+		final String token = node.getToken();
+		
+		switch (token.toUpperCase()) {
+			case Keywords.DELETE:
+				break;
+			case Keywords.FROM:
+				for (ParseToken tablePart : node.getNodes()) {
+					tableName.append(tablePart.getToken());
+				}
+				addPendingTable(delete, tableName);
+				
+				/* DELETE FROM JOIN syntax not ANSI standard */
+				
+//				if (tableName.length() > 0) {
+//					delete.tableAlias(tableName.toString());
+//					tableName.setLength(0);
+//				}
+//				
+//				From from = new From();
+//				delete.from(from);
+//				parseFrom(from, node.getNodes());
+				break;
+			case Keywords.WHERE:
+				addPendingTable(delete, tableName);
+				
+				Where where = new Where();
+				delete.where(where);
+				parseCondition(where, node.getNodes(), 0, node.getNodes().size());
+				break;
+			default:
+				tableName.append(token);
+				break;
+		}
 	}
 	
 	private int parseExpression(ExpressionBuilding builder, List<ParseToken> nodes, int i) {
@@ -1347,31 +1349,33 @@ public class SqlParser {
 		
 		int i = start;
 		for (; i < nodes.size(); i++) {
-			ParseToken node = nodes.get(i);
-			
-			final String token = node.getToken();
-			
-			switch (token.toUpperCase()) {
-				case Keywords.SET:
-					addPendingTable(update, tableName);
-					
-					SetValues values = new SetValues();
-					update.set(values);
-					parseSetValues(values, node.getNodes());
-					break;
-				case Keywords.UPDATE:
-					break;
-				case Keywords.WHERE:
-					Where where = new Where();
-					update.where(where);
-					parseCondition(where, node.getNodes(), 0, node.getNodes().size());
-					break;
-				default:
-					tableName.append(token);
-					break;
-			}
+			parseUpdateNode(update, nodes.get(i), tableName);
 		}
 		return i - 1;
+	}
+	
+	private void parseUpdateNode(final Update update, final ParseToken node, final StringBuilder tableName) {
+		final String token = node.getToken();
+		
+		switch (token.toUpperCase()) {
+			case Keywords.SET:
+				addPendingTable(update, tableName);
+				
+				SetValues values = new SetValues();
+				update.set(values);
+				parseSetValues(values, node.getNodes());
+				break;
+			case Keywords.UPDATE:
+				break;
+			case Keywords.WHERE:
+				Where where = new Where();
+				update.where(where);
+				parseCondition(where, node.getNodes(), 0, node.getNodes().size());
+				break;
+			default:
+				tableName.append(token);
+				break;
+		}
 	}
 
 	private int parseWith(With with, List<ParseToken> nodes, int i) {
@@ -1416,6 +1420,10 @@ public class SqlParser {
 			}
 		}
 		throw new IllegalArgumentException("could not find " + Keywords.SELECT + " keyword after common table expression(s)");
+	}
+	
+	private ParseToken sqlToParseTree(String sql) {
+		return new ParseTree(tokenize(sql)).parseTokens();
 	}
 	
 	/* END Private methods */

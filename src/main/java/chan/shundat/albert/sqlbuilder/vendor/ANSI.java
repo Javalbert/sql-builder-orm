@@ -257,7 +257,7 @@ public class ANSI implements Vendor {
 		
 		for (Node node : delete.getNodes()) {
 			switch (node.getType()) {
-				// DELETE FROM syntax not ANSI standard
+				// DELETE FROM JOIN syntax not ANSI standard
 //				case Node.TYPE_FROM:
 //					builder.append(" ").append(print((From)node));
 //					break;

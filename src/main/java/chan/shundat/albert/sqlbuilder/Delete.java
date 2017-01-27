@@ -49,7 +49,7 @@ public class Delete implements DMLStatement<Delete>, NodeHolder, TableNameSpecif
 	
 	/* BEGIN Fluent API */
 	
-	// DELETE FROM syntax not ANSI standard
+	// DELETE FROM JOIN syntax not ANSI standard
 //	public Delete from(From from) {
 //		if (from == null) {
 //			throw new NullPointerException("from cannot be null");

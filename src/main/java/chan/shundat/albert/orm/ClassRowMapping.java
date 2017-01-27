@@ -285,7 +285,7 @@ public class ClassRowMapping {
 	private void initDeleteById() {
 		deleteById = new Delete()
 		.tableName(tableIdentifier)
-		// DELETE FROM syntax not ANSI standard
+		// DELETE FROM JOIN syntax not ANSI standard
 //		.from(new From()
 //			.tableName(tableIdentifier)
 //		)
