@@ -1,6 +1,5 @@
 package chan.shundat.albert.sqlbuilder.parser
 
-import chan.shundat.albert.sqlbuilder.SqlParser
 import spock.lang.Specification
 import spock.lang.Unroll
 

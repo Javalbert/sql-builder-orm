@@ -1,5 +1,6 @@
-package chan.shundat.albert.sqlbuilder
+package chan.shundat.albert.sqlbuilder.parser
 
+import chan.shundat.albert.sqlbuilder.Delete
 import spock.lang.Specification
 
 class SqlParserSpec extends Specification {

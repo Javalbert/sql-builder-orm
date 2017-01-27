@@ -10,7 +10,7 @@
  * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See
  * the License for the specific language governing permissions and limitations under the License.
  *******************************************************************************/
-package chan.shundat.albert.sqlbuilder;
+package chan.shundat.albert.sqlbuilder.parser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,9 +18,38 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import chan.shundat.albert.sqlbuilder.parser.ParseToken;
-import chan.shundat.albert.sqlbuilder.parser.ParseTree;
-import chan.shundat.albert.sqlbuilder.parser.StringLiteralParseToken;
+import chan.shundat.albert.sqlbuilder.AggregateFunction;
+import chan.shundat.albert.sqlbuilder.ArithmeticOperator;
+import chan.shundat.albert.sqlbuilder.BinaryOperator;
+import chan.shundat.albert.sqlbuilder.Case;
+import chan.shundat.albert.sqlbuilder.CastFunction;
+import chan.shundat.albert.sqlbuilder.ColumnBuilder;
+import chan.shundat.albert.sqlbuilder.ColumnList;
+import chan.shundat.albert.sqlbuilder.ColumnValues;
+import chan.shundat.albert.sqlbuilder.Condition;
+import chan.shundat.albert.sqlbuilder.Delete;
+import chan.shundat.albert.sqlbuilder.Expression;
+import chan.shundat.albert.sqlbuilder.ExpressionBuilding;
+import chan.shundat.albert.sqlbuilder.From;
+import chan.shundat.albert.sqlbuilder.Function;
+import chan.shundat.albert.sqlbuilder.GroupBy;
+import chan.shundat.albert.sqlbuilder.Having;
+import chan.shundat.albert.sqlbuilder.InValues;
+import chan.shundat.albert.sqlbuilder.Insert;
+import chan.shundat.albert.sqlbuilder.Keywords;
+import chan.shundat.albert.sqlbuilder.Node;
+import chan.shundat.albert.sqlbuilder.OrderBy;
+import chan.shundat.albert.sqlbuilder.Predicate;
+import chan.shundat.albert.sqlbuilder.RelationalOperator;
+import chan.shundat.albert.sqlbuilder.Select;
+import chan.shundat.albert.sqlbuilder.SelectList;
+import chan.shundat.albert.sqlbuilder.SetValue;
+import chan.shundat.albert.sqlbuilder.SetValues;
+import chan.shundat.albert.sqlbuilder.SqlStatement;
+import chan.shundat.albert.sqlbuilder.TableNameSpecifier;
+import chan.shundat.albert.sqlbuilder.Update;
+import chan.shundat.albert.sqlbuilder.Where;
+import chan.shundat.albert.sqlbuilder.With;
 import chan.shundat.albert.utils.collections.CollectionUtils;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
