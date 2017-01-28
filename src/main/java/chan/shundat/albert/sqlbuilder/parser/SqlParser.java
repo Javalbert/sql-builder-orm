@@ -124,6 +124,32 @@ public class SqlParser {
 	
 	/* BEGIN Static methods */
 	
+	private static int addConditionOrPredicate(Case sqlCase, List<ParseToken> nodes, final int start, Set<String> endTokens) {
+		final int conditionIndex = getConditionIndex(nodes, start, endTokens);
+		final int predicateIndex = getPredicateIndex(nodes, start, endTokens);
+
+		int nextTokenIndex = start;
+		final int parseStart = start + 1;
+		
+		if (conditionIndex > -1) {
+			Condition condition = new Condition();
+			sqlCase.condition(condition);
+			
+			int conditionEnd = getFirstIndex(nodes, parseStart, endTokens);
+			nextTokenIndex = parseCondition(condition, nodes, parseStart, conditionEnd);
+			nextTokenIndex--;
+		} else if (predicateIndex > -1) {
+			Predicate predicate = new Predicate();
+			sqlCase.predicate(predicate);
+			
+			int predicateEnd = getFirstIndex(nodes, parseStart, endTokens);
+			nextTokenIndex = parsePredicate(predicate, nodes, parseStart, predicateEnd);
+			nextTokenIndex--;
+		}
+		
+		return nextTokenIndex;
+	}
+
 	private static void addPendingTable(TableNameSpecifier specifier, StringBuilder tableName) {
 		if (tableName.length() == 0) {
 			return;
@@ -266,8 +292,8 @@ public class SqlParser {
 		}
 		return -1;
 	}
-
-	private int getSetOperationEndIndex(List<ParseToken> nodes, int start) {
+	
+	private static int getSetOperationEndIndex(List<ParseToken> nodes, int start) {
 		for (int i = start; i < nodes.size(); i++) {
 			ParseToken node = nodes.get(i);
 			String tokenUpperCase = node.getToken().toUpperCase();
@@ -278,162 +304,9 @@ public class SqlParser {
 		}
 		return nodes.size();
 	}
-
-	private static int parseOffsetOrFetch(OrderBy orderBy, 
-			List<ParseToken> nodes, 
-			int i, 
-			String keyword) {
-		try {
-			ParseToken intNode = getNextNode(nodes, i);
-			int count = Integer.parseInt(intNode != null ? intNode.getToken() : null);
-			
-			switch (keyword) {
-				case Keywords.FETCH: orderBy.fetch(count); break;
-				case Keywords.OFFSET: orderBy.offset(count); break;
-			}
-		} catch (NumberFormatException e) {
-			throw new IllegalArgumentException("must be an integer after " + keyword + " keyword", e);
-		}
-		i++;
-		
-		ParseToken rowsNode = getNextNode(nodes, i);
-		String rows = rowsNode != null ? rowsNode.getToken().toUpperCase() : null;
-		if (rowsNode == null 
-				|| !rows.equals(Keywords.ROWS) && !rows.equals(Keywords.ROW)) {
-			throw new IllegalArgumentException("expected {" + Keywords.ROWS 
-					+ " | " + Keywords.ROW + "} after " + keyword + " skip count");
-		}
-		i++;
-		
-		return i;
-	}
 	
-	private static boolean parsePendingColumn(StringBuilder pendingString, ColumnBuilder builder) {
-		if (pendingString.length() <= 0) {
-			return false;
-		}
-		
-		String str = getPendingString(pendingString);
-		if (str.startsWith("'") && builder instanceof OrderBy) {
-			((OrderBy)builder).alias(str);
-		} else {
-			String[] parts = str.split("\\.");
-			
-			if (parts.length > 2) {
-				builder.tableName(combineTableNameParts(parts));
-			} else if (parts.length > 1) {
-				builder.tableAlias(parts[0]);
-			}
-			builder.column(parts[parts.length - 1]);
-		}
-		
-		return true;
-	}
-	
-	/* END Static methods */
-	
-	private SqlStatement sqlStatement;
-	private int statementType;
-	private final List<String> tokens = new ArrayList<>();
-
-	public <T extends SqlStatement> T getSqlStatement() { return (T)sqlStatement; }
-	public int getStatementType() { return statementType; }
-	
-	public SqlParser parse(String sql) {
-		sqlStatement = null;
-		statementType = 0;
-		
-		parseTree(sqlToParseTree(sql));
-		return this;
-	}
-
-	/* START Protected methods */
-	
-	List<String> tokenize(String sql) {
-		tokens.clear();
-		
-		Matcher matcher = PATTERN.matcher(sql);
-
-		int index = 0;
-		int quoteCount = 0;
-		boolean stringLiteral = false;
-		
-		while (matcher.find()) {
-			String token = sql.substring(index, matcher.start()).trim();
-			if (!token.isEmpty()) {
-				tokens.add(token);
-			}
-			
-			String delimiter = sql.substring(matcher.start(), matcher.end());
-			if (!delimiter.isEmpty()) {
-				if (delimiter.equals("'")) {
-					int nextSingleQuote = matcher.end() + 1;
-					
-					if (stringLiteral 
-							&& quoteCount <= 0
-							&& nextSingleQuote < sql.length() 
-							&& sql.subSequence(matcher.start(), nextSingleQuote).equals("''")) {
-						quoteCount = 2;
-					}
-
-					if (quoteCount <= 0) {
-						stringLiteral = !stringLiteral;
-					}
-					quoteCount--;
-				}
-				
-				if (!stringLiteral) {
-					delimiter = delimiter.trim();
-				}
-				if (!delimiter.isEmpty()) {
-					tokens.add(delimiter);
-				}
-			}
-			
-			index = matcher.end();
-		}
-		
-		String lastToken = sql.substring(index);
-		if (!lastToken.isEmpty()) {
-			tokens.add(lastToken);
-		}
-		return tokens;
-	}
-	
-	/* END Protected methods */
-	
-	/* BEGIN Private methods */
-	
-	private int addConditionOrPredicate(Case sqlCase, List<ParseToken> nodes, final int start, Set<String> endTokens) {
-		final int conditionIndex = getConditionIndex(nodes, start, endTokens);
-		final int predicateIndex = getPredicateIndex(nodes, start, endTokens);
-
-		int nextTokenIndex = start;
-		final int parseStart = start + 1;
-		
-		if (conditionIndex > -1) {
-			Condition condition = new Condition();
-			sqlCase.condition(condition);
-			
-			int conditionEnd = getFirstIndex(nodes, parseStart, endTokens);
-			nextTokenIndex = parseCondition(condition, nodes, parseStart, conditionEnd);
-			nextTokenIndex--;
-		} else if (predicateIndex > -1) {
-			Predicate predicate = new Predicate();
-			sqlCase.predicate(predicate);
-			
-			int predicateEnd = getFirstIndex(nodes, parseStart, endTokens);
-			nextTokenIndex = parsePredicate(predicate, nodes, parseStart, predicateEnd);
-			nextTokenIndex--;
-		}
-		
-		return nextTokenIndex;
-	}
-
-	private void parseCase(Case sqlCase, List<ParseToken> nodes) {
-		StringBuilder pendingString = new StringBuilder();
-
-		ExpressionCaseHelper helper = new ExpressionCaseHelper(sqlCase, pendingString);
+	private static void parseCase(Case sqlCase, List<ParseToken> nodes) {
+		ExpressionCaseHelper helper = new ExpressionCaseHelper(sqlCase);
 		
 		int start = addConditionOrPredicate(sqlCase, nodes, 0, TOKEN_SET_AFTER_CASE);
 		
@@ -484,23 +357,21 @@ public class SqlParser {
 		helper.addLastColumn();
 	}
 
-	private void parseColumnList(ColumnList columns, List<ParseToken> nodes) {
+	private static void parseColumnList(ColumnList columns, List<ParseToken> nodes) {
 		for (ParseToken node : nodes) {
-			if (node.getToken().equals(",")) {
-				continue;
+			if (!",".equals(node.getToken())) {
+				columns.column(node.getToken());
 			}
-			columns.column(node.getToken());
 		}
 	}
 	
-	private void parseColumnParenthesesGroup(ParseToken groupToken, ExpressionBuilding parent) {
+	private static void parseColumnParenthesesGroup(ParseToken groupToken, ExpressionBuilding parent) {
 		if (!groupToken.getToken().equals(ParseTree.TOKEN_PARENTHESES_GROUP)) {
 			throw new IllegalArgumentException("groupToken's token must be " + ParseTree.TOKEN_PARENTHESES_GROUP);
 		}
 		
 		List<ParseToken> nodes = groupToken.getNodes();
-		StringBuilder pendingString = new StringBuilder();
-		ExpressionCaseHelper helper = new ExpressionCaseHelper(parent, pendingString);
+		ExpressionCaseHelper helper = new ExpressionCaseHelper(parent);
 		
 		for (int i = 0; i < nodes.size(); i++) {
 			int expressionEndIndex = parseExpression(parent, nodes, i);
@@ -547,7 +418,7 @@ public class SqlParser {
 		helper.addLastColumn();
 	}
 
-	private int parseCondition(Condition condition, List<ParseToken> nodes, int start, int end) {
+	private static int parseCondition(Condition condition, List<ParseToken> nodes, int start, int end) {
 		int i = start;
 		for (; i < end; i++) {
 			ParseToken node = nodes.get(i);
@@ -577,7 +448,7 @@ public class SqlParser {
 		return i;
 	}
 	
-	private int parseConditionPredicate(Condition condition, List<ParseToken> nodes, int start, int end) {
+	private static int parseConditionPredicate(Condition condition, List<ParseToken> nodes, int start, int end) {
 		int predicateIndex = getPredicateIndex(nodes, start);
 		
 		if (predicateIndex > 0) {
@@ -593,7 +464,7 @@ public class SqlParser {
 		return start;
 	}
 
-	private int parseDelete(Delete delete, List<ParseToken> nodes, int start) {
+	private static int parseDelete(Delete delete, List<ParseToken> nodes, int start) {
 		StringBuilder tableName = new StringBuilder();
 		
 		int i = start;
@@ -603,7 +474,7 @@ public class SqlParser {
 		return i - 1;
 	}
 	
-	private void parseDeleteNode(final Delete delete, final ParseToken node, final StringBuilder tableName) {
+	private static void parseDeleteNode(final Delete delete, final ParseToken node, final StringBuilder tableName) {
 		final String token = node.getToken();
 		
 		switch (token.toUpperCase()) {
@@ -639,7 +510,7 @@ public class SqlParser {
 		}
 	}
 	
-	private int parseExpression(ExpressionBuilding builder, List<ParseToken> nodes, int i) {
+	private static int parseExpression(ExpressionBuilding builder, List<ParseToken> nodes, int i) {
 		int expressionEndIndex = getFirstIndex(nodes, i, TOKEN_SET_EXPRESSION_END);
 		int expressionIndex = getExpressionIndex(nodes, i, expressionEndIndex);
 		if (expressionIndex < 0) {
@@ -649,8 +520,7 @@ public class SqlParser {
 		Expression expression = new Expression();
 		builder.expression(expression);
 		
-		StringBuilder pendingString = new StringBuilder();
-		ExpressionCaseHelper helper = new ExpressionCaseHelper(expression, pendingString);
+		ExpressionCaseHelper helper = new ExpressionCaseHelper(expression);
 		
 		for (; i < expressionEndIndex; i++) {
 			ParseToken node = nodes.get(i);
@@ -698,7 +568,7 @@ public class SqlParser {
 		return i;
 	}
 	
-	private void parseFrom(From from, List<ParseToken> nodes) {
+	private static void parseFrom(From from, List<ParseToken> nodes) {
 		StringBuilder tableName = new StringBuilder();
 		boolean expectingDot = false;
 		
@@ -759,7 +629,7 @@ public class SqlParser {
 		addPendingTable(from, tableName);
 	}
 
-	private void parseFromParenthesesGroup(From from, List<ParseToken> nodes) {
+	private static void parseFromParenthesesGroup(From from, List<ParseToken> nodes) {
 		for (int i = 0; i < nodes.size(); i++) {
 			ParseToken node = nodes.get(i);
 			
@@ -776,7 +646,7 @@ public class SqlParser {
 		}
 	}
 	
-	private void parseGroupBy(GroupBy groupBy, List<ParseToken> nodes) {
+	private static void parseGroupBy(GroupBy groupBy, List<ParseToken> nodes) {
 		StringBuilder column = new StringBuilder();
 		
 		for (int i = 0; i < nodes.size(); i++) {
@@ -796,7 +666,7 @@ public class SqlParser {
 		parsePendingColumn(column, groupBy);
 	}
 
-	private int parseInsert(Insert insert, List<ParseToken> nodes, int start) {
+	private static int parseInsert(Insert insert, List<ParseToken> nodes, int start) {
 		StringBuilder table = new StringBuilder();
 		int i = start;
 		
@@ -813,6 +683,11 @@ public class SqlParser {
 				case Keywords.INTO:
 					break;
 				case Keywords.SELECT:
+					if (table.length() > 0) {
+						insert.into(table.toString());
+						table.setLength(0);
+					}
+					
 					Select select = new Select();
 					insert.subselect(select);
 					i = parseSelectTree(select, nodes, i);
@@ -850,29 +725,63 @@ public class SqlParser {
 		return i - 1;
 	}
 	
-	private void parseInsertValues(ColumnValues values, List<ParseToken> nodes) {
-		StringBuilder pendingString = new StringBuilder();
-		ExpressionCaseHelper helper = new ExpressionCaseHelper(values, pendingString);
+	private static void parseInsertValues(ColumnValues values, List<ParseToken> nodes) {
+		ExpressionCaseHelper helper = new ExpressionCaseHelper(values);
 		
 		for (int i = 0; i < nodes.size(); i++) {
-			ParseToken node = nodes.get(i);
-			
-			switch (node.getToken().toUpperCase()) {
-				case ",":
-					helper.caseComma();
-					break;
-				case Keywords.DEFAULT:
-					values.sqlDefault();
-					break;
-				default:
-					helper.caseDefault(node, i);
-					break;
-			}
+			parseInsertValue(values, nodes.get(i), i, helper);
 		}
 		helper.addLastColumn();
 	}
 	
-	private void parseOrderBy(OrderBy orderBy, List<ParseToken> nodes) {
+	private static void parseInsertValue(
+			final ColumnValues values,
+			final ParseToken node,
+			final int i,
+			final ExpressionCaseHelper helper) {
+		switch (node.getToken().toUpperCase()) {
+			case ",":
+				helper.caseComma();
+				break;
+			case Keywords.DEFAULT:
+				values.sqlDefault();
+				break;
+			default:
+				helper.caseDefault(node, i);
+				break;
+		}
+	}
+
+	private static int parseOffsetOrFetch(OrderBy orderBy, 
+			List<ParseToken> nodes, 
+			int i, 
+			String keyword) {
+		try {
+			ParseToken intNode = getNextNode(nodes, i);
+			int count = Integer.parseInt(intNode != null ? intNode.getToken() : null);
+			
+			switch (keyword) {
+				case Keywords.FETCH: orderBy.fetch(count); break;
+				case Keywords.OFFSET: orderBy.offset(count); break;
+			}
+		} catch (NumberFormatException e) {
+			throw new IllegalArgumentException("must be an integer after " + keyword + " keyword", e);
+		}
+		i++;
+		
+		ParseToken rowsNode = getNextNode(nodes, i);
+		String rows = rowsNode != null ? rowsNode.getToken().toUpperCase() : null;
+		if (rowsNode == null 
+				|| !rows.equals(Keywords.ROWS) && !rows.equals(Keywords.ROW)) {
+			throw new IllegalArgumentException("expected {" + Keywords.ROWS 
+					+ " | " + Keywords.ROW + "} after " + keyword + " skip count");
+		}
+		i++;
+		
+		return i;
+	}
+	
+	private static void parseOrderBy(OrderBy orderBy, List<ParseToken> nodes) {
 		StringBuilder column = new StringBuilder();
 		
 		for (int i = 0; i < nodes.size(); i++) {
@@ -922,10 +831,8 @@ public class SqlParser {
 		parsePendingColumn(column, orderBy);
 	}
 
-	private int parsePredicate(Predicate predicate, List<ParseToken> nodes, int start, int end) {
-		StringBuilder pendingString = new StringBuilder();
-		
-		ExpressionCaseHelper helper = new ExpressionCaseHelper(predicate, pendingString);
+	private static int parsePredicate(Predicate predicate, List<ParseToken> nodes, int start, int end) {
+		ExpressionCaseHelper helper = new ExpressionCaseHelper(predicate);
 		boolean checkForInValues = false;
 		
 		int i = start;
@@ -1058,9 +965,8 @@ public class SqlParser {
 		return i;
 	}
 	
-	private void parseInValues(InValues values, List<ParseToken> valueNodes) {
-		StringBuilder pendingString = new StringBuilder();
-		ExpressionCaseHelper helper = new ExpressionCaseHelper(values, pendingString);
+	private static void parseInValues(InValues values, List<ParseToken> valueNodes) {
+		ExpressionCaseHelper helper = new ExpressionCaseHelper(values);
 		
 		for (int i = 0; i < valueNodes.size(); i++) {
 			ParseToken valueNode = valueNodes.get(i);
@@ -1080,7 +986,29 @@ public class SqlParser {
 		helper.addLastColumn();
 	}
 	
-	private void parseSelectList(SelectList list, List<ParseToken> nodes) {
+	private static boolean parsePendingColumn(StringBuilder pendingString, ColumnBuilder builder) {
+		if (pendingString.length() <= 0) {
+			return false;
+		}
+		
+		String str = getPendingString(pendingString);
+		if (str.startsWith("'") && builder instanceof OrderBy) {
+			((OrderBy)builder).alias(str);
+		} else {
+			String[] parts = str.split("\\.");
+			
+			if (parts.length > 2) {
+				builder.tableName(combineTableNameParts(parts));
+			} else if (parts.length > 1) {
+				builder.tableAlias(parts[0]);
+			}
+			builder.column(parts[parts.length - 1]);
+		}
+		
+		return true;
+	}
+	
+	private static void parseSelectList(SelectList list, List<ParseToken> nodes) {
 		StringBuilder pendingString = new StringBuilder();
 		
 		ExpressionCaseHelper helper = new ExpressionCaseHelper(list, pendingString);
@@ -1136,11 +1064,11 @@ public class SqlParser {
 		helper.addLastColumn();
 	}
 
-	private int parseSelectTree(Select select, List<ParseToken> nodes, int start) {
+	private static int parseSelectTree(Select select, List<ParseToken> nodes, int start) {
 		return parseSelectTree(select, nodes, start, nodes.size());
 	}
 
-	private int parseSelectTree(Select select, List<ParseToken> nodes, int start, int end) {
+	private static int parseSelectTree(Select select, List<ParseToken> nodes, int start, int end) {
 		int i = start;
 		boolean setOperation = false;
 		
@@ -1237,14 +1165,12 @@ public class SqlParser {
 		return i - 1;
 	}
 
-	private int parseSetValue(SetValue value, List<ParseToken> nodes, int start) {
-		StringBuilder pendingString = new StringBuilder();
-
+	private static int parseSetValue(SetValue value, List<ParseToken> nodes, int start) {
 		int end = getFirstIndex(nodes, start + 1, TOKEN_SET_SET_VALUE_TERMINATOR);
 		int operatorIndex = getExpressionIndex(nodes, start, end);
 		int expressionIndex = getFirstIndex(nodes, start, "=") + 1;
 		
-		ExpressionCaseHelper helper = new ExpressionCaseHelper(value, pendingString);
+		ExpressionCaseHelper helper = new ExpressionCaseHelper(value);
 		helper.setAlwaysAppendColumn(true);
 		
 		int i = start;
@@ -1274,83 +1200,20 @@ public class SqlParser {
 		return i;
 	}
 	
-	private int parseSetValue(SetValues values, List<ParseToken> nodes, int i) {
+	private static int parseSetValue(SetValues values, List<ParseToken> nodes, int i) {
 		SetValue value = new SetValue();
 		values.add(value);
 		
 		return parseSetValue(value, nodes, i);
 	}
 	
-	private void parseSetValues(SetValues values, List<ParseToken> nodes) {
+	private static void parseSetValues(SetValues values, List<ParseToken> nodes) {
 		for (int i = 0; i < nodes.size(); i++) {
 			i = parseSetValue(values, nodes, i);
 		}
 	}
-	
-	private void parseTree(ParseToken rootToken) {
-		List<ParseToken> nodes = rootToken.getNodes();
-		
-		With with = null;
-		
-		for (int i = 0; i < nodes.size(); i++) {
-			ParseToken node = nodes.get(i);
 
-			final String token = node.getToken();
-			
-			switch (token.toUpperCase()) {
-				case Keywords.DELETE:
-					Delete delete = new Delete();
-					
-					if (with != null) {
-						delete.with(with);
-					}
-					i = parseDelete(delete, nodes, i + 1);
-					
-					sqlStatement = delete;
-					statementType = Node.TYPE_DELETE;
-					break;
-				case Keywords.INSERT:
-					Insert insert = new Insert();
-					
-					if (with != null) {
-						insert.with(with);
-					}
-					i = parseInsert(insert, nodes, i + 1);
-					
-					sqlStatement = insert;
-					statementType = Node.TYPE_INSERT;
-					break;
-				case Keywords.SELECT:
-					Select select = new Select();
-					
-					if (with != null) {
-						select.with(with);
-					}
-					i = parseSelectTree(select, nodes, i);
-					
-					sqlStatement = select;
-					statementType = Node.TYPE_SELECT;
-					break;
-				case Keywords.UPDATE:
-					Update update = new Update();
-					
-					if (with != null) {
-						update.with(with);
-					}
-					i = parseUpdate(update, nodes, i + 1);
-					
-					sqlStatement = update;
-					statementType = Node.TYPE_UPDATE;
-					break;
-				case Keywords.WITH:
-					with = new With();
-					i = parseWith(with, nodes, i + 1);
-					break;
-			}
-		}
-	}
-
-	private int parseUpdate(Update update, List<ParseToken> nodes, int start) {
+	private static int parseUpdate(Update update, List<ParseToken> nodes, int start) {
 		StringBuilder tableName = new StringBuilder();
 		
 		int i = start;
@@ -1360,7 +1223,7 @@ public class SqlParser {
 		return i - 1;
 	}
 	
-	private void parseUpdateNode(final Update update, final ParseToken node, final StringBuilder tableName) {
+	private static void parseUpdateNode(final Update update, final ParseToken node, final StringBuilder tableName) {
 		final String token = node.getToken();
 		
 		switch (token.toUpperCase()) {
@@ -1384,7 +1247,7 @@ public class SqlParser {
 		}
 	}
 
-	private int parseWith(With with, List<ParseToken> nodes, int i) {
+	private static int parseWith(With with, List<ParseToken> nodes, int i) {
 		for (; i < nodes.size(); i++) {
 			ParseToken node = nodes.get(i);
 
@@ -1428,15 +1291,11 @@ public class SqlParser {
 		throw new IllegalArgumentException("could not find " + Keywords.SELECT + " keyword after common table expression(s)");
 	}
 	
-	private ParseToken sqlToParseTree(String sql) {
-		return new ParseTree(tokenize(sql)).parseTokens();
-	}
+	/* END Static methods */
 	
-	/* END Private methods */
-
-	/* BEGIN Classes */
+	/* START Static classes */
 	
-	private class ExpressionCaseHelper {
+	private static class ExpressionCaseHelper {
 		private final ExpressionBuilding builder;
 		private boolean expectingDot;
 		private final StringBuilder pendingString;
@@ -1444,6 +1303,10 @@ public class SqlParser {
 
 		public void setAlwaysAppendColumn(boolean alwaysAppendColumn) {
 			this.alwaysAppendColumn = alwaysAppendColumn;
+		}
+		
+		public ExpressionCaseHelper(ExpressionBuilding builder) {
+			this(builder, new StringBuilder());
 		}
 		
 		public ExpressionCaseHelper(ExpressionBuilding builder, StringBuilder pendingString) {
@@ -1539,5 +1402,146 @@ public class SqlParser {
 		}
 	}
 	
-	/* END Classes */
+	/* END Static classes */
+	
+	private SqlStatement sqlStatement;
+	private int statementType;
+	private final List<String> tokens = new ArrayList<>();
+
+	public <T extends SqlStatement> T getSqlStatement() { return (T)sqlStatement; }
+	public int getStatementType() { return statementType; }
+	
+	public SqlParser parse(String sql) {
+		sqlStatement = null;
+		statementType = 0;
+		
+		parseTree(sqlToParseTree(sql));
+		return this;
+	}
+
+	/* START Protected methods */
+	
+	List<String> tokenize(String sql) {
+		tokens.clear();
+		
+		Matcher matcher = PATTERN.matcher(sql);
+
+		int index = 0;
+		int quoteCount = 0;
+		boolean stringLiteral = false;
+		
+		while (matcher.find()) {
+			String token = sql.substring(index, matcher.start()).trim();
+			if (!token.isEmpty()) {
+				tokens.add(token);
+			}
+			
+			String delimiter = sql.substring(matcher.start(), matcher.end());
+			if (!delimiter.isEmpty()) {
+				if (delimiter.equals("'")) {
+					int nextSingleQuote = matcher.end() + 1;
+					
+					if (stringLiteral 
+							&& quoteCount <= 0
+							&& nextSingleQuote < sql.length() 
+							&& sql.subSequence(matcher.start(), nextSingleQuote).equals("''")) {
+						quoteCount = 2;
+					}
+
+					if (quoteCount <= 0) {
+						stringLiteral = !stringLiteral;
+					}
+					quoteCount--;
+				}
+				
+				if (!stringLiteral) {
+					delimiter = delimiter.trim();
+				}
+				if (!delimiter.isEmpty()) {
+					tokens.add(delimiter);
+				}
+			}
+			
+			index = matcher.end();
+		}
+		
+		String lastToken = sql.substring(index);
+		if (!lastToken.isEmpty()) {
+			tokens.add(lastToken);
+		}
+		return tokens;
+	}
+	
+	/* END Protected methods */
+	
+	/* BEGIN Private methods */
+
+	private void parseTree(ParseToken rootToken) {
+		List<ParseToken> nodes = rootToken.getNodes();
+		
+		With with = null;
+		
+		for (int i = 0; i < nodes.size(); i++) {
+			ParseToken node = nodes.get(i);
+
+			final String token = node.getToken();
+			
+			switch (token.toUpperCase()) {
+				case Keywords.DELETE:
+					Delete delete = new Delete();
+					
+					if (with != null) {
+						delete.with(with);
+					}
+					i = parseDelete(delete, nodes, i + 1);
+					
+					sqlStatement = delete;
+					statementType = Node.TYPE_DELETE;
+					break;
+				case Keywords.INSERT:
+					Insert insert = new Insert();
+					
+					if (with != null) {
+						insert.with(with);
+					}
+					i = parseInsert(insert, nodes, i + 1);
+					
+					sqlStatement = insert;
+					statementType = Node.TYPE_INSERT;
+					break;
+				case Keywords.SELECT:
+					Select select = new Select();
+					
+					if (with != null) {
+						select.with(with);
+					}
+					i = parseSelectTree(select, nodes, i);
+					
+					sqlStatement = select;
+					statementType = Node.TYPE_SELECT;
+					break;
+				case Keywords.UPDATE:
+					Update update = new Update();
+					
+					if (with != null) {
+						update.with(with);
+					}
+					i = parseUpdate(update, nodes, i + 1);
+					
+					sqlStatement = update;
+					statementType = Node.TYPE_UPDATE;
+					break;
+				case Keywords.WITH:
+					with = new With();
+					i = parseWith(with, nodes, i + 1);
+					break;
+			}
+		}
+	}
+	
+	private ParseToken sqlToParseTree(String sql) {
+		return new ParseTree(tokenize(sql)).parseTokens();
+	}
+	
+	/* END Private methods */
 }
