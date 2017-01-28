@@ -1237,9 +1237,10 @@ public class SqlParser {
 		return i - 1;
 	}
 
-	private int parseSetValue(SetValue value, List<ParseToken> nodes, int start, int end) {
+	private int parseSetValue(SetValue value, List<ParseToken> nodes, int start) {
 		StringBuilder pendingString = new StringBuilder();
-		
+
+		int end = getFirstIndex(nodes, start + 1, TOKEN_SET_SET_VALUE_TERMINATOR);
 		int operatorIndex = getExpressionIndex(nodes, start, end);
 		int expressionIndex = getFirstIndex(nodes, start, "=") + 1;
 		
@@ -1253,6 +1254,8 @@ public class SqlParser {
 			final String token = node.getToken();
 			
 			switch (token.toUpperCase()) {
+				case ",":
+					break;
 				case "=":
 					helper.caseComma();
 					break;
@@ -1271,13 +1274,16 @@ public class SqlParser {
 		return i;
 	}
 	
+	private int parseSetValue(SetValues values, List<ParseToken> nodes, int i) {
+		SetValue value = new SetValue();
+		values.add(value);
+		
+		return parseSetValue(value, nodes, i);
+	}
+	
 	private void parseSetValues(SetValues values, List<ParseToken> nodes) {
 		for (int i = 0; i < nodes.size(); i++) {
-			SetValue value = new SetValue();
-			values.add(value);
-			
-			int setValueEndIndex = getFirstIndex(nodes, i + 1, TOKEN_SET_SET_VALUE_TERMINATOR);
-			i = parseSetValue(value, nodes, i, setValueEndIndex);
+			i = parseSetValue(values, nodes, i);
 		}
 	}
 	
@@ -1473,9 +1479,9 @@ public class SqlParser {
 		public void caseDefault(ParseToken node, int i) {
 			String token = node.getToken();
 			
-			if (node instanceof StringLiteralParseToken) {
-				StringLiteralParseToken literal = (StringLiteralParseToken)node;
-				builder.literal(literal.getValue());
+			if (node instanceof LiteralParseToken) {
+				LiteralParseToken literal = (LiteralParseToken)node;
+				literal.toExpression(builder);
 				return;
 			} else if (token.startsWith(":")) {
 				appendPendingString();

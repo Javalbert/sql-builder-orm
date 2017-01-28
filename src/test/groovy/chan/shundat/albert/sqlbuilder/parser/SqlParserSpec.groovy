@@ -1,8 +1,12 @@
 package chan.shundat.albert.sqlbuilder.parser
 
+import chan.shundat.albert.sqlbuilder.Column
 import chan.shundat.albert.sqlbuilder.Delete
 import chan.shundat.albert.sqlbuilder.Insert
+import chan.shundat.albert.sqlbuilder.LiteralNumber
+import chan.shundat.albert.sqlbuilder.LiteralString
 import chan.shundat.albert.sqlbuilder.Select
+import chan.shundat.albert.sqlbuilder.SetValue
 import chan.shundat.albert.sqlbuilder.SetValues
 import chan.shundat.albert.sqlbuilder.SqlStatement
 import chan.shundat.albert.sqlbuilder.Table
@@ -86,17 +90,32 @@ WHERE (a.c2 = 'a' OR a.c2 <> ''' a b ''')
 	}
 	
 	def 'Parse SET nodes of UPDATE statement'() {
-		given: "SQL string \"UPDATE Albert.dbo.Person SET name = '@183R7'\""
-		String sql = "UPDATE Albert.dbo.Person SET name = '@183R7'"
+		given: "SQL string \"UPDATE Albert.dbo.Person SET name = '@183R7', age = 25\""
+		String sql = "UPDATE Albert.dbo.Person SET name = '@183R7', age = 25"
 		
 		and: 'child nodes of SET node, and SetValues object'
 		List<ParseToken> nodes = parser.sqlToParseTree(sql).nodes[6].nodes
+		int nodeIndex = 0;
 		SetValues values = new SetValues()
 		
-		when: ''
-//		parser.parseSetValues(values, nodes)
+		when: "parsing first set value \"name = '@183R7'\""
+		nodeIndex = parser.parseSetValue(values, nodes, nodeIndex)
+		SetValue setName = values.nodes[0]
+		Column nameColumn = setName.nodes[0]
+		LiteralString nameLiteral = setName.nodes[1]
 		
-		then: ''
+		and: "then parsing second set value \"age = 25\""
+		parser.parseSetValue(values, nodes, nodeIndex)
+		SetValue setAge = values.nodes[1]
+		Column ageColumn = setAge.nodes[0]
+		LiteralNumber ageLiteral = setAge.nodes[1]
 		
+		then: 'first set value has column name "name" with string value "@183R7"'
+		nameColumn.name == 'name'
+		nameLiteral.value == '@183R7'
+		
+		then: 'second set value has column name "age" with number value 25'
+		ageColumn.name == 'age'
+		ageLiteral.value == 25
 	}
 }

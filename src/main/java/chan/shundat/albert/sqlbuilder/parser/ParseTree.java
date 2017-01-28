@@ -7,6 +7,8 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
+
 import chan.shundat.albert.sqlbuilder.Keywords;
 import chan.shundat.albert.utils.collections.CollectionUtils;
 
@@ -297,8 +299,13 @@ public class ParseTree {
 				addAndPush(parseToken);
 				break;
 			default:
-				parseToken = new ParseToken(currentToken, Keywords.KEYWORD_SET.contains(currentToken));
-				currentParseToken.addNode(parseToken);
+				if (StringUtils.isNumeric(currentToken)) {
+					parseToken = new NumberLiteralParseToken(currentToken);
+					currentParseToken.addNode(parseToken);
+				} else {
+					parseToken = new ParseToken(currentToken, Keywords.KEYWORD_SET.contains(currentToken));
+					currentParseToken.addNode(parseToken);
+				}
 				break;
 		}
 	}
