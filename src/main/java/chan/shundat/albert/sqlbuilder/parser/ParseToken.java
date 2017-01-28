@@ -20,7 +20,7 @@ public class ParseToken {
 	private final String token;
 	
 	public List<ParseToken> getNodes() { return nodes; }
-		public String getToken() { return token; }
+	public String getToken() { return token; }
 	
 	public ParseToken(String token) {
 		this(token, false);

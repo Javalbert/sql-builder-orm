@@ -159,11 +159,15 @@ public class SqlParser {
 		tableName.setLength(0);
 	}
 	
+	/**
+	 * Combines the <b>parts</b> with <b>.</b> excluding last part which is the column name
+	 * @param parts
+	 * @return
+	 */
 	private static String combineTableNameParts(String[] parts) {
 		StringBuilder builder = new StringBuilder();
 		for (int i = 0; i < parts.length - 1; i++) {
-			String part = parts[i];
-			builder.append((i > 0 ? "." : "") + part);
+			builder.append((i > 0 ? "." : "") + parts[i]);
 		}
 		return builder.toString();
 	}
@@ -986,6 +990,10 @@ public class SqlParser {
 		helper.addLastColumn();
 	}
 	
+	private static boolean parsePendingColumn(ExpressionCaseHelper helper, ColumnBuilder builder) {
+		return parsePendingColumn(helper.pendingString, builder);
+	}
+	
 	private static boolean parsePendingColumn(StringBuilder pendingString, ColumnBuilder builder) {
 		if (pendingString.length() <= 0) {
 			return false;
@@ -1009,59 +1017,66 @@ public class SqlParser {
 	}
 	
 	private static void parseSelectList(SelectList list, List<ParseToken> nodes) {
-		StringBuilder pendingString = new StringBuilder();
-		
-		ExpressionCaseHelper helper = new ExpressionCaseHelper(list, pendingString);
+		ExpressionCaseHelper helper = new ExpressionCaseHelper(list);
 		helper.setAlwaysAppendColumn(true);
 		
 		for (int i = 0; i < nodes.size(); i++) {
-			int expressionEndIndex = parseExpression(list, nodes, i);
-			
-			if (expressionEndIndex != i) {
-				i = expressionEndIndex;
-
-				if (i >= nodes.size()) {
-					break;
-				}
-			}
-			
-			final ParseToken node = nodes.get(i);
-			
-  			ParseToken nextNode = null;
-  			final String token = node.getToken();
-			
-			switch (token.toUpperCase()) {
-				case ",":
-					helper.caseComma();
-					break;
-				case Keywords.AS:
-					parsePendingColumn(pendingString, list);
-					nextNode = getNextNode(nodes, i);
-					
-					if (nextNode instanceof StringLiteralParseToken) {
-						StringLiteralParseToken literal = (StringLiteralParseToken)nextNode;
-						list.as(literal.getValue());
-					} else {
-						list.as(nextNode.getToken());
-					}
-					
-					i++;
-					break;
-				case Keywords.CASE:
-					helper.caseCase(node);
-					break;
-				case Keywords.DISTINCT:
-					list.distinct();
-					break;
-				case ParseTree.TOKEN_PARENTHESES_GROUP:
-					helper.caseParenthesesGroup(node);
-					break;
-				default:
-					helper.caseDefault(node, i);
-					break;
-			}
+			i = parseSelectListNode(list, nodes, i, helper);
 		}
 		helper.addLastColumn();
+	}
+	
+	private static int parseSelectListNode(
+			final SelectList list,
+			final List<ParseToken> nodes,
+			int i,
+			final ExpressionCaseHelper helper) {
+		int expressionEndIndex = parseExpression(list, nodes, i);
+		
+		if (expressionEndIndex != i) {
+			i = expressionEndIndex;
+
+			if (i >= nodes.size()) {
+				return i;
+			}
+		}
+		
+		final ParseToken node = nodes.get(i);
+		
+		ParseToken nextNode = null;
+		final String token = node.getToken();
+		
+		switch (token.toUpperCase()) {
+			case ",":
+				helper.caseComma();
+				break;
+			case Keywords.AS:
+				parsePendingColumn(helper, list);
+				nextNode = getNextNode(nodes, i);
+				
+				if (nextNode instanceof StringLiteralParseToken) {
+					StringLiteralParseToken literal = (StringLiteralParseToken)nextNode;
+					list.as(literal.getValue());
+				} else {
+					list.as(nextNode.getToken());
+				}
+				
+				i++;
+				break;
+			case Keywords.CASE:
+				helper.caseCase(node);
+				break;
+			case Keywords.DISTINCT:
+				list.distinct();
+				break;
+			case ParseTree.TOKEN_PARENTHESES_GROUP:
+				helper.caseParenthesesGroup(node);
+				break;
+			default:
+				helper.caseDefault(node, i);
+				break;
+		}
+		return i;
 	}
 
 	private static int parseSelectTree(Select select, List<ParseToken> nodes, int start) {
@@ -1295,6 +1310,12 @@ public class SqlParser {
 	
 	/* START Static classes */
 	
+	/**
+	 * A helper class that is used by multiple switch statements in {@link SqlParser}
+	 * to provide common functionality. The methods are called in the case statements of those switch statements.
+	 * @author Albert
+	 *
+	 */
 	private static class ExpressionCaseHelper {
 		private final ExpressionBuilding builder;
 		private boolean expectingDot;
@@ -1306,12 +1327,8 @@ public class SqlParser {
 		}
 		
 		public ExpressionCaseHelper(ExpressionBuilding builder) {
-			this(builder, new StringBuilder());
-		}
-		
-		public ExpressionCaseHelper(ExpressionBuilding builder, StringBuilder pendingString) {
 			this.builder = builder;
-			this.pendingString = pendingString;
+			pendingString = new StringBuilder();
 		}
 
 		public void addLastColumn() {

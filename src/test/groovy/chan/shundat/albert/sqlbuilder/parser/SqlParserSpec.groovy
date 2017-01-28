@@ -9,7 +9,9 @@ import chan.shundat.albert.sqlbuilder.Insert
 import chan.shundat.albert.sqlbuilder.LiteralNumber
 import chan.shundat.albert.sqlbuilder.LiteralString
 import chan.shundat.albert.sqlbuilder.Node
+import chan.shundat.albert.sqlbuilder.Prefix
 import chan.shundat.albert.sqlbuilder.Select
+import chan.shundat.albert.sqlbuilder.SelectList
 import chan.shundat.albert.sqlbuilder.SetValue
 import chan.shundat.albert.sqlbuilder.SetValues
 import chan.shundat.albert.sqlbuilder.SqlStatement
@@ -247,16 +249,49 @@ FROM phone_book"""
 		select instanceof Select
 	}
 	
-	def ''() {
-		given: ''
-		String sql =
-""""""
+	def 'Parse select list in SELECT statement and verify Column objects'() {
+		given: "SQL string \"SELECT t.col1 AS Col1, t.col2 AS 'Second Column' FROM tbl t\""
+		String sql = "SELECT t.col1 AS Col1, t.col2 AS 'Second Column' FROM tbl t"
 		
+		and: 'select list parse token and SelectList object'
+		List<ParseToken> selectNodes = new ParseTree(parser.tokenize(sql)).parseTokens().nodes
+		ParseToken selectListNode = selectNodes[0]
+		SelectList selectList = new SelectList()
+		int i = 0
+		ExpressionCaseHelper helper = new ExpressionCaseHelper(selectList)
+		helper.setAlwaysAppendColumn(true) // Important
 		
-		when: ''
+		when: 'parsing "t.col1"'
+		i = SqlParser.parseSelectListNode(selectList, selectListNode.nodes, i, helper) + 1 // t
+		i = SqlParser.parseSelectListNode(selectList, selectListNode.nodes, i, helper) + 1 // .
+		i = SqlParser.parseSelectListNode(selectList, selectListNode.nodes, i, helper) + 1 // col1
+		String pendingCol1 = helper.pendingString.toString()
 		
+		and: 'then parsing AS'
+		i = SqlParser.parseSelectListNode(selectList, selectListNode.nodes, i, helper) + 1
+		Node col1 = selectList.nodes[0]
 		
-		then: ''
+		and: "then parsing \"t.col2 AS 'Second Column'\""
+		i = SqlParser.parseSelectListNode(selectList, selectListNode.nodes, i, helper) + 1 // ,
+		i = SqlParser.parseSelectListNode(selectList, selectListNode.nodes, i, helper) + 1 // t
+		i = SqlParser.parseSelectListNode(selectList, selectListNode.nodes, i, helper) + 1 // .
+		i = SqlParser.parseSelectListNode(selectList, selectListNode.nodes, i, helper) + 1 // col2
+		// Move forward to parsing the alias string literal from t.col2
+		i = SqlParser.parseSelectListNode(selectList, selectListNode.nodes, i, helper) + 1
+		Node col2 = selectList.nodes[1]
 		
+		then: 'set pending column "t.col1"'
+		pendingCol1 == 't.col1'
+		
+		and: 'then "col1" Column object with table alias "t" and column alias "Col1" is added into SelectList'
+		col1 instanceof Column
+		col1.prefix == Prefix.TABLE_ALIAS
+		col1.prefixValue == 't'
+		col1.name == 'col1'
+		col1.alias == 'Col1'
+		
+		and: 'then col2 has a column alias of "Second Column"'
+		col2.name == 'col2'
+		col2.alias == 'Second Column'
 	}
 }
