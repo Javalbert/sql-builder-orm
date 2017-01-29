@@ -151,12 +151,10 @@ public class SqlParser {
 	}
 
 	private static void addPendingTable(TableNameSpecifier specifier, StringBuilder tableName) {
-		if (tableName.length() == 0) {
-			return;
+		if (tableName.length() > 0) {
+			specifier.tableName(tableName.toString());
+			tableName.setLength(0);
 		}
-		
-		specifier.tableName(tableName.toString());
-		tableName.setLength(0);
 	}
 	
 	/**
@@ -1437,6 +1435,7 @@ public class SqlParser {
 		}
 		
 		public void addPendingTable() {
+			handleInlineViewAlias();
 			SqlParser.addPendingTable(from, tableName);
 			expectingDot = false;
 		}
@@ -1449,6 +1448,17 @@ public class SqlParser {
 			} else {
 				tableName.append(token);
 				expectingDot = !expectingDot;
+			}
+		}
+		
+		private void handleInlineViewAlias() {
+			if (tableName.length() > 0 && !from.getNodes().isEmpty()) {
+				Node lastNode = from.getNodes().get(from.getNodes().size() - 1);
+				
+				if (lastNode instanceof Select) {
+					from.as(tableName.toString());
+					tableName.setLength(0);
+				}
 			}
 		}
 	}

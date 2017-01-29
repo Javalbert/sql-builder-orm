@@ -314,7 +314,7 @@ FROM phone_book"""
 		
 		when: 'parsing "Pets" table'
 		i = SqlParser.parseFromNode(from, fromNode.nodes, i, helper) + 1
-		String pendingPets = helper.tableName
+		String pendingPets = helper.tableName.toString()
 		
 		and: 'then parsing "AS p"'
 		i = SqlParser.parseFromNode(from, fromNode.nodes, i, helper) + 1
@@ -351,5 +351,20 @@ FROM phone_book"""
 		
 		and: 'then forth node Condition object representing ON join predicate is added'
 		joinPredicate instanceof Condition
+	}
+	
+	def 'Parse FROM clause with inline view'() {
+		given: 'SELECT * FROM People LEFT OUTER JOIN (SELECT p.* FROM Pets p INNER JOIN PetTypes pt ON p.PetTypeID = pt.PetTypeID) Pets'
+		String sql = "SELECT * FROM People LEFT OUTER JOIN (SELECT p.* FROM Pets p INNER JOIN PetTypes pt ON p.PetTypeID = pt.PetTypeID) Pets"
+		
+		when: 'parsed'
+		parser.parse(sql)
+		Select select = parser.sqlStatement
+		From from = select.nodes[1]
+		Node inlineView = from.nodes[2]
+		
+		then: 'Inline view inside From object is a Select object with alias "Pets"'
+		inlineView instanceof Select
+		inlineView.alias == 'Pets'
 	}
 }
