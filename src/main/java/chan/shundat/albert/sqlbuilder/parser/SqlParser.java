@@ -789,50 +789,62 @@ public class SqlParser {
 		StringBuilder column = new StringBuilder();
 		
 		for (int i = 0; i < nodes.size(); i++) {
-			ParseToken node = nodes.get(i);
-			
-			final String token = node.getToken();
-			
-			switch (token.toUpperCase()) {
-				case Keywords.ASC:
-					parsePendingColumn(column, orderBy);
-					orderBy.asc();
-					break;
-				case Keywords.DESC:
-					parsePendingColumn(column, orderBy);
-					orderBy.desc();
-					break;
-				case Keywords.FETCH:
-					ParseToken firstNode = getNextNode(nodes, i);
-					if (firstNode == null || !firstNode.getToken().toUpperCase().equals(Keywords.FIRST)) {
-						throw new IllegalArgumentException("expected " + Keywords.FIRST + " after " + Keywords.FETCH);
-					}
-					i++;
-
-					i = parseOffsetOrFetch(orderBy, nodes, i, Keywords.FETCH);
-					
-					ParseToken onlyNode = getNextNode(nodes, i);
-					if (onlyNode == null || !onlyNode.getToken().toUpperCase().equals(Keywords.ONLY)) {
-						throw new IllegalArgumentException("expected " + Keywords.ONLY 
-								+ " after {" + Keywords.ROWS + " | " + Keywords.ROW + "}");
-					}
-					i++;
-					break;
-				case Keywords.OFFSET:
-					parsePendingColumn(column, orderBy);
-					i = parseOffsetOrFetch(orderBy, nodes, i, Keywords.OFFSET);
-					break;
-				default:
-					if (node instanceof StringLiteralParseToken) {
-						StringLiteralParseToken literal = (StringLiteralParseToken)node;
-						orderBy.alias(literal.getValue());
-					} else {
-						column.append(node.getToken());
-					}
-					break;
-			}
+			i = parseOrderByNode(orderBy, nodes, i, column);
 		}
 		parsePendingColumn(column, orderBy);
+	}
+	
+	private static int parseOrderByNode(
+			final OrderBy orderBy,
+			final List<ParseToken> nodes,
+			int i,
+			final StringBuilder column) {
+		ParseToken node = nodes.get(i);
+		
+		final String token = node.getToken();
+		
+		switch (token.toUpperCase()) {
+			case ",":
+				parsePendingColumn(column, orderBy);
+				break;
+			case Keywords.ASC:
+				parsePendingColumn(column, orderBy);
+				orderBy.asc();
+				break;
+			case Keywords.DESC:
+				parsePendingColumn(column, orderBy);
+				orderBy.desc();
+				break;
+			case Keywords.FETCH:
+				ParseToken firstNode = getNextNode(nodes, i);
+				if (firstNode == null || !firstNode.getToken().toUpperCase().equals(Keywords.FIRST)) {
+					throw new IllegalArgumentException("expected " + Keywords.FIRST + " after " + Keywords.FETCH);
+				}
+				i++;
+
+				i = parseOffsetOrFetch(orderBy, nodes, i, Keywords.FETCH);
+				
+				ParseToken onlyNode = getNextNode(nodes, i);
+				if (onlyNode == null || !onlyNode.getToken().toUpperCase().equals(Keywords.ONLY)) {
+					throw new IllegalArgumentException("expected " + Keywords.ONLY 
+							+ " after {" + Keywords.ROWS + " | " + Keywords.ROW + "}");
+				}
+				i++;
+				break;
+			case Keywords.OFFSET:
+				parsePendingColumn(column, orderBy);
+				i = parseOffsetOrFetch(orderBy, nodes, i, Keywords.OFFSET);
+				break;
+			default:
+				if (node instanceof StringLiteralParseToken) {
+					StringLiteralParseToken literal = (StringLiteralParseToken)node;
+					orderBy.alias(literal.getValue());
+				} else {
+					column.append(node.getToken());
+				}
+				break;
+		}
+		return i;
 	}
 
 	private static int parsePredicate(Predicate predicate, List<ParseToken> nodes, int start, int end) {

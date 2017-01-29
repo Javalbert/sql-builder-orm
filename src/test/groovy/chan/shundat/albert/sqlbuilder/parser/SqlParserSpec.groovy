@@ -5,17 +5,21 @@ import chan.shundat.albert.sqlbuilder.ColumnList
 import chan.shundat.albert.sqlbuilder.ColumnValues
 import chan.shundat.albert.sqlbuilder.Condition
 import chan.shundat.albert.sqlbuilder.Delete
+import chan.shundat.albert.sqlbuilder.Fetch
 import chan.shundat.albert.sqlbuilder.From
 import chan.shundat.albert.sqlbuilder.Insert
 import chan.shundat.albert.sqlbuilder.Join
 import chan.shundat.albert.sqlbuilder.LiteralNumber
 import chan.shundat.albert.sqlbuilder.LiteralString
 import chan.shundat.albert.sqlbuilder.Node
+import chan.shundat.albert.sqlbuilder.Offset
+import chan.shundat.albert.sqlbuilder.OrderBy
 import chan.shundat.albert.sqlbuilder.Prefix
 import chan.shundat.albert.sqlbuilder.Select
 import chan.shundat.albert.sqlbuilder.SelectList
 import chan.shundat.albert.sqlbuilder.SetValue
 import chan.shundat.albert.sqlbuilder.SetValues
+import chan.shundat.albert.sqlbuilder.SortType
 import chan.shundat.albert.sqlbuilder.SqlStatement
 import chan.shundat.albert.sqlbuilder.Table
 import chan.shundat.albert.sqlbuilder.Token
@@ -366,5 +370,75 @@ FROM phone_book"""
 		then: 'Inline view inside From object is a Select object with alias "Pets"'
 		inlineView instanceof Select
 		inlineView.alias == 'Pets'
+	}
+	
+	def 'Parse ORDER BY and verify nodes'() {
+		given: "SQL string \"SELECT d.android_version_number, COUNT(*) AS 'Device Count' FROM MobileDevice d GROUP BY d.android_version_number ORDER BY d.android_version_number, 'Device Count' DESC\""
+		String sql = "SELECT d.android_version_number, COUNT(*) AS 'Device Count' FROM MobileDevice d GROUP BY d.android_version_number ORDER BY d.android_version_number, 'Device Count' DESC"
+		
+		and: 'parse token of ORDER BY clause and OrderBy object'
+		List<ParseToken> selectNodes = new ParseTree(parser.tokenize(sql)).parseTokens().nodes
+		ParseToken orderByNode = selectNodes[3]
+		OrderBy orderBy = new OrderBy()
+		int i = 0
+		StringBuilder columnBuilder = new StringBuilder()
+		
+		when: 'parsing "d.android_version_number"'
+		i = SqlParser.parseOrderByNode(orderBy, orderByNode.nodes, i, columnBuilder) + 1 // d
+		i = SqlParser.parseOrderByNode(orderBy, orderByNode.nodes, i, columnBuilder) + 1 // .
+		i = SqlParser.parseOrderByNode(orderBy, orderByNode.nodes, i, columnBuilder) + 1 // android_version_number
+		String pendingAndroidVersionNumber = columnBuilder.toString() // Must get column string here, on next iteration columnBuilder.setLength(0)
+		i = SqlParser.parseOrderByNode(orderBy, orderByNode.nodes, i, columnBuilder) + 1 // ,
+		Node androidVersionNumberColumn = orderBy.nodes[0]
+		
+		and: "then parsing column alias \"'Device Count'\""
+		i = SqlParser.parseOrderByNode(orderBy, orderByNode.nodes, i, columnBuilder) + 1
+		Node deviceCountColumn = orderBy.nodes[1]
+		
+		and: 'then parsing DESC keyword'
+		i = SqlParser.parseOrderByNode(orderBy, orderByNode.nodes, i, columnBuilder) + 1
+		Node descToken = orderBy.nodes[2]
+		
+		then: 'pending column "d.android_version_number" is added as Column object with name "android_version_number" and table alias "d"'
+		pendingAndroidVersionNumber == 'd.android_version_number'
+		androidVersionNumberColumn instanceof Column
+		androidVersionNumberColumn.prefixValue == 'd'
+		androidVersionNumberColumn.name == 'android_version_number'
+		
+		and: 'then Column with column alias "Device Count" is added'
+		deviceCountColumn instanceof Column
+		deviceCountColumn.alias == 'Device Count'
+		
+		and: 'then constant token DESC is added'
+		descToken == SortType.DESC
+	}
+	
+	def 'Parse ORDER BY with OFFSET FETCH'() {
+		given: "SQL string \"SELECT * FROM tbl ORDER BY col1 OFFSET 60 ROWS FETCH FIRST 20 ROWS ONLY\""
+		String sql = "SELECT * FROM tbl ORDER BY col1 OFFSET 60 ROWS FETCH FIRST 20 ROWS ONLY"
+		
+		and: 'parse token of ORDER BY clause and OrderBy object'
+		List<ParseToken> selectNodes = new ParseTree(parser.tokenize(sql)).parseTokens().nodes
+		ParseToken orderByNode = selectNodes[2]
+		OrderBy orderBy = new OrderBy()
+		int i = 0
+		StringBuilder columnBuilder = new StringBuilder()
+		
+		when: 'parsing "OFFSET"'
+		i = SqlParser.parseOrderByNode(orderBy, orderByNode.nodes, i, columnBuilder) + 1 // col1
+		i = SqlParser.parseOrderByNode(orderBy, orderByNode.nodes, i, columnBuilder) + 1 // OFFSET
+		Node offsetNode = orderBy.nodes[1]
+		
+		and: 'then parsing "FETCH FIRST 20 ROWS ONLY"'
+		i = SqlParser.parseOrderByNode(orderBy, orderByNode.nodes, i, columnBuilder) + 1
+		Node fetchNode = orderBy.nodes[2]
+		
+		then: 'Offset object with skip count of 60 is added'
+		offsetNode instanceof Offset
+		offsetNode.skipCount == 60
+		
+		and: 'then Fetch object with fetch count of 20 is added'
+		fetchNode instanceof Fetch
+		fetchNode.fetchCount == 20
 	}
 }
