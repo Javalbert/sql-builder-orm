@@ -1278,49 +1278,16 @@ public class SqlParser {
 				break;
 		}
 	}
-
+	
 	private static int parseWith(With with, List<ParseToken> nodes, int i) {
-		for (; i < nodes.size(); i++) {
-			ParseToken node = nodes.get(i);
-
-			final String token = node.getToken();
-			
-			switch (token.toUpperCase()) {
-				case ",":
-					break;
-				case Keywords.AS:
-					ParseToken selectNode = nodes.get(++i);
-					if (!selectNode.getToken().equals(ParseTree.TOKEN_PARENTHESES_GROUP)) {
-						throw new IllegalArgumentException("expected parentheses for common table expression query");
-					}
-					
-					Select cteQuery = new Select();
-					with.as(cteQuery);
-					parseSelectTree(cteQuery, selectNode.getNodes(), 0);
-					break;
-				case Keywords.INSERT:
-				case Keywords.SELECT:
-					return i - 1;
-				case Keywords.WITH:
-					break;
-				case ParseTree.TOKEN_PARENTHESES_GROUP:
-					List<ParseToken> columns = node.getNodes();
-					
-					for (int j = 0; j < columns.size(); j++) {
-						String column = columns.get(j).getToken();
-						
-						if (column.equals(",")) {
-							continue;
-						}
-						with.column(column);
-					}
-					break;
-				default:
-					with.name(token);
-					break;
-			}
+		WithHelper helper = new WithHelper(with, nodes, i);
+		while (helper.parseNextToken());
+		
+		if (helper.terminalClauseFound) {
+			return helper.i;
+		} else {
+			throw new IllegalArgumentException("could not find " + Keywords.SELECT + " keyword after common table expression(s)");
 		}
-		throw new IllegalArgumentException("could not find " + Keywords.SELECT + " keyword after common table expression(s)");
 	}
 	
 	/* END Static methods */
@@ -1477,6 +1444,77 @@ public class SqlParser {
 					tableName.setLength(0);
 				}
 			}
+		}
+	}
+
+	/**
+	 * Encapsulates the parsing of WITH clause, 
+	 * makes it more testable
+	 * @author Albert
+	 *
+	 */
+	private static class WithHelper {
+		private boolean completed;
+		private int i;
+		private final List<ParseToken> nodes;
+		private boolean terminalClauseFound;
+		private final With with;
+		
+		public WithHelper(With with, List<ParseToken> nodes, int i) {
+			this.i = i;
+			this.nodes = nodes;
+			this.with = with;
+		}
+		
+		public boolean parseNextToken() {
+			if (completed || (completed = i >= nodes.size())) {
+				return false;
+			}
+			
+			ParseToken node = nodes.get(i);
+
+			final String token = node.getToken();
+			final String upperCasedToken = token.toUpperCase();
+			
+			switch (upperCasedToken) {
+				case ",":
+					break;
+				case Keywords.AS:
+					ParseToken selectNode = nodes.get(++i);
+					if (!selectNode.getToken().equals(ParseTree.TOKEN_PARENTHESES_GROUP)) {
+						throw new IllegalArgumentException("expected parentheses for common table expression query");
+					}
+					
+					Select cteQuery = new Select();
+					with.as(cteQuery);
+					parseSelectTree(cteQuery, selectNode.getNodes(), 0);
+					break;
+				case Keywords.INSERT:
+				case Keywords.SELECT:
+					i--;
+					terminalClauseFound = true;
+					completed = true;
+					return false;
+				case Keywords.WITH:
+					break;
+				case ParseTree.TOKEN_PARENTHESES_GROUP:
+					List<ParseToken> columns = node.getNodes();
+					
+					for (int j = 0; j < columns.size(); j++) {
+						String column = columns.get(j).getToken();
+						
+						if (!column.equals(",")) {
+							with.column(column);
+						}
+					}
+					break;
+				default:
+					with.name(token);
+					break;
+			}
+			
+			i++;
+			return true;
 		}
 	}
 	

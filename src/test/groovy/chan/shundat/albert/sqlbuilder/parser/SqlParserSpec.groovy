@@ -3,6 +3,7 @@ package chan.shundat.albert.sqlbuilder.parser
 import chan.shundat.albert.sqlbuilder.Column
 import chan.shundat.albert.sqlbuilder.ColumnList
 import chan.shundat.albert.sqlbuilder.ColumnValues
+import chan.shundat.albert.sqlbuilder.CommonTableExpression
 import chan.shundat.albert.sqlbuilder.Condition
 import chan.shundat.albert.sqlbuilder.Delete
 import chan.shundat.albert.sqlbuilder.Fetch
@@ -26,8 +27,10 @@ import chan.shundat.albert.sqlbuilder.Table
 import chan.shundat.albert.sqlbuilder.Token
 import chan.shundat.albert.sqlbuilder.Update
 import chan.shundat.albert.sqlbuilder.Where
+import chan.shundat.albert.sqlbuilder.With
 import chan.shundat.albert.sqlbuilder.parser.SqlParser.ExpressionCaseHelper
 import chan.shundat.albert.sqlbuilder.parser.SqlParser.FromHelper
+import chan.shundat.albert.sqlbuilder.parser.SqlParser.WithHelper
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -107,7 +110,8 @@ WHERE (a.c2 = 'a' OR a.c2 <> ''' a b ''')
 		noNodesAddedToDeleteYet
 		
 		and: 'then Table object with name "Albert.dbo.Person" is added'
-		table instanceof Table && table.name == 'Albert.dbo.Person'
+		table instanceof Table
+		table.name == 'Albert.dbo.Person'
 		
 		and: 'then Where object is added'
 		where instanceof Where
@@ -156,7 +160,8 @@ WHERE (a.c2 = 'a' OR a.c2 <> ''' a b ''')
 		
 		and: 'first node is Table with name "Albert.dbo.Person"'
 		Node table = update.nodes[0]
-		table instanceof Table && table.name == 'Albert.dbo.Person'
+		table instanceof Table
+		table.name == 'Albert.dbo.Person'
 		
 		and: 'second node is SetValues object'
 		Node setValues = update.nodes[1]
@@ -477,5 +482,56 @@ FROM phone_book"""
 		and: 'then "col2" Column is added'
 		col2Node instanceof Column
 		col2Node.name == 'col2'
+	}
+	
+	def 'Parse WITH clause and verify nodes'() {
+		given: "SQL string \"WITH tbl1 AS (SELECT 1 col1, 2 col2), tbl2 (first_name, last_name) AS (SELECT 'albert' FirstName, 'chan') SELECT * FROM tbl1, tbl2\""
+		String sql = "WITH tbl1 AS (SELECT 1 col1, 2 col2), tbl2 (first_name, last_name) AS (SELECT 'albert' FirstName, 'chan') SELECT * FROM tbl1, tbl2"
+		
+		and: 'With object'
+		List<ParseToken> selectNodes = new ParseTree(parser.tokenize(sql)).parseTokens().nodes
+		With with = new With()
+		WithHelper helper = new WithHelper(with, selectNodes, 0)
+		
+		when: 'parsing "WITH" and "tbl1"'
+		helper.parseNextToken() // WITH
+		helper.parseNextToken() // tbl1
+		Node tbl1Cte = with.nodes[0]
+		
+		and: 'then parsing "AS (SELECT 1 col1, 2 col2)"'
+		helper.parseNextToken()
+		Select tbl1CteQuery = tbl1Cte.select
+		
+		and: 'then parsing ", tbl2 (first_name, last_name)"'
+		helper.parseNextToken() // ,
+		helper.parseNextToken() // tbl2
+		helper.parseNextToken() // (
+		Node tbl2Cte = with.nodes[1]
+		List<String> tbl2Columns = tbl2Cte.columns
+		
+		and: 'then parsing the "SELECT" of the query (not CTE)'
+		helper.parseNextToken() // AS
+		boolean wasNotTheEnd = !helper.terminalClauseFound
+		int indexBeforeSelect = helper.i - 1 // - 1 because the helper increments 1 more for parentheses group node
+		helper.parseNextToken()
+		boolean foundSelect = helper.terminalClauseFound
+		int indexAfterSelect = helper.i
+		
+		then: 'CommonTableExpression object with name "tbl1" is added into With object'
+		tbl1Cte instanceof CommonTableExpression
+		tbl1Cte.name == 'tbl1'
+		
+		and: 'then tbl1 CTE has its SELECT statement set'
+		tbl1CteQuery instanceof Select
+		
+		and: 'then tbl2 CTE specified columns "first_name" and "last_name"'
+		tbl2Columns == [ 'first_name', 'last_name' ]
+		
+		and: 'then SELECT clause of the query is found, '
+		wasNotTheEnd
+		foundSelect
+		
+		and: "internal index was not incremented from \"(SELECT 'albert' FirstName, 'chan')\" to the \"SELECT\" because another for loop will use the value and increment it"
+		indexAfterSelect == indexBeforeSelect
 	}
 }
