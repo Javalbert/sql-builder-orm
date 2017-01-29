@@ -202,7 +202,7 @@ public class SqlParser {
 		return -1;
 	}
 	
-	private static int getExpressionIndex(List<ParseToken> nodes, int start, int end) {
+	private static int getFirstExpressionIndex(List<ParseToken> nodes, int start, int end) {
 		for (int i = start; i < end; i++) {
 			ParseToken node = nodes.get(i);
 			
@@ -246,6 +246,23 @@ public class SqlParser {
 			}
 		}
 		return nodes.size();
+	}
+	
+	private static int getLastExpressionIndex(List<ParseToken> nodes, int start, int end) {
+		for (int i = end - 1; i >= start; i--) {
+			ParseToken node = nodes.get(i);
+			
+			switch (node.getToken()) {
+				case BinaryOperator.STRING_CONCAT:
+				case ArithmeticOperator.STRING_DIVIDE:
+				case ArithmeticOperator.STRING_MINUS:
+				case ArithmeticOperator.STRING_MOD:
+				case ArithmeticOperator.STRING_MULTIPLY:
+				case ArithmeticOperator.STRING_PLUS:
+					return i;
+			}
+		}
+		return -1;
 	}
 
 	private static ParseToken getNextNode(List<ParseToken> nodes, int i) {
@@ -514,8 +531,10 @@ public class SqlParser {
 	
 	private static int parseExpression(ExpressionBuilding builder, List<ParseToken> nodes, int i) {
 		int expressionEndIndex = getFirstIndex(nodes, i, TOKEN_SET_EXPRESSION_END);
-		int expressionIndex = getExpressionIndex(nodes, i, expressionEndIndex);
-		if (expressionIndex < 0) {
+		int lastExpressionIndex = getLastExpressionIndex(nodes, i, expressionEndIndex);
+		if (lastExpressionIndex < 0 
+				/* Solves the "SELECT *" (select all) problem where the asterisk is treated as multiplication */
+				|| lastExpressionIndex + 1 >= expressionEndIndex) {
 			return i;
 		}
 		
@@ -1199,7 +1218,7 @@ public class SqlParser {
 
 	private static int parseSetValue(SetValue value, List<ParseToken> nodes, int start) {
 		int end = getFirstIndex(nodes, start + 1, TOKEN_SET_SET_VALUE_TERMINATOR);
-		int operatorIndex = getExpressionIndex(nodes, start, end);
+		int operatorIndex = getFirstExpressionIndex(nodes, start, end);
 		int expressionIndex = getFirstIndex(nodes, start, "=") + 1;
 		
 		ExpressionCaseHelper helper = new ExpressionCaseHelper(value);

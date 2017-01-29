@@ -1,12 +1,15 @@
 package chan.shundat.albert.sqlbuilder.parser
 
 import chan.shundat.albert.sqlbuilder.AggregateFunction
+import chan.shundat.albert.sqlbuilder.ArithmeticOperator
+import chan.shundat.albert.sqlbuilder.BinaryOperator
 import chan.shundat.albert.sqlbuilder.Column
 import chan.shundat.albert.sqlbuilder.ColumnList
 import chan.shundat.albert.sqlbuilder.ColumnValues
 import chan.shundat.albert.sqlbuilder.CommonTableExpression
 import chan.shundat.albert.sqlbuilder.Condition
 import chan.shundat.albert.sqlbuilder.Delete
+import chan.shundat.albert.sqlbuilder.Expression
 import chan.shundat.albert.sqlbuilder.Fetch
 import chan.shundat.albert.sqlbuilder.From
 import chan.shundat.albert.sqlbuilder.GroupBy
@@ -536,15 +539,44 @@ FROM phone_book"""
 		indexAfterSelect == indexBeforeSelect
 	}
 	
-	def 'Parse expressions in SELECT'() {
-		given: ''
+	def 'Parse expressions with string concatenation and arithmetic operations in SELECT statement'() {
+		given: "SQL string \"SELECT num1str || ' + ' || num2str AS str_concat, num1 + num2 AS addition, (num1 + num2) * num3 - 1 AS more_complicated\""
+		String sql = "SELECT num1str || ' + ' || num2str AS str_concat, num1 + num2 AS addition, (num1 + num2) * num3 - 1 AS more_complicated"
 		
+		when: 'parsed'
+		parser.parse(sql)
+		SelectList selectList = parser.sqlStatement.nodes[0]
 		
-		when: ''
+		then: 'first column is an Expression object with alias "str_concat"'
+		Node strConcatExpr = selectList.nodes[0]
+		strConcatExpr instanceof Expression
+		strConcatExpr.alias == 'str_concat'
 		
+		and: 'first column consists of nodes: num1str, string concat binary operator, literal string " + ", string concat binary operator, and num2str'
+		Token num1StrToken = strConcatExpr.nodes[0]
+		num1StrToken.token == 'num1str'
+		BinaryOperator concat = strConcatExpr.nodes[1]
+		concat == BinaryOperator.CONCAT
+		LiteralString literal = strConcatExpr.nodes[2]
+		literal.value == ' + '
+		Token num2StrToken = strConcatExpr.nodes[4]
+		num2StrToken.token == 'num2str'
 		
-		then: ''
+		and: 'second expression has arithmetic operator add'
+		Expression additionExpr = selectList.nodes[1]
+		Node arithmeticOperatorAddNode = additionExpr.nodes[1]
+		arithmeticOperatorAddNode == ArithmeticOperator.PLUS
 		
+		and: 'thrid expression consists: nested expression with addition operator node, multiplication operator, num3, subtract operator, literal number 1'
+		Expression moreComplicatedExpr = selectList.nodes[2]
+		Node nestedAddition = moreComplicatedExpr.nodes[0]
+		nestedAddition.nodes[1] == ArithmeticOperator.PLUS
+		moreComplicatedExpr.nodes[1] == ArithmeticOperator.MULTIPLY
+		moreComplicatedExpr.nodes[2].token == 'num3'
+		moreComplicatedExpr.nodes[3] == ArithmeticOperator.MINUS
+		Node literalNumberOne = moreComplicatedExpr.nodes[4]
+		literalNumberOne instanceof LiteralNumber
+		literalNumberOne.value == 1
 	}
 	
 	def 'Parse functions in SELECT statement'() {
