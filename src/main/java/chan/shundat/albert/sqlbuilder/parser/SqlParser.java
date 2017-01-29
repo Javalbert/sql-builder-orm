@@ -1054,7 +1054,7 @@ public class SqlParser {
 			i = expressionEndIndex;
 
 			if (i >= nodes.size()) {
-				return i;
+				return nodes.size();
 			}
 		}
 		
@@ -1370,25 +1370,26 @@ public class SqlParser {
 		 * @return either a Function object if pendingString is not empty, or just the builder
 		 */
 		public ExpressionBuilding createFunction() {
-			if (pendingString.length() > 0) {
-				String name = getPendingString(pendingString);
-				
-				Function function = null;
-				switch (name.toUpperCase()) {
-					case Keywords.AVG: function = AggregateFunction.avg(); break;
-					case Keywords.CAST: function = new CastFunction(); break;
-					case Keywords.COUNT: function = AggregateFunction.count(); break;
-					case Keywords.MAX: function = AggregateFunction.max(); break;
-					case Keywords.MIN: function = AggregateFunction.min(); break;
-					case Keywords.SUM: function = AggregateFunction.sum(); break;
-					default: function = new Function(name); break;
-				}
-				
-				builder.function(function);
-				return function;
+			if (pendingString.length() == 0) {
+				return builder;
 			}
 			
-			return builder;
+			String name = getPendingString(pendingString);
+			expectingDot = false;
+			
+			Function function = null;
+			switch (name.toUpperCase()) {
+				case Keywords.AVG: function = AggregateFunction.avg(); break;
+				case Keywords.CAST: function = new CastFunction(); break;
+				case Keywords.COUNT: function = AggregateFunction.count(); break;
+				case Keywords.MAX: function = AggregateFunction.max(); break;
+				case Keywords.MIN: function = AggregateFunction.min(); break;
+				case Keywords.SUM: function = AggregateFunction.sum(); break;
+				default: function = new Function(name); break;
+			}
+			
+			builder.function(function);
+			return function;
 		}
 
 		private void appendPendingString() {

@@ -1,5 +1,6 @@
 package chan.shundat.albert.sqlbuilder.parser
 
+import chan.shundat.albert.sqlbuilder.AggregateFunction
 import chan.shundat.albert.sqlbuilder.Column
 import chan.shundat.albert.sqlbuilder.ColumnList
 import chan.shundat.albert.sqlbuilder.ColumnValues
@@ -533,5 +534,40 @@ FROM phone_book"""
 		
 		and: "internal index was not incremented from \"(SELECT 'albert' FirstName, 'chan')\" to the \"SELECT\" because another for loop will use the value and increment it"
 		indexAfterSelect == indexBeforeSelect
+	}
+	
+	def 'Parse expressions in SELECT'() {
+		given: ''
+		
+		
+		when: ''
+		
+		
+		then: ''
+		
+	}
+	
+	def 'Parse functions in SELECT statement'() {
+		given: "SQL string \"SELECT TRIM(col1) || ' Summary', MIN(col2), MAX(col2), AVG(col2), SUM(col2), COUNT(col2) GROUP BY col1, col2\""
+		String sql = "SELECT TRIM(col1) || ' Summary', MIN(col2), MAX(col2), AVG(col2), SUM(col2), COUNT(col2) GROUP BY col1, col2"
+		
+		when: 'parsed'
+		parser.parse(sql)
+		SelectList selectList = parser.sqlStatement.nodes[0]
+		
+		then: 'second column is AggregateFunction object representing MIN function on "col2" column'
+		Node minNode = selectList.nodes[1]
+		minNode instanceof AggregateFunction
+		minNode.name == 'MIN'
+		minNode.nodes[0].token == 'col2'
+		
+		and: 'then third column is MAX function'
+		AggregateFunction maxNode = selectList.nodes[2]
+		maxNode.name == 'MAX'
+		
+		and: 'then the rest are AVG, SUM, and COUNT'
+		selectList.nodes[3].name == 'AVG'
+		selectList.nodes[4].name == 'SUM'
+		selectList.nodes[5].name == 'COUNT'
 	}
 }
