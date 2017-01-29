@@ -7,6 +7,7 @@ import chan.shundat.albert.sqlbuilder.Condition
 import chan.shundat.albert.sqlbuilder.Delete
 import chan.shundat.albert.sqlbuilder.Fetch
 import chan.shundat.albert.sqlbuilder.From
+import chan.shundat.albert.sqlbuilder.GroupBy
 import chan.shundat.albert.sqlbuilder.Insert
 import chan.shundat.albert.sqlbuilder.Join
 import chan.shundat.albert.sqlbuilder.LiteralNumber
@@ -440,5 +441,41 @@ FROM phone_book"""
 		and: 'then Fetch object with fetch count of 20 is added'
 		fetchNode instanceof Fetch
 		fetchNode.fetchCount == 20
+	}
+	
+	def 'Parse GROUP BY and verify nodes'() {
+		given: "SQL string \"SELECT * FROM tbl GROUP BY col1, col2\""
+		String sql = "SELECT * FROM tbl GROUP BY col1, col2"
+		
+		and: 'GROUP BY parse token and GroupBy object'
+		List<ParseToken> selectNodes = new ParseTree(parser.tokenize(sql)).parseTokens().nodes
+		ParseToken groupByNode = selectNodes[2]
+		GroupBy groupBy = new GroupBy()
+		int i = 0
+		StringBuilder columnBuilder = new StringBuilder()
+		
+		when: 'parsing "col1"'
+		SqlParser.parseGroupByNode(groupBy, groupByNode.nodes[i++], columnBuilder)
+		String pendingCol1 = columnBuilder.toString()
+		
+		and: 'then parsing ","'
+		SqlParser.parseGroupByNode(groupBy, groupByNode.nodes[i++], columnBuilder)
+		Node col1Node = groupBy.nodes[0]
+		
+		and: 'then parsing "col2"'
+		SqlParser.parseGroupByNode(groupBy, groupByNode.nodes[i++], columnBuilder)
+		SqlParser.parsePendingColumn(columnBuilder, groupBy); // Must call this to add last column
+		Node col2Node = groupBy.nodes[1]
+		
+		then: 'column "col1" is pending to be added as a Column'
+		pendingCol1 == 'col1'
+		
+		and: 'then "col1" Column is added'
+		col1Node instanceof Column
+		col1Node.name == 'col1'
+		
+		and: 'then "col2" Column is added'
+		col2Node instanceof Column
+		col2Node.name == 'col2'
 	}
 }

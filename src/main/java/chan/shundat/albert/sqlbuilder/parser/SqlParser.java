@@ -654,20 +654,25 @@ public class SqlParser {
 		StringBuilder column = new StringBuilder();
 		
 		for (int i = 0; i < nodes.size(); i++) {
-			ParseToken node = nodes.get(i);
-			
-			final String token = node.getToken();
-			
-			switch (token.toUpperCase()) {
-				case ",":
-					parsePendingColumn(column, groupBy);
-					break;
-				default:
-					column.append(node.getToken());
-					break;
-			}
+			parseGroupByNode(groupBy, nodes.get(i), column);
 		}
 		parsePendingColumn(column, groupBy);
+	}
+	
+	private static void parseGroupByNode(
+			final GroupBy groupBy,
+			final ParseToken node,
+			final StringBuilder column) {
+		final String token = node.getToken();
+		
+		switch (token.toUpperCase()) {
+			case ",":
+				parsePendingColumn(column, groupBy);
+				break;
+			default:
+				column.append(node.getToken());
+				break;
+		}
 	}
 
 	private static int parseInsert(Insert insert, List<ParseToken> nodes, int start) {
