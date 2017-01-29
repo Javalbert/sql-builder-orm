@@ -573,64 +573,66 @@ public class SqlParser {
 	}
 	
 	private static void parseFrom(From from, List<ParseToken> nodes) {
-		StringBuilder tableName = new StringBuilder();
-		boolean expectingDot = false;
+		FromHelper helper = new FromHelper(from);
 		
 		for (int i = 0; i < nodes.size(); i++) {
-			ParseToken node = nodes.get(i);
-			
-			final String token = node.getToken();
-			
-			switch (token.toUpperCase()) {
-				case ",":
-					break;
-				case Keywords.AS:
-					ParseToken nextNode = getNextNode(nodes, i);
-					from.as(nextNode.getToken());
-					i++;
-					break;
-				case Keywords.FULL_OUTER_JOIN:
-					addPendingTable(from, tableName);
-					from.fullOuterJoin();
-					break;
-				case Keywords.INNER_JOIN:
-					addPendingTable(from, tableName);
-					from.innerJoin();
-					break;
-				case Keywords.LEFT_OUTER_JOIN:
-					addPendingTable(from, tableName);
-					from.leftOuterJoin();
-					break;
-				case Keywords.ON:
-					addPendingTable(from, tableName);
-					
-					Condition joinCondition = new Condition();
-					from.on(joinCondition);
-					
-					int start = i + 1;
-					i = parseCondition(joinCondition, nodes, start, getFirstIndex(nodes, start, TOKEN_SET_JOINS));
-					i--;
-					break;
-				case Keywords.RIGHT_OUTER_JOIN:
-					addPendingTable(from, tableName);
-					from.rightOuterJoin();
-					break;
-				case ParseTree.TOKEN_PARENTHESES_GROUP:
-					parseFromParenthesesGroup(from, node.getNodes());
-					break;
-				default:
-					if (tableName.length() > 0 && expectingDot && !token.equals(".")) {
-						addPendingTable(from, tableName);
-						from.as(token);
-						expectingDot = false;
-					} else {
-						tableName.append(token);
-						expectingDot = !expectingDot;
-					}
-					break;
-			}
+			i = parseFromNode(from, nodes, i, helper);
 		}
-		addPendingTable(from, tableName);
+		helper.addPendingTable();
+	}
+	
+	private static int parseFromNode(
+			final From from,
+			final List<ParseToken> nodes,
+			int i,
+			final FromHelper helper) {
+		ParseToken node = nodes.get(i);
+		
+		final String token = node.getToken();
+		
+		switch (token.toUpperCase()) {
+			case ",":
+				break;
+			case Keywords.AS:
+				helper.addPendingTable();
+				ParseToken nextNode = getNextNode(nodes, i);
+				from.as(nextNode.getToken());
+				i++;
+				break;
+			case Keywords.FULL_OUTER_JOIN:
+				helper.addPendingTable();
+				from.fullOuterJoin();
+				break;
+			case Keywords.INNER_JOIN:
+				helper.addPendingTable();
+				from.innerJoin();
+				break;
+			case Keywords.LEFT_OUTER_JOIN:
+				helper.addPendingTable();
+				from.leftOuterJoin();
+				break;
+			case Keywords.ON:
+				helper.addPendingTable();
+				
+				Condition joinCondition = new Condition();
+				from.on(joinCondition);
+				
+				int start = i + 1;
+				i = parseCondition(joinCondition, nodes, start, getFirstIndex(nodes, start, TOKEN_SET_JOINS));
+				i--;
+				break;
+			case Keywords.RIGHT_OUTER_JOIN:
+				helper.addPendingTable();
+				from.rightOuterJoin();
+				break;
+			case ParseTree.TOKEN_PARENTHESES_GROUP:
+				parseFromParenthesesGroup(from, node.getNodes());
+				break;
+			default:
+				helper.caseDefault(token);
+				break;
+		}
+		return i;
 	}
 
 	private static void parseFromParenthesesGroup(From from, List<ParseToken> nodes) {
@@ -1415,6 +1417,38 @@ public class SqlParser {
 			if (pendingString.length() > 0) {
 				builder.append(getPendingString(pendingString), isNextNodeAnExpression);
 				expectingDot = false;
+			}
+		}
+	}
+
+	/**
+	 * Helper class that makes unit testing parsing of FROM clause easier, 
+	 * with the slight overhead of creating this object
+	 * @author Albert
+	 *
+	 */
+	private static class FromHelper {
+		private boolean expectingDot;
+		private final From from;
+		private final StringBuilder tableName = new StringBuilder();
+		
+		public FromHelper(From from) {
+			this.from = from;
+		}
+		
+		public void addPendingTable() {
+			SqlParser.addPendingTable(from, tableName);
+			expectingDot = false;
+		}
+
+		public void caseDefault(String token) {
+			if (tableName.length() > 0 && expectingDot && !".".equals(token)) {
+				addPendingTable();
+				from.as(token);
+				expectingDot = false;
+			} else {
+				tableName.append(token);
+				expectingDot = !expectingDot;
 			}
 		}
 	}

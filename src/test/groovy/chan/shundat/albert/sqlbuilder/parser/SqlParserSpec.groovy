@@ -3,9 +3,11 @@ package chan.shundat.albert.sqlbuilder.parser
 import chan.shundat.albert.sqlbuilder.Column
 import chan.shundat.albert.sqlbuilder.ColumnList
 import chan.shundat.albert.sqlbuilder.ColumnValues
+import chan.shundat.albert.sqlbuilder.Condition
 import chan.shundat.albert.sqlbuilder.Delete
-import chan.shundat.albert.sqlbuilder.ExpressionBuilding
+import chan.shundat.albert.sqlbuilder.From
 import chan.shundat.albert.sqlbuilder.Insert
+import chan.shundat.albert.sqlbuilder.Join
 import chan.shundat.albert.sqlbuilder.LiteralNumber
 import chan.shundat.albert.sqlbuilder.LiteralString
 import chan.shundat.albert.sqlbuilder.Node
@@ -20,6 +22,7 @@ import chan.shundat.albert.sqlbuilder.Token
 import chan.shundat.albert.sqlbuilder.Update
 import chan.shundat.albert.sqlbuilder.Where
 import chan.shundat.albert.sqlbuilder.parser.SqlParser.ExpressionCaseHelper
+import chan.shundat.albert.sqlbuilder.parser.SqlParser.FromHelper
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -293,5 +296,60 @@ FROM phone_book"""
 		and: 'then col2 has a column alias of "Second Column"'
 		col2.name == 'col2'
 		col2.alias == 'Second Column'
+	}
+	
+	def 'Parse FROM clause and verify nodes'() {
+		given: 'SQL string "SELECT * FROM Pets AS p INNER JOIN PetTypes t ON p.PetTypeID = t.PetTypeID"'
+		String sql = "SELECT * FROM Pets AS p INNER JOIN PetTypes t ON p.PetTypeID = t.PetTypeID"
+		
+		and: 'FROM object'
+		List<ParseToken> selectNodes = new ParseTree(parser.tokenize(sql)).parseTokens().nodes
+		ParseToken fromNode = selectNodes[1]
+		From from = new From()
+		int i = 0
+		FromHelper helper = new FromHelper(from)
+		
+		expect: 'parse token represents FROM clause'
+		fromNode.token == 'FROM'
+		
+		when: 'parsing "Pets" table'
+		i = SqlParser.parseFromNode(from, fromNode.nodes, i, helper) + 1
+		String pendingPets = helper.tableName
+		
+		and: 'then parsing "AS p"'
+		i = SqlParser.parseFromNode(from, fromNode.nodes, i, helper) + 1
+		Node petsTable = from.nodes[0]
+		
+		and: 'then parsing "INNER JOIN"'
+		i = SqlParser.parseFromNode(from, fromNode.nodes, i, helper) + 1
+		Node innerJoin = from.nodes[1]
+		
+		and: 'then parsing "PetTypes t"'
+		i = SqlParser.parseFromNode(from, fromNode.nodes, i, helper) + 1 // PetTypes
+		i = SqlParser.parseFromNode(from, fromNode.nodes, i, helper) + 1 // t
+		Node petTypesTable = from.nodes[2]
+		
+		and: 'then parsing "ON"'
+		i = SqlParser.parseFromNode(from, fromNode.nodes, i, helper) + 1
+		Node joinPredicate = from.nodes[3]
+		
+		then: 'table "Pets" is pending to be added'
+		pendingPets == 'Pets'
+		
+		and: 'then first node Table object is added into From object with name "Pets" and alias "p"'
+		petsTable instanceof Table
+		petsTable.alias == 'p'
+		petsTable.name == 'Pets'
+		
+		and: 'then seoncd node INNER JOIN constant token is added'
+		innerJoin == Join.INNER_JOIN
+		
+		and: 'then third node Table "PetTypes" alias "t" is added'
+		petTypesTable instanceof Table
+		petTypesTable.alias == 't'
+		petTypesTable.name == 'PetTypes'
+		
+		and: 'then forth node Condition object representing ON join predicate is added'
+		joinPredicate instanceof Condition
 	}
 }
