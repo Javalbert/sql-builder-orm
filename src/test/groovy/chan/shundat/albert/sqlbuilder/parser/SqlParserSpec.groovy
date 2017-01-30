@@ -3,6 +3,7 @@ package chan.shundat.albert.sqlbuilder.parser
 import chan.shundat.albert.sqlbuilder.AggregateFunction
 import chan.shundat.albert.sqlbuilder.ArithmeticOperator
 import chan.shundat.albert.sqlbuilder.BinaryOperator
+import chan.shundat.albert.sqlbuilder.Case
 import chan.shundat.albert.sqlbuilder.Column
 import chan.shundat.albert.sqlbuilder.ColumnList
 import chan.shundat.albert.sqlbuilder.ColumnValues
@@ -692,5 +693,64 @@ FROM phone_book"""
 		Predicate inSomeCollection = condition.nodes[4]
 		inSomeCollection.nodes[2] instanceof Param
 		inSomeCollection.nodes[2].name == 'someCollection'
+	}
+	
+	def 'Parse CASE expressions in SELECT statement and verify nodes'() {
+		given: "SQL string \"SELECT CASE num1 WHEN 1 THEN 'One' ELSE 'Zero' END AS 'Number Word' FROM tbl\""
+		String sql = "SELECT CASE num1 WHEN 1 THEN 'One' ELSE 'Zero' END AS 'Number Word' FROM tbl"
+		
+		and: 'Case object, SelectList object, and CASE parse token'
+		List<ParseToken> selectNodes = new ParseTree(parser.tokenize(sql)).parseTokens().nodes
+		ParseToken caseNode = selectNodes[0].nodes[0] // SELECT > CASE
+		Case sqlCase = new Case()
+		SelectList selectList = new SelectList()
+		selectList.sqlCase(sqlCase)
+		int i = 0
+		ExpressionCaseHelper helper = new ExpressionCaseHelper(sqlCase);
+		
+		when: 'parsing "num1"'
+		i = SqlParser.parseCaseNode(sqlCase, caseNode.nodes, i, helper) + 1
+		String pendingInputExpr = helper.pendingString.toString()
+		
+		and: 'then parsing WHEN keyword'
+		i = SqlParser.parseCaseNode(sqlCase, caseNode.nodes, i, helper) + 1
+		
+		and: 'then parsing 1'
+		i = SqlParser.parseCaseNode(sqlCase, caseNode.nodes, i, helper) + 1
+		
+		and: "then parsing \"THEN 'One'\""
+		i = SqlParser.parseCaseNode(sqlCase, caseNode.nodes, i, helper) + 1 // THEN
+		i = SqlParser.parseCaseNode(sqlCase, caseNode.nodes, i, helper) + 1 // 'One'
+		
+		and: "then parsing \"ELSE 'Zero' END\""
+		i = SqlParser.parseCaseNode(sqlCase, caseNode.nodes, i, helper) + 1 // ELSE
+		i = SqlParser.parseCaseNode(sqlCase, caseNode.nodes, i, helper) + 1 // 'Zero'
+		i = SqlParser.parseCaseNode(sqlCase, caseNode.nodes, i, helper) + 1 // END
+		boolean endOfCase = i >= caseNode.nodes.size()
+		
+		and: 'then apply alias to Case via SelectList object'
+		selectList.as('Number Word')
+		
+		then: 'pending input expression "num1"'
+		pendingInputExpr == 'num1'
+		
+		and: 'then num1 is added and WHEN constant token is added into Case object'
+		sqlCase.nodes[0].token == 'num1'
+		sqlCase.nodes[1] == Case.WHEN
+		
+		and: 'then 1 number literal is added'
+		sqlCase.nodes[2].value == 1
+		
+		and: 'then THEN constant token and string literal "One" added'
+		sqlCase.nodes[3] == Case.THEN
+		sqlCase.nodes[4].value == 'One'
+		
+		and: 'then ELSE and "Zero" added, and reached end of CASE expression'
+		sqlCase.nodes[5] == Case.ELSE
+		sqlCase.nodes[6].value == 'Zero'
+		endOfCase
+		
+		and: "then Case object's alias is \"Number Word\""
+		sqlCase.alias == 'Number Word'
 	}
 }

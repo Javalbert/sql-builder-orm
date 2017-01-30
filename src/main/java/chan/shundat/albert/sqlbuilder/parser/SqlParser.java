@@ -330,50 +330,59 @@ public class SqlParser {
 		int start = addConditionOrPredicate(sqlCase, nodes, 0, TOKEN_SET_AFTER_CASE);
 		
 		for (int i = start; i < nodes.size(); i++) {
-			int expressionEndIndex = parseExpression(sqlCase, nodes, i);
-			
-			if (expressionEndIndex != i) {
-				i = expressionEndIndex;
-
-				if (i >= nodes.size()) {
-					break;
-				}
-			}
-			
-			ParseToken node = nodes.get(i);
-			final String token = node.getToken();
-			
-			switch (token.toUpperCase()) {
-				case Keywords.CASE:
-					helper.caseCase(node);
-					break;
-				case Keywords.ELSE:
-					helper.caseComma();
-					sqlCase.ifElse();
-					break;
-				case Keywords.END:
-					helper.caseComma();
-					sqlCase.end();
-					return;
-				case Keywords.THEN:
-					helper.caseComma();
-					sqlCase.then();
-					i = addConditionOrPredicate(sqlCase, nodes, i, TOKEN_SET_AFTER_THEN);
-					break;
-				case ParseTree.TOKEN_PARENTHESES_GROUP:
-					helper.caseParenthesesGroup(node);
-					break;
-				case Keywords.WHEN:
-					helper.caseComma();
-					sqlCase.when();
-					i = addConditionOrPredicate(sqlCase, nodes, i, TOKEN_SET_AFTER_WHEN);
-					break;
-				default:
-					helper.caseDefault(node, i);
-					break;
-			}
+			i = parseCaseNode(sqlCase, nodes, i, helper);
 		}
 		helper.addLastColumn();
+	}
+	
+	private static int parseCaseNode(
+			final Case sqlCase,
+			final List<ParseToken> nodes,
+			int i,
+			final ExpressionCaseHelper helper) {
+		int expressionEndIndex = parseExpression(sqlCase, nodes, i);
+		
+		if (expressionEndIndex != i) {
+			i = expressionEndIndex;
+
+			if (i >= nodes.size()) {
+				return nodes.size();
+			}
+		}
+		
+		ParseToken node = nodes.get(i);
+		final String token = node.getToken();
+		
+		switch (token.toUpperCase()) {
+			case Keywords.CASE:
+				helper.caseCase(node);
+				break;
+			case Keywords.ELSE:
+				helper.caseComma();
+				sqlCase.ifElse();
+				break;
+			case Keywords.END:
+				helper.caseComma();
+				sqlCase.end();
+				return nodes.size();
+			case Keywords.THEN:
+				helper.caseComma();
+				sqlCase.then();
+				i = addConditionOrPredicate(sqlCase, nodes, i, TOKEN_SET_AFTER_THEN);
+				break;
+			case ParseTree.TOKEN_PARENTHESES_GROUP:
+				helper.caseParenthesesGroup(node);
+				break;
+			case Keywords.WHEN:
+				helper.caseComma();
+				sqlCase.when();
+				i = addConditionOrPredicate(sqlCase, nodes, i, TOKEN_SET_AFTER_WHEN);
+				break;
+			default:
+				helper.caseDefault(node, i);
+				break;
+		}
+		return i;
 	}
 
 	private static void parseColumnList(ColumnList columns, List<ParseToken> nodes) {
