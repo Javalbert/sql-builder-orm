@@ -13,6 +13,7 @@ import chan.shundat.albert.sqlbuilder.Expression
 import chan.shundat.albert.sqlbuilder.Fetch
 import chan.shundat.albert.sqlbuilder.From
 import chan.shundat.albert.sqlbuilder.GroupBy
+import chan.shundat.albert.sqlbuilder.InValues
 import chan.shundat.albert.sqlbuilder.Insert
 import chan.shundat.albert.sqlbuilder.Join
 import chan.shundat.albert.sqlbuilder.LiteralNumber
@@ -651,5 +652,45 @@ FROM phone_book"""
 		and: "then nested Condition (col1 IS NULL OR col1 LIKE 'abc%') is added"
 		Node nestedCondition = condition.nodes[4]
 		nestedCondition instanceof Condition
+	}
+	
+	def 'Parse WHERE clause with IN keyword'() {
+		given: "SQL string \"SELECT * FROM tbl WHERE col1 IN (1, 2) AND col2 IN (SELECT * FROM tbl2) AND col3 IN (:someCollection)\""
+		String sql = "SELECT * FROM tbl WHERE col1 IN (1, 2) AND col2 IN (SELECT * FROM tbl2) AND col3 IN (:someCollection)"
+		
+		and: 'Condition object and WHERE parse token'
+		List<ParseToken> selectNodes = new ParseTree(parser.tokenize(sql)).parseTokens().nodes
+		ParseToken whereNode = selectNodes[2]
+		Condition condition = new Condition()
+		int i = 0
+		int nodeListSize = whereNode.nodes.size()
+		
+		when: 'parsing "col1 IN (1, 2)"'
+		i = SqlParser.parseConditionNode(condition, whereNode.nodes, i, nodeListSize) + 1
+		
+		and: 'then parsing "AND col2 IN (SELECT * FROM tbl2)"'
+		i = SqlParser.parseConditionNode(condition, whereNode.nodes, i, nodeListSize) + 1 // AND
+		i = SqlParser.parseConditionNode(condition, whereNode.nodes, i, nodeListSize) + 1
+		
+		and: 'then parsing "AND col3 IN (:someCollection)"'
+		i = SqlParser.parseConditionNode(condition, whereNode.nodes, i, nodeListSize) + 1 // AND
+		i = SqlParser.parseConditionNode(condition, whereNode.nodes, i, nodeListSize) + 1
+		
+		then: 'Predicate object for "col1 IN (1, 2)" uses predicate operator IN and contains InValues object with values 1 and 2'
+		Predicate inOneOrTwo = condition.nodes[0]
+		inOneOrTwo.nodes[1] == PredicateOperator.IN
+		Node valuesOneOrTwo = inOneOrTwo.nodes[2]
+		valuesOneOrTwo instanceof InValues
+		valuesOneOrTwo.nodes[0].value == 1
+		valuesOneOrTwo.nodes[1].value == 2
+		
+		and: 'then IN Predicate contains Select object'
+		Predicate inSelect = condition.nodes[2]
+		inSelect.nodes[2] instanceof Select
+		
+		and: 'then IN Predicate contains Param :someCollection'
+		Predicate inSomeCollection = condition.nodes[4]
+		inSomeCollection.nodes[2] instanceof Param
+		inSomeCollection.nodes[2].name == 'someCollection'
 	}
 }

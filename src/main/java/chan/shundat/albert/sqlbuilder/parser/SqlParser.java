@@ -992,7 +992,7 @@ public class SqlParser {
 							String inValueUpperCase = inValueNode.getToken().toUpperCase();
 							
 							parseColumnParenthesesGroup = inValueUpperCase.equals(Keywords.SELECT) 
-									|| inValueUpperCase.startsWith(":");
+									|| inValueUpperCase.startsWith(":"); /* : for Param object */
 						}
 						
 						if (parseColumnParenthesesGroup) {
