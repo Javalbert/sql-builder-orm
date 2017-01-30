@@ -12,40 +12,18 @@
  *******************************************************************************/
 package chan.shundat.albert.domain;
 
-import java.util.Date;
-
-import chan.shundat.albert.orm.Alias;
 import chan.shundat.albert.orm.Column;
-import chan.shundat.albert.orm.GeneratedValue;
 import chan.shundat.albert.orm.Id;
-import chan.shundat.albert.orm.MapKey;
 import chan.shundat.albert.orm.Table;
 import chan.shundat.albert.orm.Version;
 
-@Table(catalog = "Albert", schema = "dbo", name = "Person")
-public class Person {
+@Table(catalog = "Albert", schema = "dbo", name = "Person2")
+public class Person2 {
+	@Version
 	@Id
-	@GeneratedValue
 	@Column("person_key")
 	private int personKey;
-	@Column("first_name")
-	private String firstName;
 	private String lastName;
-	@Column("date_of_birth")
-	private Date dateOfBirth;
-	@Version
-	@Column
-	private int version;
-	
-	// Aliased columns
-	//
-	@MapKey("Full Name")
-	@Alias("full_name")
-	private String fullName;
-	
-	// Non-database fields
-	//
-	private String jsonString;
 	
 	public int getPersonKey() {
 		return personKey;
@@ -53,47 +31,12 @@ public class Person {
 	public void setPersonKey(int personKey) {
 		this.personKey = personKey;
 	}
-	public String getFirstName() {
-		return firstName;
-	}
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
-	}
 	@Column("last_name")
 	public String getLastName() {
 		return lastName;
 	}
+	@Column("last_name")
 	public void setLastName(String lastName) {
 		this.lastName = lastName;
-	}
-	public Date getDateOfBirth() {
-		return dateOfBirth;
-	}
-	public void setDateOfBirth(Date dateOfBirth) {
-		this.dateOfBirth = dateOfBirth;
-	}
-	public int getVersion() {
-		return version;
-	}
-	public void setVersion(int version) {
-		this.version = version;
-	}
-	
-	// Aliased columns
-	//
-	public String getFullName() {
-		return fullName;
-	}
-	public void setFullName(String fullName) {
-		this.fullName = fullName;
-	}
-	
-	// Non-database accessors
-	//
-	public String getJsonString() {
-		return jsonString;
-	}
-	public void setJsonString(String jsonString) {
-		this.jsonString = jsonString;
 	}
 }

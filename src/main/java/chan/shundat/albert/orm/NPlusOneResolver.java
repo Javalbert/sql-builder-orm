@@ -473,6 +473,9 @@ public class NPlusOneResolver extends ObjectGraphResolver {
 			
 			try {
 				switch (relationship.getFieldType()) {
+					case Relationship.FIELD_DEQUE:
+						relatedObjects = getCollections(connection, owners, CollectionUtils.FACTORY_DEQUE);
+						break;
 					case Relationship.FIELD_LINKED_LIST:
 						relatedObjects = getCollections(connection, owners, CollectionUtils.FACTORY_LINKED_LIST);
 						break;
@@ -490,9 +493,6 @@ public class NPlusOneResolver extends ObjectGraphResolver {
 						break;
 					case Relationship.FIELD_SET:
 						relatedObjects = getCollections(connection, owners, CollectionUtils.FACTORY_SET);
-						break;
-					case Relationship.FIELD_STACK:
-						relatedObjects = getCollections(connection, owners, CollectionUtils.FACTORY_STACK);
 						break;
 					case Relationship.FIELD_UNIQUE:
 						relatedObjects = uniqueResults(connection, owners);
@@ -603,7 +603,7 @@ public class NPlusOneResolver extends ObjectGraphResolver {
 				
 				while (rs.next()) {
 					Object object = relatedEntityColumns.createFromResultSet(rs);
-					Object key = relatedClassMapping.getMapKeyValue(relationship.getMapKeyName(), object);
+					Object key = relatedClassMapping.getMapKeyValue(object, relationship.getMapKeyName());
 					map.put(key, object);
 					assignOwnerField(object, owner);
 				}

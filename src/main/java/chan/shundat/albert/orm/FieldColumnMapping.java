@@ -158,4 +158,11 @@ public abstract class FieldColumnMapping implements MemberAccess {
 		Object value = getFromResultSet(rs, columnLabel);
 		set(instance, value);
 	}
+
+	@Override
+	public String toString() {
+		return "FieldColumnMapping [alias=" + alias + ", autoIncrementId=" + autoIncrementId + ", column=" + column
+				+ ", jdbcType=" + jdbcType + ", mapKeyName=" + mapKeyName + ", primaryKey=" + primaryKey + ", version="
+				+ version + "]";
+	}
 }

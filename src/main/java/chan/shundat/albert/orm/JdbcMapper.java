@@ -406,7 +406,7 @@ public class JdbcMapper {
 		
 		while (rs.next()) {
 			T object = createObject(clazz, columnMappings, rsHelper);
-			K key = classRowMapping.getMapKeyValue(mapKeyName, object);
+			K key = classRowMapping.getMapKeyValue(object, mapKeyName);
 			map.put(key, object);
 		}
 		return map;
