@@ -440,29 +440,38 @@ public class SqlParser {
 	private static int parseCondition(Condition condition, List<ParseToken> nodes, int start, int end) {
 		int i = start;
 		for (; i < end; i++) {
-			ParseToken node = nodes.get(i);
-
-			Condition conditionGroup = condition;
-			final String token = node.getToken();
-			
-			switch (token.toUpperCase()) {
-				case Keywords.AND:
-					condition.and();
-					break;
-				case Keywords.OR:
-					condition.or();
-					break;
-				case ParseTree.TOKEN_PARENTHESES_GROUP:
-					if (getConditionIndex(node.getNodes(), 0) > -1) {
-						conditionGroup = new Condition();
-						condition.group(conditionGroup);
-					}
-					parseCondition(conditionGroup, node.getNodes(), 0, node.getNodes().size());
-					break;
-				default:
-					i = parseConditionPredicate(condition, nodes, i, end);
-					break;
-			}
+			i = parseConditionNode(condition, nodes, i, end);
+		}
+		return i;
+	}
+	
+	private static int parseConditionNode(
+			final Condition condition,
+			final List<ParseToken> nodes,
+			int i,
+			final int end) {
+		ParseToken node = nodes.get(i);
+		
+		Condition conditionGroup = condition;
+		final String token = node.getToken();
+		
+		switch (token.toUpperCase()) {
+			case Keywords.AND:
+				condition.and();
+				break;
+			case Keywords.OR:
+				condition.or();
+				break;
+			case ParseTree.TOKEN_PARENTHESES_GROUP:
+				if (getConditionIndex(node.getNodes(), 0) > -1) {
+					conditionGroup = new Condition();
+					condition.group(conditionGroup);
+				}
+				parseCondition(conditionGroup, node.getNodes(), 0, node.getNodes().size());
+				break;
+			default:
+				i = parseConditionPredicate(condition, nodes, i, end);
+				break;
 		}
 		return i;
 	}

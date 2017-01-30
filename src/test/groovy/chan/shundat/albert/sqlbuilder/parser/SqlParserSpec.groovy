@@ -17,9 +17,13 @@ import chan.shundat.albert.sqlbuilder.Insert
 import chan.shundat.albert.sqlbuilder.Join
 import chan.shundat.albert.sqlbuilder.LiteralNumber
 import chan.shundat.albert.sqlbuilder.LiteralString
+import chan.shundat.albert.sqlbuilder.LogicalOperator
 import chan.shundat.albert.sqlbuilder.Node
 import chan.shundat.albert.sqlbuilder.Offset
 import chan.shundat.albert.sqlbuilder.OrderBy
+import chan.shundat.albert.sqlbuilder.Param
+import chan.shundat.albert.sqlbuilder.Predicate
+import chan.shundat.albert.sqlbuilder.PredicateOperator
 import chan.shundat.albert.sqlbuilder.Prefix
 import chan.shundat.albert.sqlbuilder.Select
 import chan.shundat.albert.sqlbuilder.SelectList
@@ -601,5 +605,51 @@ FROM phone_book"""
 		selectList.nodes[3].name == 'AVG'
 		selectList.nodes[4].name == 'SUM'
 		selectList.nodes[5].name == 'COUNT'
+	}
+	
+	def 'Parse WHERE clause of SELECT statement and verify Condition object nodes'() {
+		given: "SQL string \"SELECT * FROM tbl WHERE num1 >= 2 AND some_date > :someDate AND (col1 IS NULL OR col1 LIKE 'abc%')\""
+		String sql = "SELECT * FROM tbl WHERE num1 >= 2 AND some_date > :someDate AND (col1 IS NULL OR col1 LIKE 'abc%')"
+		
+		and: 'Condition object and WHERE parse token'
+		List<ParseToken> selectNodes = new ParseTree(parser.tokenize(sql)).parseTokens().nodes
+		ParseToken whereNode = selectNodes[2]
+		Condition condition = new Condition()
+		int i = 0
+		int nodeListSize = whereNode.nodes.size()
+		
+		when: 'parsing "num1 >= 2"'
+		i = SqlParser.parseConditionNode(condition, whereNode.nodes, i, nodeListSize) + 1
+		
+		and: 'then parsing "AND" logical operator'
+		i = SqlParser.parseConditionNode(condition, whereNode.nodes, i, nodeListSize) + 1
+		
+		and: 'then parsing "some_date > :someDate"'
+		i = SqlParser.parseConditionNode(condition, whereNode.nodes, i, nodeListSize) + 1
+		
+		and: "then parsing \"AND (col1 IS NULL OR col1 LIKE 'abc%')\""
+		i = SqlParser.parseConditionNode(condition, whereNode.nodes, i, nodeListSize) + 1 // AND
+		i = SqlParser.parseConditionNode(condition, whereNode.nodes, i, nodeListSize) + 1
+		
+		then: 'Predicate object representing num1 >= 2 is added into Condition object'
+		Node num1GteqTwo = condition.nodes[0]
+		num1GteqTwo instanceof Predicate
+		num1GteqTwo.nodes[0].token == 'num1'
+		num1GteqTwo.nodes[1] == PredicateOperator.GT_EQ
+		num1GteqTwo.nodes[2].value == 2
+		
+		and: 'then logical operator AND constant is added'
+		Node logicalAndNode = condition.nodes[1]
+		logicalAndNode == LogicalOperator.AND
+		
+		and: 'then Param object representing parameter :someDate is added'
+		Predicate someDateGtParam = condition.nodes[2]
+		Node someDateParam = someDateGtParam.nodes[2]
+		someDateParam instanceof Param
+		someDateParam.name == 'someDate'
+		
+		and: "then nested Condition (col1 IS NULL OR col1 LIKE 'abc%') is added"
+		Node nestedCondition = condition.nodes[4]
+		nestedCondition instanceof Condition
 	}
 }
