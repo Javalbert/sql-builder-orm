@@ -74,10 +74,10 @@ public class ANSI implements Vendor {
 	public String createTableIdentifier(chan.shundat.albert.orm.Table tableAnno) {
 		StringBuilder identifier = new StringBuilder();
 		
-		if (tableAnno.catalog() != null) {
+		if (!Strings.isNullOrEmpty(tableAnno.catalog())) {
 			identifier.append(tableAnno.catalog()).append(".");
 		}
-		if (tableAnno.schema() != null) {
+		if (!Strings.isNullOrEmpty(tableAnno.schema())) {
 			identifier.append(tableAnno.schema()).append(".");
 		}
 		identifier.append(tableAnno.name());
