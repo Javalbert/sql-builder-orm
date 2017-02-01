@@ -53,6 +53,7 @@ public class ClassRowMapping {
 	private String catalog;
 	private final Class clazz;
 	private Delete deleteById;
+	private Delete deleteByIdAndVersion;
 	private final Map<String, FieldColumnMapping> fieldAliasMappings;
 	private final List<FieldColumnMapping> fieldColumnMappingList;
 	private final Map<String, FieldColumnMapping> fieldColumnMappings;
@@ -76,6 +77,7 @@ public class ClassRowMapping {
 	public String getCatalog() { return catalog; }
 	public Class getClazz() { return clazz; }
 	public Delete getDeleteById() { return deleteById; }
+	public Delete getDeleteByIdAndVersion() { return deleteByIdAndVersion; }
 	public Map<String, FieldColumnMapping> getFieldAliasMappings() { return fieldAliasMappings; }
 	public List<FieldColumnMapping> getFieldColumnMappingList() { return fieldColumnMappingList; }
 	public Map<String, FieldColumnMapping> getFieldColumnMappings() { return fieldColumnMappings; }
@@ -204,10 +206,16 @@ public class ClassRowMapping {
 	}
 
 	public void setVersion(Object object) {
-		if (!hasVersionControl()) {
-			return;
+		if (hasVersionControl()) {
+			versionColumnMapping.set(object, 0);
 		}
-		versionColumnMapping.set(object, 0);
+	}
+	
+	public void setVersionParameter(JdbcStatement statement, Object object) {
+		if (hasVersionControl()) {
+			Object version = versionColumnMapping.get(object);
+			statement.setParameter(versionColumnMapping, version);
+		}
 	}
 	
 	/* BEGIN Private methods */
@@ -289,6 +297,11 @@ public class ClassRowMapping {
 //		.from(new From()
 //			.tableName(tableIdentifier)
 //		)
+		.where(createWhereById())
+		.immutable();
+		
+		deleteByIdAndVersion = new Delete()
+		.tableName(tableIdentifier)
 		.where(createWhereById(true))
 		.immutable();
 	}

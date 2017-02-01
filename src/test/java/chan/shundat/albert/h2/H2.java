@@ -22,8 +22,10 @@ public final class H2 {
 			conn = getConnection();
 			createTableUser = conn.prepareStatement(
 					"CREATE TABLE User ("
-					+ "user_id int auto_increment primary key,"
-					+ "name varchar(20))");
+					+ "user_id INT PRIMARY KEY,"
+					+ "name VARCHAR(20),"
+					+ "version INT DEFAULT 0"
+					+ ")");
 			createTableUser.executeUpdate();
 		} finally {
 			JdbcUtils.closeQuietly(createTableUser);
