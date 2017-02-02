@@ -246,4 +246,114 @@ class JdbcMapperSpec extends Specification {
 		updatedUser.version == 1
 		updatedUser.name == 'Javalbert'
 	}
+	
+	def 'Update stale object updated by another transaction and throw an error'() {
+		given: 'User variable called "user"'
+		mapper.register(User.class)
+		Connection conn = null
+		User user = new User()
+		user.userId = 7
+		user.name = 'Albert'
+		
+		and: 'variable called "staleUser"'
+		User staleUser = null
+		try {
+			conn = H2.getConnection()
+			mapper.save(conn, user)
+			user = mapper.get(conn, User.class, 7)
+			staleUser = mapper.get(conn, User.class, 7)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		when: '"user" is updated'
+		try {
+			conn = H2.getConnection()
+			mapper.update(conn, user)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		and: 'then "staleUser" is updated'
+		try {
+			conn = H2.getConnection()
+			mapper.update(conn, staleUser)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		then: 'throw error'
+		thrown(IllegalStateException)
+	}
+	
+	def 'Delete stale object updated by another transaction and throw an error'() {
+		given: 'User variable called "user"'
+		mapper.register(User.class)
+		Connection conn = null
+		User user = new User()
+		user.userId = 8
+		user.name = 'Albert'
+		
+		and: 'variable called "staleUser"'
+		User staleUser = null
+		try {
+			conn = H2.getConnection()
+			mapper.save(conn, user)
+			user = mapper.get(conn, User.class, 8)
+			staleUser = mapper.get(conn, User.class, 8)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		when: '"user" is updated'
+		try {
+			conn = H2.getConnection()
+			mapper.update(conn, user)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		and: 'then "staleUser" is deleted'
+		try {
+			conn = H2.getConnection()
+			mapper.delete(conn, staleUser)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		then: 'throw error'
+		thrown(IllegalStateException)
+	}
+	
+	def 'Persist an object into the database regardless if it is an existing record'() {
+		given: 'New User entity'
+		mapper.register(User.class)
+		Connection conn = null
+		User user = new User()
+		user.userId = 9
+		user.name = 'Albert'
+		
+		when: 'User is saved or updated'
+		try {
+			conn = H2.getConnection()
+			mapper.saveOrUpdate(conn, user)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		Integer versionAfterSave = user.version
+		
+		and: 'then User is saved or updated using the same method'
+		try {
+			conn = H2.getConnection()
+			mapper.saveOrUpdate(conn, user)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		then: "User's version number was set to zero after first call"
+		versionAfterSave == 0
+		
+		and: "then User's version number was incremented to 1 after second call"
+		user.version == 1
+	}
 }

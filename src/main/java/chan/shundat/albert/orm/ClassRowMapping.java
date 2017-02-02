@@ -168,6 +168,13 @@ public class ClassRowMapping {
 		return versionColumnMapping != null;
 	}
 	
+	public void incrementVersion(Object object) {
+		if (hasVersionControl()) {
+			Integer version = (Integer)versionColumnMapping.get(object);
+			versionColumnMapping.set(object, ++version);
+		}
+	}
+	
 	public boolean isAutoIncrementId() {
 		return autoIncrementIdMapping != null;
 	}

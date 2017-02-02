@@ -371,7 +371,11 @@ public class JdbcMapper {
 		ClassRowMapping classRowMapping = getClassRowMapping(object.getClass());
 		Update updateById = classRowMapping.getUpdateById();
 		JdbcStatement updateStatement = createQuery(updateById).setParametersFrom(object, classRowMapping);
-		return update(connection, updateStatement, classRowMapping);
+		boolean updated = update(connection, updateStatement, classRowMapping);
+		if (updated) {
+			classRowMapping.incrementVersion(object);
+		}
+		return updated;
 	}
 	
 	/* END Public methods */
