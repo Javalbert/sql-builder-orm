@@ -4,6 +4,7 @@ import java.sql.Connection
 import java.sql.SQLException
 
 import chan.shundat.albert.domain.User
+import chan.shundat.albert.domain.User2
 import chan.shundat.albert.h2.H2
 import chan.shundat.albert.sqlbuilder.ColumnList
 import chan.shundat.albert.sqlbuilder.ColumnValues
@@ -32,6 +33,15 @@ class JdbcMapperSpec extends Specification {
 		then: 'ClassRowMapping object for User class is created'
 		ClassRowMapping userMapping = mapper.getMappings().get(User.class)
 		userMapping != null
+	}
+	
+	def 'Register all entity classes in Java package'() {
+		when: 'Registering chan.shundat.albert.domain'
+		mapper.register('chan.shundat.albert.domain')
+		
+		then: 'User and User2 classes were registered'
+		mapper.getMappings().get(User.class) != null
+		mapper.getMappings().get(User2.class) != null
 	}
 	
 	def 'Execute JdbcStatement object representing INSERT statement and verifying entity was inserted'() {
@@ -355,5 +365,23 @@ class JdbcMapperSpec extends Specification {
 		
 		and: "then User's version number was incremented to 1 after second call"
 		user.version == 1
+	}
+	
+	def 'Save object with auto-increment ID'() {
+		given: 'User2 object'
+		mapper.register(User2.class)
+		User2 user = new User2()
+		
+		when: 'saved to database'
+		Connection conn = null
+		try {
+			conn = H2.getConnection()
+			mapper.saveOrUpdate(conn, user)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		then: "User2 object's auto-increment ID is set to 1"
+		user.userId == 1
 	}
 }
