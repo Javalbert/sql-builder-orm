@@ -1,25 +1,18 @@
 # SqlbuilderORM
 
 ## Summary
-- SQL centric
-	- No need to learn framework specific query language
-	- SQL building
-	- SQL parsing
-	- ANSI SQL over proprietary SQL extensions
-- No reliance on database schema (potentially inconsistent/buggy JDBC driver behavior)
-- Data mapping row to class
-	- Requires explicit @Column annotations (no need for transient keyword)
-	- Classes don't need to represent a database table and they can use @Alias annotation for aliases in result sets
-- No Connection object intialization/handling (your choice of application framework and/or connection pool handles Connections)
-- SELECT query results can be returned as Lists, Maps, or Sets
-	- JSON support (uses GSON library)
-- Uses Reflection API
-	- No proxy classes
-- Object graphs decided at runtime (not compile time)
-- No code generation
+- SQL builder API conforming to ANSI SQL
+- SQL parser which can parse ANSI SQL strings and internally uses the SQL builder API
+- Output SQL strings based on database vendor (ANSI, SQL Server, MySQL)
+- No proxy objects
+- Object graphs decided at runtime instead of compile time annotations
 
 ## TODO
-
-- Testing
-	- JUnit
-- Javadoc
+- Add JMH benchmarks (ReflectASM vs reflection, Hibernate)
+- Adding JUnit tests using Spock
+- Conform to ANSI SQL
+- Implement MERGE statement
+- Implement nested JOINs
+- Implement new Java 8 features (Date and Time API, lamda functions)
+- Publish project to The Central Repository
+- Replace usage of reflection API with ReflectASM library
