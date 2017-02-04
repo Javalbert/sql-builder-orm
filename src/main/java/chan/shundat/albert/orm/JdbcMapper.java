@@ -367,6 +367,16 @@ public class JdbcMapper {
 		return result;
 	}
 	
+	public Select selectById(Class clazz) {
+		return getClassRowMapping(clazz).getSelectById();
+	}
+	
+	public Select selectFrom(Class clazz) {
+		ClassRowMapping mapping = getClassRowMapping(clazz);
+		return new Select().list(mapping.getSelectList())
+				.from(mapping.getFrom());
+	}
+	
 	public boolean update(Connection connection, Object object) throws SQLException {
 		ClassRowMapping classRowMapping = getClassRowMapping(object.getClass());
 		Update updateById = classRowMapping.getUpdateById();
