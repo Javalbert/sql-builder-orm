@@ -17,6 +17,7 @@ class JdbcStatementSpec extends Specification {
 	private JdbcMapper mapper
 	
 	def setupSpec() {
+		H2.deleteRecords()
 		H2.createTables()
 	}
 	
@@ -44,13 +45,16 @@ class JdbcStatementSpec extends Specification {
 			JdbcUtils.closeQuietly(conn)
 		}
 		
+		and: 'Select (by ID) object'
+		Select selectById = mapper.selectById(User.class)
+		
 		when: 'PreparedStatement is returned, ResultSet is processed, and User variable named "user2" is created manually'
 		PreparedStatement stmt = null
 		ResultSet rs = null
 		User user2 = null
 		try {
 			conn = H2.getConnection()
-			JdbcStatement jdbcStmt = mapper.createQuery(mapper.selectById(User.class))
+			JdbcStatement jdbcStmt = mapper.createQuery(selectById)
 			jdbcStmt.setInteger('user_id', 1) // Use database column name as param name
 			
 			stmt = jdbcStmt.createPreparedStatement(conn)

@@ -19,6 +19,7 @@ class JdbcMapperSpec extends Specification {
 	private JdbcMapper mapper;
 	
 	def setupSpec() {
+		H2.deleteRecords()
 		H2.createTables()
 	}
 	

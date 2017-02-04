@@ -24,6 +24,14 @@ public final class H2 {
 				+ ")");
 	}
 	
+	public static void deleteRecords() {
+		try {
+			executeStatements(
+					"DELETE FROM User",
+					"DELETE FROM User2");
+		} catch (Exception ignored) {}
+	}
+	
 	public static void executeStatements(String...sqlStatements) throws ClassNotFoundException, SQLException {
 		Connection conn = null;
 		Deque<PreparedStatement> preparedStatements = new ArrayDeque<>();
