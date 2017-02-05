@@ -14,6 +14,8 @@ public class User {
 	private int userId;
 	@Column("name")
 	private String name;
+	@Column("active")
+	private Boolean active;
 	@Version
 	@Column("version")
 	private int version;
@@ -30,6 +32,12 @@ public class User {
 	public void setName(String name) {
 		this.name = name;
 	}
+	public Boolean isActive() {
+		return active;
+	}
+	public void setActive(Boolean active) {
+		this.active = active;
+	}
 	public int getVersion() {
 		return version;
 	}
@@ -37,17 +45,25 @@ public class User {
 		this.version = version;
 	}
 	
-	public User() {}
+	public User() {
+		this(0, null);
+	}
 	
 	public User(int userId, String name) {
-		this.name = name;
+		this(userId, name, null);
+	}
+	
+	public User(int userId, String name, Boolean active) {
 		this.userId = userId;
+		this.name = name;
+		this.active = active;
 	}
 	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
+		result = prime * result + ((active == null) ? 0 : active.hashCode());
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result + userId;
 		result = prime * result + version;
@@ -63,6 +79,11 @@ public class User {
 		if (getClass() != obj.getClass())
 			return false;
 		User other = (User) obj;
+		if (active == null) {
+			if (other.active != null)
+				return false;
+		} else if (!active.equals(other.active))
+			return false;
 		if (name == null) {
 			if (other.name != null)
 				return false;

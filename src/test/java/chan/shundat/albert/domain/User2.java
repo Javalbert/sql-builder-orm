@@ -38,4 +38,10 @@ public class User2 {
 	public void setVersion(int version) {
 		this.version = version;
 	}
+	
+	public User2() {}
+	
+	public User2(String name) {
+		this.name = name;
+	}
 }

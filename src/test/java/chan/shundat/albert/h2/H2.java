@@ -15,6 +15,7 @@ public final class H2 {
 				"CREATE TABLE IF NOT EXISTS User ("
 				+ "user_id INT PRIMARY KEY,"
 				+ "name VARCHAR(20),"
+				+ "active BOOLEAN,"
 				+ "version INT DEFAULT 0"
 				+ ")",
 				"CREATE TABLE IF NOT EXISTS User2 ("
@@ -28,7 +29,8 @@ public final class H2 {
 		try {
 			executeStatements(
 					"DELETE FROM User",
-					"DELETE FROM User2");
+					"DELETE FROM User2",
+					"ALTER TABLE User2 ALTER COLUMN user_id RESTART WITH 1");
 		} catch (Exception ignored) {}
 	}
 	
