@@ -52,7 +52,8 @@ public class JdbcMapper {
 	
 	private static final Logger logger = LoggerFactory.getLogger(JdbcMapper.class);
 	
-	private static <T> T createObject(Class<T> clazz, 
+	private static <T> T createObject(
+			Class<T> clazz, 
 			List<FieldColumnMapping> columnMappings, 
 			ResultSetHelper rs) 
 			throws SQLException {
@@ -60,11 +61,14 @@ public class JdbcMapper {
 		try {
 			instance = clazz.newInstance();
 			setObjectProperties(instance, columnMappings, rs);
-		} catch (InstantiationException | IllegalAccessException e) {}
+		} catch (InstantiationException | IllegalAccessException e) {
+			throw new IllegalStateException(clazz + " does not have default constructor", e);
+		}
 		return instance;
 	}
 	
-	private static void save(Connection connection, 
+	private static void save(
+			Connection connection, 
 			Object object, 
 			JdbcStatement insertStatement, 
 			ClassRowMapping classRowMapping) 
@@ -90,7 +94,8 @@ public class JdbcMapper {
 		}
 	}
 	
-	private static void setObjectProperties(Object instance, 
+	private static void setObjectProperties(
+			Object instance, 
 			List<FieldColumnMapping> columnMappings, 
 			ResultSetHelper rs) 
 			throws SQLException {
@@ -99,7 +104,8 @@ public class JdbcMapper {
 		}
 	}
 	
-	private static boolean refresh(Connection connection, 
+	private static boolean refresh(
+			Connection connection, 
 			Object object, 
 			JdbcStatement selectStatement, 
 			List<FieldColumnMapping> columnMappings) throws SQLException {

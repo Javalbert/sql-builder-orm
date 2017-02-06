@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -79,7 +78,10 @@ public class JdbcStatement {
 	
 	private static final Pattern PARAM_PATTERN = Pattern.compile(":\\w+");
 	
-	private static <T, C extends Collection<T>> C toJdbcDataTypeCollection(Class<T> clazz, ResultSetHelper rs, C collection) throws SQLException {
+	private static <T, C extends Collection<T>> C toJdbcDataTypeCollection(
+			Class<T> clazz,
+			ResultSetHelper rs,
+			C collection) throws SQLException {
 		switch (clazz.getCanonicalName()) {
 			case ClassUtils.NAME_BOOLEAN:
 			case ClassUtils.NAME_JAVA_LANG_BOOLEAN:
@@ -417,7 +419,8 @@ public class JdbcStatement {
 		}
 	}
 
-	public <T, C extends Collection<T>> C toJdbcDataTypeCollection(Connection connection, 
+	public <T, C extends Collection<T>> C toJdbcDataTypeCollection(
+			Connection connection, 
 			Class<T> clazz, 
 			C collection) 
 			throws SQLException {
@@ -494,10 +497,6 @@ public class JdbcStatement {
 			JdbcUtils.closeQuietly(rs);
 			close(stmt);
 		}
-	}
-
-	public <T> LinkedList<T> toLinkedList(Connection connection, Class<T> clazz) throws SQLException {
-		return toCollection(connection, clazz, new LinkedList<>());
 	}
 	
 	public <K, T> Map<K, T> toLinkedMap(Connection connection, Class<T> clazz) throws SQLException {

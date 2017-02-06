@@ -12,6 +12,18 @@ import chan.shundat.albert.utils.jdbc.JdbcUtils;
 public final class H2 {
 	public static void createTables() throws ClassNotFoundException, SQLException {
 		executeStatements(
+				"CREATE TABLE IF NOT EXISTS DataTypeHolder ("
+				+ "id INT PRIMARY KEY,"
+				+ "int_val INT NOT NULL,"
+				+ "boolean_val BOOLEAN NOT NULL,"
+				+ "bigint_val BIGINT NOT NULL,"
+				+ "decimal_val DECIMAL(13, 2),"
+				+ "double_val DOUBLE NOT NULL,"
+				+ "real_val REAL NOT NULL,"
+				+ "date_val DATE,"
+				+ "timestamp_val TIMESTAMP,"
+				+ "varchar_val VARCHAR(255)"
+				+ ")",
 				"CREATE TABLE IF NOT EXISTS User ("
 				+ "user_id INT PRIMARY KEY,"
 				+ "name VARCHAR(20),"
@@ -28,6 +40,7 @@ public final class H2 {
 	public static void deleteRecords() {
 		try {
 			executeStatements(
+					"DELETE FROM DataTypeHolder",
 					"DELETE FROM User",
 					"DELETE FROM User2",
 					"ALTER TABLE User2 ALTER COLUMN user_id RESTART WITH 1");
@@ -61,6 +74,7 @@ public final class H2 {
 	
 	public static void dropTables() throws ClassNotFoundException, SQLException {
 		executeStatements(
+				"DROP TABLE IF EXISTS DataTypeHolder",
 				"DROP TABLE IF EXISTS User",
 				"DROP TABLE IF EXISTS User2");
 	}
