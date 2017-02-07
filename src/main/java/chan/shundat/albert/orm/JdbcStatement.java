@@ -78,58 +78,58 @@ public class JdbcStatement {
 	
 	private static final Pattern PARAM_PATTERN = Pattern.compile(":\\w+");
 	
-	private static <T, C extends Collection<T>> C toJdbcDataTypeCollection(
-			Class<T> clazz,
+	private static Collection toJdbcDataTypeCollection(
+			Class clazz,
 			ResultSetHelper rs,
-			C collection) throws SQLException {
+			Collection collection) throws SQLException {
 		switch (clazz.getCanonicalName()) {
 			case ClassUtils.NAME_BOOLEAN:
 			case ClassUtils.NAME_JAVA_LANG_BOOLEAN:
 				while (rs.next()) {
-					collection.add((T)rs.getBoolean2(1));
+					collection.add(rs.getBoolean2(1));
 				}
 				break;
 			case ClassUtils.NAME_DOUBLE:
 			case ClassUtils.NAME_JAVA_LANG_DOUBLE:
 				while (rs.next()) {
-					collection.add((T)rs.getDouble2(1));
+					collection.add(rs.getDouble2(1));
 				}
 				break;
 			case ClassUtils.NAME_FLOAT:
 			case ClassUtils.NAME_JAVA_LANG_FLOAT:
 				while (rs.next()) {
-					collection.add((T)rs.getFloat2(1));
+					collection.add(rs.getFloat2(1));
 				}
 				break;
 			case ClassUtils.NAME_JAVA_LANG_INTEGER:
 				while (rs.next()) {
-					collection.add((T)rs.getInt2(1));
+					collection.add(rs.getInt2(1));
 				}
 				break;
 			case ClassUtils.NAME_LONG:
 			case ClassUtils.NAME_JAVA_LANG_LONG:
 				while (rs.next()) {
-					collection.add((T)rs.getLong2(1));
+					collection.add(rs.getLong2(1));
 				}
 				break;
 			case ClassUtils.NAME_JAVA_LANG_STRING:
 				while (rs.next()) {
-					collection.add((T)rs.getString(1));
+					collection.add(rs.getString(1));
 				}
 				break;
 			case ClassUtils.NAME_JAVA_MATH_BIG_DECIMAL:
 				while (rs.next()) {
-					collection.add((T)rs.getBigDecimal(1));
+					collection.add(rs.getBigDecimal(1));
 				}
 				break;
 			case ClassUtils.NAME_JAVA_SQL_TIMESTAMP:
 				while (rs.next()) {
-					collection.add((T)rs.getTimestamp(1));
+					collection.add(rs.getTimestamp2(1));
 				}
 				break;
 			case ClassUtils.NAME_JAVA_UTIL_DATE:
 				while (rs.next()) {
-					collection.add((T)rs.getDate2(1));
+					collection.add(rs.getDate2(1));
 				}
 				break;
 		}
@@ -419,10 +419,10 @@ public class JdbcStatement {
 		}
 	}
 
-	public <T, C extends Collection<T>> C toJdbcDataTypeCollection(
+	public Collection toJdbcDataTypeCollection(
 			Connection connection, 
-			Class<T> clazz, 
-			C collection) 
+			Class clazz, 
+			Collection collection) 
 			throws SQLException {
 		PreparedStatement stmt = null;
 		ResultSetHelper rs = null;
@@ -727,10 +727,7 @@ public class JdbcStatement {
 		List<java.sql.Date> dates = new ArrayList<>();
 		
 		for (Date date : x) {
-			if (date == null) {
-				continue;
-			}
-			dates.add(new java.sql.Date(date.getTime()));
+			dates.add(date != null ? new java.sql.Date(date.getTime()) : null);
 		}
 		return setCollection(name, PARAM_TYPE_LIST_DATE, dates);
 	}
@@ -910,12 +907,9 @@ public class JdbcStatement {
 		List<java.sql.Timestamp> timestamps = new ArrayList<>();
 		
 		for (Date date : x) {
-			if (date == null) {
-				continue;
-			}
-			timestamps.add(new java.sql.Timestamp(date.getTime()));
+			timestamps.add(date != null ? new java.sql.Timestamp(date.getTime()) : null);
 		}
-		return setCollection(name, PARAM_TYPE_LIST_TIMESTAMP, x);
+		return setCollection(name, PARAM_TYPE_LIST_TIMESTAMP, timestamps);
 	}
 	
 	public JdbcStatement sqlStatement(SqlStatement sqlStatement) {
