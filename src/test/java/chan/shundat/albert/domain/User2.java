@@ -13,30 +13,47 @@
 package chan.shundat.albert.domain;
 
 import chan.shundat.albert.orm.Column;
+import chan.shundat.albert.orm.Entity;
+import chan.shundat.albert.orm.GeneratedValue;
 import chan.shundat.albert.orm.Id;
-import chan.shundat.albert.orm.IdClass;
 import chan.shundat.albert.orm.Table;
+import chan.shundat.albert.orm.Version;
 
-@IdClass(BookPagePK.class)
-@Table(catalog = "Albert", schema = "dbo", name = "Book_Page")
-public class BookPage {
+@Entity
+@Table(name = "User2")
+public class User2 {
 	@Id
-	@Column("isbn")
-	private String isbn;
-	@Id
-	@Column("page_number")
-	private int pageNumber;
+	@GeneratedValue
+	@Column("user_id")
+	private int userId;
+	@Column("name")
+	private String name;
+	@Version
+	@Column("version")
+	private int version;
 	
-	public String getIsbn() {
-		return isbn;
+	public int getUserId() {
+		return userId;
 	}
-	public void setIsbn(String isbn) {
-		this.isbn = isbn;
+	public void setUserId(int userId) {
+		this.userId = userId;
 	}
-	public int getPageNumber() {
-		return pageNumber;
+	public String getName() {
+		return name;
 	}
-	public void setPageNumber(int pageNumber) {
-		this.pageNumber = pageNumber;
+	public void setName(String name) {
+		this.name = name;
+	}
+	public int getVersion() {
+		return version;
+	}
+	public void setVersion(int version) {
+		this.version = version;
+	}
+	
+	public User2() {}
+	
+	public User2(String name) {
+		this.name = name;
 	}
 }

@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import chan.shundat.albert.sqlbuilder.Aliasable;
-import chan.shundat.albert.sqlbuilder.Delete;
 import chan.shundat.albert.sqlbuilder.Insert;
 import chan.shundat.albert.sqlbuilder.Node;
 import chan.shundat.albert.sqlbuilder.Select;
@@ -53,7 +52,8 @@ public class JdbcMapper {
 	
 	private static final Logger logger = LoggerFactory.getLogger(JdbcMapper.class);
 	
-	private static <T> T createObject(Class<T> clazz, 
+	private static <T> T createObject(
+			Class<T> clazz, 
 			List<FieldColumnMapping> columnMappings, 
 			ResultSetHelper rs) 
 			throws SQLException {
@@ -61,11 +61,14 @@ public class JdbcMapper {
 		try {
 			instance = clazz.newInstance();
 			setObjectProperties(instance, columnMappings, rs);
-		} catch (InstantiationException | IllegalAccessException e) {}
+		} catch (InstantiationException | IllegalAccessException e) {
+			throw new IllegalStateException(clazz + " does not have default constructor", e);
+		}
 		return instance;
 	}
 	
-	private static void save(Connection connection, 
+	private static void save(
+			Connection connection, 
 			Object object, 
 			JdbcStatement insertStatement, 
 			ClassRowMapping classRowMapping) 
@@ -91,7 +94,8 @@ public class JdbcMapper {
 		}
 	}
 	
-	private static void setObjectProperties(Object instance, 
+	private static void setObjectProperties(
+			Object instance, 
 			List<FieldColumnMapping> columnMappings, 
 			ResultSetHelper rs) 
 			throws SQLException {
@@ -100,7 +104,8 @@ public class JdbcMapper {
 		}
 	}
 	
-	private static boolean refresh(Connection connection, 
+	private static boolean refresh(
+			Connection connection, 
 			Object object, 
 			JdbcStatement selectStatement, 
 			List<FieldColumnMapping> columnMappings) throws SQLException {
@@ -123,6 +128,12 @@ public class JdbcMapper {
 			JdbcUtils.closeQuietly(stmt);
 		}
 	}
+	
+	private static void throwRowWasChanged(boolean throwCondition, ClassRowMapping classRowMapping) {
+		if (throwCondition && classRowMapping.hasVersionControl()) {
+			throw new IllegalStateException("row was updated or deleted by another transaction");
+		}
+	}
 
 	private static <T> T uniqueResultById(Connection connection, 
 			Class<T> clazz, 
@@ -137,10 +148,7 @@ public class JdbcMapper {
 	private static boolean update(Connection connection, JdbcStatement updateStatement, ClassRowMapping classRowMapping) throws SQLException {
 		int updatedRows = updateStatement.executeUpdate(connection);
 		boolean updated = updatedRows > 0;
-		
-		if (!updated && classRowMapping.hasVersionControl()) {
-			throw new IllegalStateException("row was updated or deleted by another transaction");
-		}
+		throwRowWasChanged(!updated, classRowMapping);
 		return updated;
 	}
 	
@@ -178,14 +186,11 @@ public class JdbcMapper {
 	}
 	
 	public boolean delete(Connection connection, Object object) throws SQLException {
-		ClassRowMapping classRowMapping = mappings.get(object.getClass());
-		Serializable id = classRowMapping.getOrCreateId(object);
-		return delete(connection, id, classRowMapping);
+		return deleteByObject(connection, object, getClassRowMapping(object.getClass()));
 	}
 	
 	public boolean delete(Connection connection, Class clazz, Serializable id) throws SQLException {
-		ClassRowMapping classRowMapping = mappings.get(clazz);
-		return delete(connection, id, classRowMapping);
+		return deleteById(connection, getClassRowMapping(clazz), id);
 	}
 	
 //	public <T, C extends Collection<T>, ID extends Serializable, IDList extends Collection<ID>> C getCollection(
@@ -219,7 +224,7 @@ public class JdbcMapper {
 //			throws SQLException {
 //		Class clazz = graphEntity.getClazz();
 //		
-//		ClassRowMapping classRowMapping = mappings.get(clazz);
+//		ClassRowMapping classRowMapping = getClassRowMapping(clazz);
 //		
 //		Select selectById = classRowMapping.getSelectById();
 //		
@@ -244,7 +249,7 @@ public class JdbcMapper {
 //	}
 
 	public <T> T get(Connection connection, Class<T> clazz, Serializable id) throws SQLException {
-		ClassRowMapping classRowMapping = mappings.get(clazz);
+		ClassRowMapping classRowMapping = getClassRowMapping(clazz);
 		Select selectById = classRowMapping.getSelectById();
 		JdbcStatement selectStatement = createQuery(selectById);
 		return uniqueResultById(connection, clazz, id, classRowMapping, selectStatement);
@@ -305,7 +310,7 @@ public class JdbcMapper {
 	}
 	
 	public boolean refresh(Connection connection, Object object) throws SQLException {
-		ClassRowMapping classRowMapping = mappings.get(object.getClass());
+		ClassRowMapping classRowMapping = getClassRowMapping(object.getClass());
 		Select selectById = classRowMapping.getSelectById();
 		JdbcStatement selectStatement = createQuery(selectById);
 
@@ -334,7 +339,7 @@ public class JdbcMapper {
 	}
 
 	public void save(Connection connection, Object object) throws SQLException {
-		ClassRowMapping classRowMapping = mappings.get(object.getClass());
+		ClassRowMapping classRowMapping = getClassRowMapping(object.getClass());
 		
 		classRowMapping.setVersion(object);
 		Insert insert = classRowMapping.getInsert();
@@ -344,7 +349,7 @@ public class JdbcMapper {
 	}
 
 	public int saveOrUpdate(Connection connection, Object object) throws SQLException {
-		ClassRowMapping classRowMapping = mappings.get(object.getClass());
+		ClassRowMapping classRowMapping = getClassRowMapping(object.getClass());
 
 		Serializable id = classRowMapping.getOrCreateId(object);
 		boolean update = false;
@@ -368,6 +373,31 @@ public class JdbcMapper {
 		return result;
 	}
 	
+	public Select selectById(Class clazz) {
+		return getClassRowMapping(clazz).getSelectById();
+	}
+	
+	public Select selectFrom(Class clazz) {
+		ClassRowMapping mapping = getClassRowMapping(clazz);
+		return new Select().list(mapping.getSelectList())
+				.from(mapping.getFrom());
+	}
+	
+	public boolean update(Connection connection, Object object) throws SQLException {
+		ClassRowMapping classRowMapping = getClassRowMapping(object.getClass());
+		Update updateById = classRowMapping.getUpdateById();
+		JdbcStatement updateStatement = createQuery(updateById).setParametersFrom(object, classRowMapping);
+		boolean updated = update(connection, updateStatement, classRowMapping);
+		if (updated) {
+			classRowMapping.incrementVersion(object);
+		}
+		return updated;
+	}
+	
+	/* END Public methods */
+	
+	/* START Protected methods */
+	
 	/**
 	 * WARN: This does not call ResultSet.next()
 	 * @param clazz
@@ -376,8 +406,8 @@ public class JdbcMapper {
 	 * @return
 	 * @throws SQLException
 	 */
-	public <T> T toObject(Class<T> clazz, Select select, ResultSet rs) throws SQLException {
-		ClassRowMapping classRowMapping = mappings.get(clazz);
+	<T> T toObject(Class<T> clazz, Select select, ResultSet rs) throws SQLException {
+		ClassRowMapping classRowMapping = getClassRowMapping(clazz);
 		List<FieldColumnMapping> columnMappings = getColumnMappings(classRowMapping, select);
 
 		ResultSetHelper rsHelper = new ResultSetHelper(rs);
@@ -385,10 +415,10 @@ public class JdbcMapper {
 		return object;
 	}
 	
-	public <T, C extends Collection> C toCollection(Class<T> clazz, Select select, ResultSet rs, C objects) throws SQLException {
+	<T, C extends Collection> C toCollection(Class<T> clazz, Select select, ResultSet rs, C objects) throws SQLException {
 		ResultSetHelper rsHelper = new ResultSetHelper(rs);
 		
-		ClassRowMapping classRowMapping = mappings.get(clazz);
+		ClassRowMapping classRowMapping = getClassRowMapping(clazz);
 		List<FieldColumnMapping> columnMappings = getColumnMappings(classRowMapping, select);
 		
 		while (rs.next()) {
@@ -398,10 +428,10 @@ public class JdbcMapper {
 		return objects;
 	}
 
-	public <K, T> Map<K, T> toMap(Class<T> clazz, Select select, ResultSet rs, Map map, String mapKeyName) throws SQLException {
+	<K, T> Map<K, T> toMap(Class<T> clazz, Select select, ResultSet rs, Map map, String mapKeyName) throws SQLException {
 		ResultSetHelper rsHelper = new ResultSetHelper(rs);
 		
-		ClassRowMapping classRowMapping = mappings.get(clazz);
+		ClassRowMapping classRowMapping = getClassRowMapping(clazz);
 		List<FieldColumnMapping> columnMappings = getColumnMappings(classRowMapping, select);
 		
 		while (rs.next()) {
@@ -412,23 +442,36 @@ public class JdbcMapper {
 		return map;
 	}
 	
-	public boolean update(Connection connection, Object object) throws SQLException {
-		ClassRowMapping classRowMapping = mappings.get(object.getClass());
-		Update updateById = classRowMapping.getUpdateById();
-		JdbcStatement updateStatement = createQuery(updateById).setParametersFrom(object, classRowMapping);
-		return update(connection, updateStatement, classRowMapping);
-	}
-	
-	/* END Public methods */
+	/* END Protected methods */
 	
 	/* BEGIN Private methods */
 	
-	private boolean delete(Connection connection, Serializable id, ClassRowMapping classRowMapping) throws SQLException {
-		Delete delete = classRowMapping.getDeleteById();
-		JdbcStatement deleteStatement = createQuery(delete);
+	private boolean deleteById(Connection connection, ClassRowMapping classRowMapping, Serializable id) throws SQLException {
+		JdbcStatement deleteStatement = createQuery(classRowMapping.getDeleteById());
 		classRowMapping.setIdParameters(deleteStatement, id);
 		int deletedRows = deleteStatement.executeUpdate(connection);
 		return deletedRows > 0;
+	}
+	
+	private boolean deleteByObject(Connection connection, Object object, ClassRowMapping classRowMapping) throws SQLException {
+		JdbcStatement deleteStatement = createQuery(classRowMapping.hasVersionControl() 
+				? classRowMapping.getDeleteByIdAndVersion() 
+				: classRowMapping.getDeleteById());
+		
+		classRowMapping.setIdParameters(deleteStatement, object);
+		classRowMapping.setVersionParameter(deleteStatement, object);
+		
+		int deletedRows = deleteStatement.executeUpdate(connection);
+		throwRowWasChanged(deletedRows == 0, classRowMapping);
+		return deletedRows > 0;
+	}
+	
+	private ClassRowMapping getClassRowMapping(Class clazz) {
+		ClassRowMapping classRowMapping = mappings.get(clazz);
+		if (classRowMapping == null) {
+			throw new IllegalStateException("Entity " + clazz + " not registered");
+		}
+		return classRowMapping;
 	}
 	
 	/* END Private methods */

@@ -10,33 +10,26 @@
  * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See
  * the License for the specific language governing permissions and limitations under the License.
  *******************************************************************************/
-package chan.shundat.albert.domain;
+package chan.shundat.albert.utils;
 
-import chan.shundat.albert.orm.Column;
-import chan.shundat.albert.orm.Id;
-import chan.shundat.albert.orm.IdClass;
-import chan.shundat.albert.orm.Table;
+import java.math.BigDecimal;
 
-@IdClass(BookPagePK.class)
-@Table(catalog = "Albert", schema = "dbo", name = "Book_Page")
-public class BookPage {
-	@Id
-	@Column("isbn")
-	private String isbn;
-	@Id
-	@Column("page_number")
-	private int pageNumber;
+public final class HashEqualsUtils {
+	public static boolean equal(BigDecimal a, BigDecimal b) {
+		return a.compareTo(b) != 0;
+	}
 	
-	public String getIsbn() {
-		return isbn;
+	/**
+	 * CREDIT: <a href="http://stackoverflow.com/a/14313302">Stack Overflow</a>
+	 * @return
+	 */
+	public static int hash(BigDecimal x) {
+		if (x == null) {
+			return 0;
+		}
+		long temp = Double.doubleToLongBits(x.doubleValue());
+		return (int) (temp ^ (temp >>> 32));
 	}
-	public void setIsbn(String isbn) {
-		this.isbn = isbn;
-	}
-	public int getPageNumber() {
-		return pageNumber;
-	}
-	public void setPageNumber(int pageNumber) {
-		this.pageNumber = pageNumber;
-	}
+	
+	private HashEqualsUtils() {}
 }

@@ -25,6 +25,10 @@ public class Insert implements DMLStatement<Insert>, Node<Insert>, NodeHolder {
 	public int getType() { return TYPE_INSERT; }
 
 	public Insert() {}
+
+	public Insert(String name) {
+		into(name);
+	}
 	
 	public Insert(Insert insert) {
 		nodes = NodeUtils.mutableNodes(insert);

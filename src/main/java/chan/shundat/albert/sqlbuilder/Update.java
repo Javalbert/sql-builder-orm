@@ -29,6 +29,10 @@ public class Update implements DMLStatement<Update>,
 
 	public Update() {}
 	
+	public Update(String tableName) {
+		tableName(tableName);
+	}
+	
 	public Update(Update update) {
 		nodes = NodeUtils.mutableNodes(update);
 	}
