@@ -22,6 +22,6 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 public @interface Table {
 	String catalog() default "";
-	String name() default "";
+	String name();
 	String schema() default "";
 }
