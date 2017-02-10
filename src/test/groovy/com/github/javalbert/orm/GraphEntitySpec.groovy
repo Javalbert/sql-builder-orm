@@ -14,6 +14,7 @@ import spock.lang.Specification
 
 class GraphEntitySpec extends Specification {
 	private JdbcMapper mapper
+	private ObjectGraphResolver graphResolver
 	
 	def setupSpec() {
 		H2.deleteRecords()
@@ -26,6 +27,7 @@ class GraphEntitySpec extends Specification {
 		mapper.register(Store.class)
 		mapper.register(Order.class)
 		mapper.register(Product.class)
+		graphResolver = new BatchResolver(mapper)
 	}
 	
 	def 'Retrieve child records of a parent object in a list'() {
@@ -33,7 +35,7 @@ class GraphEntitySpec extends Specification {
 		GraphEntity customerEntity = new GraphEntity(Customer.class, 'cus')
 		GraphEntity orderEntity = new GraphEntity(Order.class, 'ord')
 		
-		and: 'a Customer record with 3 Orders'
+		and: 'a Customer record with 2 Orders'
 		Connection conn = null
 		try {
 			conn = H2.getConnection()
@@ -46,9 +48,21 @@ class GraphEntitySpec extends Specification {
 		}
 		
 		when: 'a Relationship is built between Customer and Order where Customer is related to many Orders'
+		customerEntity.isRelatedToMany(orderEntity)
+			.inList('orderList')
+			.joinedBy('customer_id')
+			.build()
 		
+		and: 'get the Customer object with orders'
+		Customer customer = null
+		try {
+			conn = H2.getConnection()
+			customer = mapper.get(conn, customerEntity, 1, graphResolver)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
 		
-		then: ''
-		
+		then: 'the Customer has 2 Orders in orders field'
+		customer.orders.size() == 2
 	}
 }
