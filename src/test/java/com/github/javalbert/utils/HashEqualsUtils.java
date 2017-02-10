@@ -16,7 +16,7 @@ import java.math.BigDecimal;
 
 public final class HashEqualsUtils {
 	public static boolean equal(BigDecimal a, BigDecimal b) {
-		return a.compareTo(b) != 0;
+		return a.compareTo(b) == 0;
 	}
 	
 	/**

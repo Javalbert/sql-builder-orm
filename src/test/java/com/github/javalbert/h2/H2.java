@@ -53,7 +53,7 @@ public final class H2 {
 				+ "full_name VARCHAR(50)"
 				+ ")",
 				"CREATE TABLE IF NOT EXISTS Store ("
-				+ "store_id IDENTITY,"
+				+ "store_key IDENTITY,"
 				+ "store_name VARCHAR(50)"
 				+ ")",
 				"CREATE TABLE IF NOT EXISTS Orders ("
@@ -63,7 +63,7 @@ public final class H2 {
 				+ "sales_amount DECIMAL(13, 2),"
 				+ "order_datetime TIMESTAMP,"
 				+ "FOREIGN KEY (customer_id) REFERENCES Customer (customer_id),"
-				+ "FOREIGN KEY (store_id) REFERENCES Store (store_id)"
+				+ "FOREIGN KEY (store_id) REFERENCES Store (store_key)"
 				+ ")",
 				"CREATE TABLE IF NOT EXISTS Product ("
 				+ "product_id IDENTITY,"
@@ -86,7 +86,7 @@ public final class H2 {
 					"DELETE FROM Orders",
 					"ALTER TABLE Orders ALTER COLUMN order_id RESTART WITH 1",
 					"DELETE FROM Store",
-					"ALTER TABLE Store ALTER COLUMN store_id RESTART WITH 1",
+					"ALTER TABLE Store ALTER COLUMN store_key RESTART WITH 1",
 					"DELETE FROM Customer",
 					"ALTER TABLE Customer ALTER COLUMN customer_id RESTART WITH 1");
 		} catch (Exception ignored) {}

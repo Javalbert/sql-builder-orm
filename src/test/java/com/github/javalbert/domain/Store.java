@@ -1,9 +1,12 @@
 package com.github.javalbert.domain;
 
+import java.util.Collection;
+
 import com.github.javalbert.orm.Column;
 import com.github.javalbert.orm.Entity;
 import com.github.javalbert.orm.GeneratedValue;
 import com.github.javalbert.orm.Id;
+import com.github.javalbert.orm.Related;
 import com.github.javalbert.orm.Table;
 
 @Entity
@@ -11,22 +14,32 @@ import com.github.javalbert.orm.Table;
 public class Store {
 	@Id
 	@GeneratedValue
-	@Column("store_id")
-	private int storeId;
+	@Column("store_key")
+	private int storeKey;
 	@Column("store_name")
 	private String storeName;
 	
-	public int getStoreId() {
-		return storeId;
+	@Related("orders")
+	private Collection<Order> orders;
+	
+	public int getStoreKey() {
+		return storeKey;
 	}
-	public void setStoreId(int storeId) {
-		this.storeId = storeId;
+	public void setStoreKey(int storeKey) {
+		this.storeKey = storeKey;
 	}
 	public String getStoreName() {
 		return storeName;
 	}
 	public void setStoreName(String storeName) {
 		this.storeName = storeName;
+	}
+	
+	public Collection<Order> getOrders() {
+		return orders;
+	}
+	public void setOrders(Collection<Order> orders) {
+		this.orders = orders;
 	}
 	
 	public Store() {}

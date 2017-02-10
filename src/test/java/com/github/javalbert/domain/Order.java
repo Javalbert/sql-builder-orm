@@ -2,11 +2,15 @@ package com.github.javalbert.domain;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.github.javalbert.orm.Column;
 import com.github.javalbert.orm.Entity;
 import com.github.javalbert.orm.GeneratedValue;
 import com.github.javalbert.orm.Id;
+import com.github.javalbert.orm.Related;
 import com.github.javalbert.orm.Table;
 
 @Entity
@@ -24,6 +28,13 @@ public class Order {
 	private BigDecimal salesAmount;
 	@Column("order_datetime")
 	private Date orderDatetime;
+	
+	@Related("productList")
+	private List<Product> productList;
+	@Related("productSet")
+	private Set<Product> productSet;
+	@Related("productMap")
+	private Map<Integer, Product> productMap;
 	
 	public int getOrderId() {
 		return orderId;
@@ -54,6 +65,25 @@ public class Order {
 	}
 	public void setOrderDatetime(Date orderDatetime) {
 		this.orderDatetime = orderDatetime;
+	}
+	
+	public List<Product> getProductList() {
+		return productList;
+	}
+	public void setProductList(List<Product> productList) {
+		this.productList = productList;
+	}
+	public Set<Product> getProductSet() {
+		return productSet;
+	}
+	public void setProductSet(Set<Product> productSet) {
+		this.productSet = productSet;
+	}
+	public Map<Integer, Product> getProductMap() {
+		return productMap;
+	}
+	public void setProductMap(Map<Integer, Product> productMap) {
+		this.productMap = productMap;
 	}
 	
 	public Order() {}
