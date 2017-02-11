@@ -29,6 +29,9 @@ public class Order {
 	@Column("order_datetime")
 	private Date orderDatetime;
 	
+	@Related("store")
+	private Store store;
+	
 	@Related("productList")
 	private List<Product> productList;
 	@Related("productSet")
@@ -67,6 +70,13 @@ public class Order {
 		this.orderDatetime = orderDatetime;
 	}
 	
+	public Store getStore() {
+		return store;
+	}
+	public void setStore(Store store) {
+		this.store = store;
+	}
+	
 	public List<Product> getProductList() {
 		return productList;
 	}
@@ -87,6 +97,10 @@ public class Order {
 	}
 	
 	public Order() {}
+	
+	public Order(int customerId, int storeId) {
+		this(customerId, storeId, null, null);
+	}
 	
 	public Order(int customerId, int storeId, BigDecimal salesAmount, Date orderDatetime) {
 		this.customerId = customerId;

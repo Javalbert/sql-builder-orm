@@ -32,7 +32,7 @@ class GraphEntitySpec extends Specification {
 		graphResolver = new BatchResolver(mapper)
 	}
 	
-	def 'Retrieve child records of a parent object in a list joined by columns with the same name'() {
+	def 'Fetch child records of a parent object in a list joined by columns with the same name'() {
 		given: 'GraphEntity objects for Customer and Order tables'
 		GraphEntity customerEntity = new GraphEntity(Customer.class, 'cus')
 		GraphEntity orderEntity = new GraphEntity(Order.class, 'ord')
@@ -68,7 +68,7 @@ class GraphEntitySpec extends Specification {
 		customer.orders.size() == 2
 	}
 	
-	def 'Retrieve child records of a parent object joined by columns with different names'() {
+	def 'Fetch child records of a parent object joined by columns with different names'() {
 		given: 'GraphEntity objects for Store and Order tables'
 		GraphEntity storeEntity = new GraphEntity(Store.class, 's')
 		GraphEntity orderEntity = new GraphEntity(Order.class, 'ord')
@@ -104,8 +104,8 @@ class GraphEntitySpec extends Specification {
 		store.orders.size() == 2
 	}
 	
-	@Unroll('Retrieve child container and expect its implementation is #implementationClass')
-	def 'Retrieve different implementations for holding child objects'() {
+	@Unroll('Fetch child container and expect its implementation is #implementationClass')
+	def 'Fetch different implementations for holding child objects'() {
 		given: 'GraphEntity objects for Order and Product tables'
 		GraphEntity orderEntity = new GraphEntity(Order.class, 'ord')
 		GraphEntity productEntity = new GraphEntity(Product.class, 'prod')
@@ -147,5 +147,97 @@ class GraphEntitySpec extends Specification {
 		{ Builder b -> b.inList('productList') }	|	{ Order o -> o.productList }	||	ArrayList.class
 		{ Builder b -> b.inMap('productMap') }	|	{ Order o -> o.productMap }	||	HashMap.class
 		{ Builder b -> b.inSet('productSet') }	|	{ Order o -> o.productSet }	||	HashSet.class
+	}
+	
+	def 'Fetch child records of parent objects and set a reference to the parent in the child objects'() {
+		given: 'GraphEntity objects for Store and Order tables'
+		GraphEntity storeEntity = new GraphEntity(Store.class, 's')
+		GraphEntity orderEntity = new GraphEntity(Order.class, 'ord')
+		
+		and: '2 Stores with 2 Orders each'
+		Connection conn = null
+		try {
+			conn = H2.getConnection()
+			mapper.save(conn, new Customer('Albert'))
+			mapper.save(conn, new Store('Store 1'))
+			mapper.save(conn, new Store('Store 2'))
+			mapper.save(conn, new Order(1, 1))
+			mapper.save(conn, new Order(1, 1))
+			mapper.save(conn, new Order(1, 2))
+			mapper.save(conn, new Order(1, 2))
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		when: 'a Store has many Orders, and inverse owner field is "store" to set Store reference in each Order'
+		storeEntity.isRelatedToMany(orderEntity)
+			.inList('orders')
+			.joinedBy('store_key', 'store_id')
+			.inverseOwnerField('store')
+			.build()
+		
+		and: 'get the Stores'
+		List<Store> stores = new ArrayList<>()
+		try {
+			conn = H2.getConnection()
+			mapper.createQuery(mapper.selectFrom(Store.class))
+					.toCollection(conn, storeEntity, stores, graphResolver)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		then: "each Order's store is the same object as the Store containing them"
+		stores[0].orders[0].store == stores[0]
+		stores[0].orders[1].store == stores[0]
+		stores[1].orders[0].store == stores[1]
+		stores[1].orders[1].store == stores[1]
+	}
+	
+	def 'Fetch 2 levels deep of relationships'() {
+		given: 'GraphEntity objects for Customer, Store, Order, and Product tables'
+		GraphEntity customerEntity = new GraphEntity(Customer.class, 'cus')
+		GraphEntity storeEntity = new GraphEntity(Store.class, 's')
+		GraphEntity orderEntity = new GraphEntity(Order.class, 'ord')
+		GraphEntity productEntity = new GraphEntity(Product.class, 'prod')
+		
+		and: 'a Customer with a Order that has a Store and a Product'
+		Connection conn = null
+		try {
+			conn = H2.getConnection()
+			mapper.save(conn, new Customer('Albert'))
+			mapper.save(conn, new Store('Amazon.ca'))
+			mapper.save(conn, new Order(1, 1, new BigDecimal('21.99'), DateUtils.newDate(2015, 11, 7)))
+			mapper.save(conn, new Product(1, 'CYPRUS Double Walled Heatproof Glass Mug', new BigDecimal('21.99')))
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		when: 'relationships are built: Customer has many Orders, Order has one Store, Order has many Products'
+		customerEntity.isRelatedToMany(orderEntity)
+			.inList('orderList')
+			.joinedBy('customer_id')
+			.build()
+		orderEntity.isRelatedToOne(storeEntity)
+			.inField('store')
+			.joinedBy('store_id', 'store_key')
+			.build()
+		orderEntity.isRelatedToMany(productEntity)
+			.inList('productList')
+			.joinedBy('order_id')
+			.build()
+		
+		and: 'get the Customer'
+		Customer customer = null
+		try {
+			conn = H2.getConnection()
+			customer = mapper.get(conn, customerEntity, 1, graphResolver)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		then: 'Customer contains 1 Order that has 1 Store and 1 Product'
+		customer.orders.size() == 1
+		customer.orders[0].store != null
+		customer.orders[0].productList.size() == 1
 	}
 }
