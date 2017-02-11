@@ -57,21 +57,6 @@ public class BatchResolver extends ObjectGraphResolver {
 		}
 	}
 	
-	private static List<FieldColumnMapping> getJoinColumnMappings(
-			Relationship relationship, 
-			ClassRowMapping ownerClassMapping) {
-		List<JoinColumn> joinColumns = relationship.getJoinColumns();
-		assertSingleJoinColumn(joinColumns);
-		
-		JoinColumn joinColumn = joinColumns.get(0);
-		FieldColumnMapping joinColumnMapping = ownerClassMapping.getFieldColumnMappings()
-				.get(joinColumn.getOwnerClassColumn());
-
-		List<FieldColumnMapping> joinColumnMappings = new ArrayList<>();
-		joinColumnMappings.add(joinColumnMapping);
-		return Collections.unmodifiableList(joinColumnMappings);
-	}
-
 	/* END Class members */
 	
 	public BatchResolver(JdbcMapper jdbcMapper) {
@@ -79,7 +64,8 @@ public class BatchResolver extends ObjectGraphResolver {
 	}
 	
 	@Override
-	public <T> void resolveRelatedObjects(Connection connection, 
+	public <T> void resolveRelatedObjects(
+			Connection connection, 
 			GraphEntity graphEntity, 
 			Collection<T> collection) throws SQLException {
 		EntityQuery query = new EntityQuery(connection);
@@ -87,7 +73,8 @@ public class BatchResolver extends ObjectGraphResolver {
 	}
 	
 	@Override
-	public void resolveRelatedObjects(Connection connection, 
+	public void resolveRelatedObjects(
+			Connection connection, 
 			GraphEntity graphEntity, 
 			Object object) throws SQLException {
 		resolveRelatedObjects(connection, graphEntity, Collections.singletonList(object));
@@ -104,7 +91,8 @@ public class BatchResolver extends ObjectGraphResolver {
 	}
 	
 	@Override
-	public <T, C extends Collection<T>> C toCollection(Connection connection, 
+	public <T, C extends Collection<T>> C toCollection(
+			Connection connection, 
 			JdbcStatement statement,
 			GraphEntity graphEntity, 
 			C collection, 
@@ -460,16 +448,16 @@ public class BatchResolver extends ObjectGraphResolver {
 	}
 	
 	private class Batch {
-		private FieldColumnMapping joinColumnMapping;
 		private Map<Object, Object> joinColumnValueOwnerMap = new HashMap<>();
 		private List<Object> joinColumnValues;
 		private final List<Object> owners = new ArrayList<>();
+		private FieldColumnMapping relatedJoinColumnMapping;
 
-		public FieldColumnMapping getJoinColumnMapping() { return joinColumnMapping; }
+		public FieldColumnMapping getRelatedJoinColumnMapping() { return relatedJoinColumnMapping; }
 		
-		public void setJoinColumnMapping(FieldColumnMapping joinColumnMapping) {
-			this.joinColumnMapping = joinColumnMapping;
-			initJoinColumnValues();
+		public void setJoinColumnMapping(FieldColumnMapping ownerJoinColumnMapping, FieldColumnMapping relatedJoinColumnMapping) {
+			this.relatedJoinColumnMapping = relatedJoinColumnMapping;
+			initJoinColumnValues(ownerJoinColumnMapping);
 		}
 
 		public List<Object> getJoinColumnValues() {
@@ -486,13 +474,13 @@ public class BatchResolver extends ObjectGraphResolver {
 			return joinColumnValueOwnerMap.get(joinColumnValue);
 		}
 
-		private void initJoinColumnValues() {
+		private void initJoinColumnValues(FieldColumnMapping ownerJoinColumnMapping) {
 			joinColumnValueOwnerMap.clear();
 			
 			List<Object> joinColumnValues = new ArrayList<>();
 			
 			for (Object owner : owners) {
-				Object joinColumnValue = joinColumnMapping.get(owner);
+				Object joinColumnValue = ownerJoinColumnMapping.get(owner);
 				
 				joinColumnValues.add(joinColumnValue);
 				joinColumnValueOwnerMap.put(joinColumnValue, owner);
@@ -541,10 +529,11 @@ public class BatchResolver extends ObjectGraphResolver {
 	}
 	
 	private class RelationshipResolver {
-		private final List<FieldColumnMapping> joinColumnMappings;
 		private final ObjectCache objectCache;
 		private final MemberAccess ownerFieldAccess;
+		private final FieldColumnMapping ownerJoinColumnMapping;
 		private final ClassRowMapping relatedClassMapping;
+		private final FieldColumnMapping relatedJoinColumnMapping;
 		private final MemberAccess relatedMemberAccess;
 		private final RelatedObjectSelect relatedObjectsSelect;
 		private final Relationship relationship;
@@ -554,13 +543,17 @@ public class BatchResolver extends ObjectGraphResolver {
 			ClassRowMapping ownerClassMapping = jdbcMapper.getMappings()
 					.get(relationship.getOwnerEntity().getClazz());
 			GraphEntity relatedEntity = relationship.getRelatedEntity();
-
-			joinColumnMappings = getJoinColumnMappings(relationship, ownerClassMapping);
-
+			
 			this.objectCache = objectCache;
 			
 			relatedClassMapping = jdbcMapper.getMappings()
 					.get(relatedEntity.getClazz());
+			
+			JoinColumn joinColumn = relationship.getJoinColumns().get(0);
+			ownerJoinColumnMapping = ownerClassMapping.getFieldColumnMappings()
+					.get(joinColumn.getOwnerClassColumn());
+			relatedJoinColumnMapping = relatedClassMapping.getFieldColumnMappings()
+					.get(joinColumn.getRelatedClassColumn());
 			
 			relatedObjectsSelect = new RelatedObjectSelect(relationship);
 
@@ -623,7 +616,8 @@ public class BatchResolver extends ObjectGraphResolver {
 			ownerFieldAccess.set(object, owner);
 		}
 		
-		private List getCollections(Connection connection, 
+		private List getCollections(
+				Connection connection, 
 				Collection owners, 
 				CollectionFactory factory) throws SQLException {
 			BatchFactory batchFactory = new BatchFactory(relationship, owners);
@@ -637,7 +631,8 @@ public class BatchResolver extends ObjectGraphResolver {
 			return objects;
 		}
 		
-		private List getMaps(Connection connection, 
+		private List getMaps(
+				Connection connection, 
 				Collection owners, 
 				MapFactory factory) throws SQLException {
 			BatchFactory batchFactory = new BatchFactory(relationship, owners);
@@ -701,7 +696,8 @@ public class BatchResolver extends ObjectGraphResolver {
 			return null;
 		}
 
-		private void queryBatchOfCollections(Connection connection, 
+		private void queryBatchOfCollections(
+				Connection connection, 
 				Batch batch, 
 				List<Object> objects, 
 				CollectionFactory factory) throws SQLException {
@@ -712,7 +708,7 @@ public class BatchResolver extends ObjectGraphResolver {
 				
 				rs = new ResultSetHelper(stmt.executeQuery());
 				while (rs.next()) {
-					FieldColumnMapping joinColumnMapping = batch.getJoinColumnMapping();
+					FieldColumnMapping joinColumnMapping = batch.getRelatedJoinColumnMapping();
 					
 					Object joinValue = joinColumnMapping.getFromResultSet(rs);
 					Object relatedObject = getRelatedObject(rs);
@@ -737,7 +733,8 @@ public class BatchResolver extends ObjectGraphResolver {
 			}
 		}
 		
-		private void queryBatchOfMaps(Connection connection, 
+		private void queryBatchOfMaps(
+				Connection connection, 
 				Batch batch, 
 				List<Object> mapValues, 
 				MapFactory factory) throws SQLException {
@@ -748,7 +745,7 @@ public class BatchResolver extends ObjectGraphResolver {
 				
 				rs = new ResultSetHelper(stmt.executeQuery());
 				while (rs.next()) {
-					FieldColumnMapping joinColumnMapping = batch.getJoinColumnMapping();
+					FieldColumnMapping joinColumnMapping = batch.getRelatedJoinColumnMapping();
 					
 					Object joinValue = joinColumnMapping.getFromResultSet(rs);
 					Object relatedObject = getRelatedObject(rs);
@@ -774,7 +771,8 @@ public class BatchResolver extends ObjectGraphResolver {
 			}
 		}
 		
-		private void queryBatchOfUniques(Connection connection, 
+		private void queryBatchOfUniques(
+				Connection connection, 
 				Batch batch, 
 				List<Object> uniqueResults) throws SQLException {
 			ResultSetHelper rs = null;
@@ -784,7 +782,7 @@ public class BatchResolver extends ObjectGraphResolver {
 				
 				rs = new ResultSetHelper(stmt.executeQuery());
 				while (rs.next()) {
-					FieldColumnMapping joinColumnMapping = batch.getJoinColumnMapping();
+					FieldColumnMapping joinColumnMapping = batch.getRelatedJoinColumnMapping();
 					
 					Object joinValue = joinColumnMapping.getFromResultSet(rs);
 					Object relatedObject = getRelatedObject(rs);
@@ -808,12 +806,12 @@ public class BatchResolver extends ObjectGraphResolver {
 		 * @param batch
 		 */
 		private void setJoinParameters(Batch batch) {
-			FieldColumnMapping joinColumnMapping = joinColumnMappings.get(0);
-			batch.setJoinColumnMapping(joinColumnMapping);
-			statement.setParameterList(joinColumnMapping.getColumn(), joinColumnMapping, batch.getJoinColumnValues());
+			batch.setJoinColumnMapping(ownerJoinColumnMapping, relatedJoinColumnMapping);
+			statement.setParameterList(ownerJoinColumnMapping.getColumn(), ownerJoinColumnMapping, batch.getJoinColumnValues());
 		}
 		
-		private List uniqueResults(Connection connection, 
+		private List uniqueResults(
+				Connection connection, 
 				Collection owners) throws SQLException {
 			BatchFactory batchFactory = new BatchFactory(relationship, owners);
 			List<Object> uniqueResults = new ArrayList<>();
