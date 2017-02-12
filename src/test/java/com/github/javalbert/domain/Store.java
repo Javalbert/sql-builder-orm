@@ -15,17 +15,17 @@ public class Store {
 	@Id
 	@GeneratedValue
 	@Column("store_key")
-	private int storeKey;
+	private long storeKey;
 	@Column("store_name")
 	private String storeName;
 	
 	@Related("orders")
 	private Collection<Order> orders;
 	
-	public int getStoreKey() {
+	public long getStoreKey() {
 		return storeKey;
 	}
-	public void setStoreKey(int storeKey) {
+	public void setStoreKey(long storeKey) {
 		this.storeKey = storeKey;
 	}
 	public String getStoreName() {

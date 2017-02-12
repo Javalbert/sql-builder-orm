@@ -135,7 +135,8 @@ public class JdbcMapper {
 		}
 	}
 
-	private static <T> T uniqueResultById(Connection connection, 
+	private static <T> T uniqueResultById(
+			Connection connection, 
 			Class<T> clazz, 
 			Serializable id, 
 			ClassRowMapping classRowMapping, 
@@ -145,7 +146,10 @@ public class JdbcMapper {
 		return object;
 	}
 	
-	private static boolean update(Connection connection, JdbcStatement updateStatement, ClassRowMapping classRowMapping) throws SQLException {
+	private static boolean update(
+			Connection connection,
+			JdbcStatement updateStatement,
+			ClassRowMapping classRowMapping) throws SQLException {
 		int updatedRows = updateStatement.executeUpdate(connection);
 		boolean updated = updatedRows > 0;
 		throwRowWasChanged(!updated, classRowMapping);
@@ -255,7 +259,11 @@ public class JdbcMapper {
 		return uniqueResultById(connection, clazz, id, classRowMapping, selectStatement);
 	}
 
-	public <T> T get(Connection connection, GraphEntity graphEntity, Serializable id, ObjectGraphResolver graphResolver) throws SQLException {
+	public <T> T get(
+			Connection connection,
+			GraphEntity graphEntity,
+			Serializable id,
+			ObjectGraphResolver graphResolver) throws SQLException {
 		T object = (T)get(connection, graphEntity.getClazz(), id);
 		graphResolver.resolveRelatedObjects(connection, graphEntity, object);
 		return object;

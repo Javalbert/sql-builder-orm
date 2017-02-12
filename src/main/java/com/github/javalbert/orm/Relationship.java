@@ -157,6 +157,11 @@ public class Relationship {
 			return this;
 		}
 		
+		/**
+		 * Read by {@link BatchResolver}
+		 * @param batchSize
+		 * @return
+		 */
 		public Builder batchSize(int batchSize) {
 			if (batchSize < 1) {
 				throw new IllegalArgumentException("batchSize cannot be less than 1");
@@ -315,20 +320,6 @@ public class Relationship {
 		public Builder joinedBy(String ownerClassColumn, String relatedClassColumn) {
 			initJoinColumns();
 			joinColumns.add(new JoinColumn(ownerClassColumn, relatedClassColumn));
-			return this;
-		}
-		
-		public Builder removeJoins() {
-			if (joinColumns != null) {
-				joinColumns.clear();
-			}
-			return this;
-		}
-		
-		public Builder removeOrderBy() {
-			if (orderByColumns != null) {
-				orderByColumns.clear();
-			}
 			return this;
 		}
 		

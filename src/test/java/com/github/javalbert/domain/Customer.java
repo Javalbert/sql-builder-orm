@@ -15,17 +15,17 @@ public class Customer {
 	@Id
 	@GeneratedValue
 	@Column("customer_id")
-	private int customerId;
+	private long customerId;
 	@Column("full_name")
 	private String fullName;
 	
 	@Related("orderList")
 	private List<Order> orders;
 	
-	public int getCustomerId() {
+	public long getCustomerId() {
 		return customerId;
 	}
-	public void setCustomerId(int customerId) {
+	public void setCustomerId(long customerId) {
 		this.customerId = customerId;
 	}
 	public String getFullName() {

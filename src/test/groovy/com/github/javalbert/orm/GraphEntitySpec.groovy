@@ -43,8 +43,8 @@ class GraphEntitySpec extends Specification {
 			conn = H2.getConnection()
 			mapper.save(conn, new Customer('Albert'))
 			mapper.save(conn, new Store('Amazon.ca'))
-			mapper.save(conn, new Order(1, 1, new BigDecimal('36.33'), DateUtils.newDate(2014, 6, 18)))
-			mapper.save(conn, new Order(1, 1, new BigDecimal('159.83'), DateUtils.newDate(2014, 6, 27)))
+			mapper.save(conn, new Order(1L, 1L, new BigDecimal('36.33'), DateUtils.newDate(2014, 6, 18)))
+			mapper.save(conn, new Order(1L, 1L, new BigDecimal('159.83'), DateUtils.newDate(2014, 6, 27)))
 		} finally {
 			JdbcUtils.closeQuietly(conn)
 		}
@@ -59,7 +59,7 @@ class GraphEntitySpec extends Specification {
 		Customer customer = null
 		try {
 			conn = H2.getConnection()
-			customer = mapper.get(conn, customerEntity, 1, graphResolver)
+			customer = mapper.get(conn, customerEntity, 1L, graphResolver)
 		} finally {
 			JdbcUtils.closeQuietly(conn)
 		}
@@ -79,8 +79,8 @@ class GraphEntitySpec extends Specification {
 			conn = H2.getConnection()
 			mapper.save(conn, new Customer('Albert'))
 			mapper.save(conn, new Store('Amazon.ca'))
-			mapper.save(conn, new Order(1, 1, new BigDecimal('36.33'), DateUtils.newDate(2014, 6, 18)))
-			mapper.save(conn, new Order(1, 1, new BigDecimal('159.83'), DateUtils.newDate(2014, 6, 27)))
+			mapper.save(conn, new Order(1L, 1L, new BigDecimal('36.33'), DateUtils.newDate(2014, 6, 18)))
+			mapper.save(conn, new Order(1L, 1L, new BigDecimal('159.83'), DateUtils.newDate(2014, 6, 27)))
 		} finally {
 			JdbcUtils.closeQuietly(conn)
 		}
@@ -95,7 +95,7 @@ class GraphEntitySpec extends Specification {
 		Store store = null
 		try {
 			conn = H2.getConnection()
-			store = mapper.get(conn, storeEntity, 1, graphResolver)
+			store = mapper.get(conn, storeEntity, 1L, graphResolver)
 		} finally {
 			JdbcUtils.closeQuietly(conn)
 		}
@@ -116,9 +116,9 @@ class GraphEntitySpec extends Specification {
 			conn = H2.getConnection()
 			mapper.save(conn, new Customer('Albert'))
 			mapper.save(conn, new Store('Amazon.ca'))
-			mapper.save(conn, new Order(1, 1, new BigDecimal('436.78'), DateUtils.newDate(2017, 2, 9)))
-			mapper.save(conn, new Product(1, '1MORE Triple Driver', new BigDecimal('149.99')))
-			mapper.save(conn, new Product(1, 'Audio-Technica ATH-M50x', new BigDecimal('286.79')))
+			mapper.save(conn, new Order(1L, 1L, new BigDecimal('436.78'), DateUtils.newDate(2017, 2, 9)))
+			mapper.save(conn, new Product(1L, '1MORE Triple Driver', new BigDecimal('149.99')))
+			mapper.save(conn, new Product(1L, 'Audio-Technica ATH-M50x', new BigDecimal('286.79')))
 		} finally {
 			JdbcUtils.closeQuietly(conn)
 		}
@@ -132,7 +132,7 @@ class GraphEntitySpec extends Specification {
 		Order order = null
 		try {
 			conn = H2.getConnection()
-			order = mapper.get(conn, orderEntity, 1, graphResolver)
+			order = mapper.get(conn, orderEntity, 1L, graphResolver)
 		} finally {
 			JdbcUtils.closeQuietly(conn)
 		}
@@ -161,10 +161,10 @@ class GraphEntitySpec extends Specification {
 			mapper.save(conn, new Customer('Albert'))
 			mapper.save(conn, new Store('Store 1'))
 			mapper.save(conn, new Store('Store 2'))
-			mapper.save(conn, new Order(1, 1))
-			mapper.save(conn, new Order(1, 1))
-			mapper.save(conn, new Order(1, 2))
-			mapper.save(conn, new Order(1, 2))
+			mapper.save(conn, new Order(1L, 1L))
+			mapper.save(conn, new Order(1L, 1L))
+			mapper.save(conn, new Order(1L, 2L))
+			mapper.save(conn, new Order(1L, 2L))
 		} finally {
 			JdbcUtils.closeQuietly(conn)
 		}
@@ -206,8 +206,8 @@ class GraphEntitySpec extends Specification {
 			conn = H2.getConnection()
 			mapper.save(conn, new Customer('Albert'))
 			mapper.save(conn, new Store('Amazon.ca'))
-			mapper.save(conn, new Order(1, 1, new BigDecimal('21.99'), DateUtils.newDate(2015, 11, 7)))
-			mapper.save(conn, new Product(1, 'CYPRUS Double Walled Heatproof Glass Mug', new BigDecimal('21.99')))
+			mapper.save(conn, new Order(1L, 1L, new BigDecimal('21.99'), DateUtils.newDate(2015, 11, 7)))
+			mapper.save(conn, new Product(1L, 'CYPRUS Double Walled Heatproof Glass Mug', new BigDecimal('21.99')))
 		} finally {
 			JdbcUtils.closeQuietly(conn)
 		}
@@ -230,7 +230,7 @@ class GraphEntitySpec extends Specification {
 		Customer customer = null
 		try {
 			conn = H2.getConnection()
-			customer = mapper.get(conn, customerEntity, 1, graphResolver)
+			customer = mapper.get(conn, customerEntity, 1L, graphResolver)
 		} finally {
 			JdbcUtils.closeQuietly(conn)
 		}
@@ -239,5 +239,47 @@ class GraphEntitySpec extends Specification {
 		customer.orders.size() == 1
 		customer.orders[0].store != null
 		customer.orders[0].productList.size() == 1
+	}
+	
+	def 'Fetch an ordered list of children'() {
+		given: 'GraphEntity objects for Order and Product'
+		GraphEntity orderEntity = new GraphEntity(Order.class, 'ord')
+		GraphEntity productEntity = new GraphEntity(Product.class, 'prod')
+		
+		and: 'a Order with 4 Products'
+		Connection conn = null
+		try {
+			conn = H2.getConnection()
+			mapper.save(conn, new Customer('Albert'))
+			mapper.save(conn, new Order(1L, null, new BigDecimal('556.50'), DateUtils.newDate(2016, 12, 29)))
+			mapper.save(conn, new Product(1L, 'The Definitive ANTLR 4 Reference', new BigDecimal('48.62')))
+			mapper.save(conn, new Product(1L, 'ASUS F555LA 15.6" Full-HD Laptop (Core i3, 4GB RAM, 500GB HDD) with Windows 10', new BigDecimal('489.99')))
+			mapper.save(conn, new Product(1L, 'LG G2 Case, MagicMobile® Hybrid Rugged', new BigDecimal('5.99')))
+			mapper.save(conn, new Product(1L, 'PThink 0.3mm Ultra-thin Tempered Glass Screen Protector for LG G2', new BigDecimal('11.90')))
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		when: 'a Relationship is defined to have Products sorted by their price in descending order'
+		orderEntity.isRelatedToMany(productEntity)
+			.inList('productList')
+			.joinedBy('order_id')
+			.descendingOrder('price')
+			.build()
+		
+		and: 'get Order'
+		Order order = null
+		try {
+			conn = H2.getConnection()
+			order = mapper.get(conn, orderEntity, 1L, graphResolver)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		then: 'list of products is sorted by price in the Order'
+		order.productList[0].productId == 2L
+		order.productList[1].productId == 1L
+		order.productList[2].productId == 4L
+		order.productList[3].productId == 3L
 	}
 }

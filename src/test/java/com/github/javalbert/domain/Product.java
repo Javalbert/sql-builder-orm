@@ -16,9 +16,9 @@ public class Product {
 	@Id
 	@GeneratedValue
 	@Column("product_id")
-	private int productId;
+	private long productId;
 	@Column("order_id")
-	private int orderId;
+	private long orderId;
 	@Column("product_name")
 	private String productName;
 	@Column("price")
@@ -27,16 +27,16 @@ public class Product {
 	@Related("order")
 	private Order order;
 	
-	public int getProductId() {
+	public long getProductId() {
 		return productId;
 	}
-	public void setProductId(int productId) {
+	public void setProductId(long productId) {
 		this.productId = productId;
 	}
-	public int getOrderId() {
+	public long getOrderId() {
 		return orderId;
 	}
-	public void setOrderId(int orderId) {
+	public void setOrderId(long orderId) {
 		this.orderId = orderId;
 	}
 	public String getProductName() {
@@ -61,7 +61,7 @@ public class Product {
 	
 	public Product() {}
 	
-	public Product(int orderId, String productName, BigDecimal price) {
+	public Product(long orderId, String productName, BigDecimal price) {
 		this.orderId = orderId;
 		this.price = price;
 		this.productName = productName;
@@ -71,9 +71,9 @@ public class Product {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + orderId;
+		result = prime * result + (int) (orderId ^ (orderId >>> 32));
 		result = prime * result + HashEqualsUtils.hash(price);
-		result = prime * result + productId;
+		result = prime * result + (int) (productId ^ (productId >>> 32));
 		result = prime * result + ((productName == null) ? 0 : productName.hashCode());
 		return result;
 	}

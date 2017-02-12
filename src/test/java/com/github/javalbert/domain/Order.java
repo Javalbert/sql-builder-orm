@@ -19,11 +19,11 @@ public class Order {
 	@Id
 	@GeneratedValue
 	@Column("order_id")
-	private int orderId;
+	private long orderId;
 	@Column("customer_id")
-	private int customerId;
+	private long customerId;
 	@Column("store_id")
-	private int storeId;
+	private Long storeId;
 	@Column("sales_amount")
 	private BigDecimal salesAmount;
 	@Column("order_datetime")
@@ -37,24 +37,24 @@ public class Order {
 	@Related("productSet")
 	private Set<Product> productSet;
 	@Related("productMap")
-	private Map<Integer, Product> productMap;
+	private Map<Long, Product> productMap;
 	
-	public int getOrderId() {
+	public long getOrderId() {
 		return orderId;
 	}
-	public void setOrderId(int orderId) {
+	public void setOrderId(long orderId) {
 		this.orderId = orderId;
 	}
-	public int getCustomerId() {
+	public long getCustomerId() {
 		return customerId;
 	}
-	public void setCustomerId(int customerId) {
+	public void setCustomerId(long customerId) {
 		this.customerId = customerId;
 	}
-	public int getStoreId() {
+	public Long getStoreId() {
 		return storeId;
 	}
-	public void setStoreId(int storeId) {
+	public void setStoreId(Long storeId) {
 		this.storeId = storeId;
 	}
 	public BigDecimal getSalesAmount() {
@@ -89,20 +89,20 @@ public class Order {
 	public void setProductSet(Set<Product> productSet) {
 		this.productSet = productSet;
 	}
-	public Map<Integer, Product> getProductMap() {
+	public Map<Long, Product> getProductMap() {
 		return productMap;
 	}
-	public void setProductMap(Map<Integer, Product> productMap) {
+	public void setProductMap(Map<Long, Product> productMap) {
 		this.productMap = productMap;
 	}
 	
 	public Order() {}
 	
-	public Order(int customerId, int storeId) {
+	public Order(long customerId, Long storeId) {
 		this(customerId, storeId, null, null);
 	}
 	
-	public Order(int customerId, int storeId, BigDecimal salesAmount, Date orderDatetime) {
+	public Order(long customerId, Long storeId, BigDecimal salesAmount, Date orderDatetime) {
 		this.customerId = customerId;
 		this.orderDatetime = orderDatetime;
 		this.salesAmount = salesAmount;
