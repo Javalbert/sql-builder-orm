@@ -230,7 +230,9 @@ public class BatchResolver extends ObjectGraphResolver {
 			final GraphEntity relatedEntity = relationship.getRelatedEntity();
 			
 			if (entityColumnsMap.containsKey(relatedEntity)) {
-				logger.error(relatedEntity + " already handled and would have resulted in a circular dependency and a StackOverflowError. Create a new GraphEntity object with the same class but different alias.");
+				logger.error(relatedEntity + " already handled and would have resulted in a circular "
+						+ "dependency and a StackOverflowError. Create a new GraphEntity "
+						+ "object with the same class but different alias.");
 				return null;
 			}
 
@@ -706,9 +708,6 @@ public class BatchResolver extends ObjectGraphResolver {
 				switch (relationship.getFieldType()) {
 					case Relationship.FIELD_DEQUE:
 						relatedObjects = getCollections(connection, owners, CollectionUtils.FACTORY_DEQUE);
-						break;
-					case Relationship.FIELD_LINKED_LIST:
-						relatedObjects = getCollections(connection, owners, CollectionUtils.FACTORY_LINKED_LIST);
 						break;
 					case Relationship.FIELD_LINKED_MAP:
 						relatedObjects = getMaps(connection, owners, CollectionUtils.FACTORY_LINKED_MAP);

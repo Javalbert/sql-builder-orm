@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,11 +30,6 @@ public final class CollectionUtils {
 	public static final CollectionFactory FACTORY_DEQUE = new CollectionFactory() {
 		@Override
 		public <T> Collection<T> newInstance() { return new ArrayDeque<>(); }
-	};
-	
-	public static final CollectionFactory FACTORY_LINKED_LIST = new CollectionFactory() {
-		@Override
-		public <T> Collection<T> newInstance() { return new LinkedList<>(); }
 	};
 	
 	public static final MapFactory FACTORY_LINKED_MAP = new MapFactory() {

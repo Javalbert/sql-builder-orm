@@ -476,9 +476,6 @@ public class NPlusOneResolver extends ObjectGraphResolver {
 					case Relationship.FIELD_DEQUE:
 						relatedObjects = getCollections(connection, owners, CollectionUtils.FACTORY_DEQUE);
 						break;
-					case Relationship.FIELD_LINKED_LIST:
-						relatedObjects = getCollections(connection, owners, CollectionUtils.FACTORY_LINKED_LIST);
-						break;
 					case Relationship.FIELD_LINKED_MAP:
 						relatedObjects = getMaps(connection, owners, CollectionUtils.FACTORY_LINKED_MAP);
 						break;
