@@ -729,9 +729,6 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 				case Relationship.FIELD_DEQUE:
 					addToCollection(ownerColumns, owner, classColumns, object, CollectionUtils.FACTORY_DEQUE);
 					break;
-				case Relationship.FIELD_LINKED_LIST:
-					addToCollection(ownerColumns, owner, classColumns, object, CollectionUtils.FACTORY_LINKED_LIST);
-					break;
 				case Relationship.FIELD_LINKED_MAP:
 					addToMap(relationship, ownerColumns, owner, classColumns, object, CollectionUtils.FACTORY_LINKED_MAP);
 					break;

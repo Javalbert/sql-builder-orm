@@ -25,14 +25,13 @@ import com.github.javalbert.sqlbuilder.SortType;
  */
 @SuppressWarnings({ "unchecked" })
 public class Relationship {
-	public static final int FIELD_DEQUE = 7;
-	public static final int FIELD_LINKED_LIST = 1;
+	public static final int FIELD_DEQUE = 1;
 	public static final int FIELD_LINKED_MAP = 2;
 	public static final int FIELD_LINKED_SET = 3;
 	public static final int FIELD_LIST = 4;
 	public static final int FIELD_MAP = 5;
 	public static final int FIELD_SET = 6;
-	public static final int FIELD_UNIQUE = 8;
+	public static final int FIELD_UNIQUE = 7;
 	
 	public static final int TYPE_N_TO_ONE = 1;
 	public static final int TYPE_ONE_TO_MANY = 2;
@@ -180,6 +179,17 @@ public class Relationship {
 			orderByColumns.add(new OrderByColumn(column, SortType.DESC));
 			return this;
 		}
+		
+		/**
+		 * 
+		 * @param fieldName corresponds to the value of @Related annotation in a field or property of owner class
+		 * @return
+		 */
+		public Builder inDeque(String fieldName) {
+			this.fieldName = fieldName;
+			fieldType = FIELD_DEQUE;
+			return this;
+		}
 
 		/**
 		 * 
@@ -189,17 +199,6 @@ public class Relationship {
 		public Builder inField(String fieldName) {
 			this.fieldName = fieldName;
 			fieldType = FIELD_UNIQUE;
-			return this;
-		}
-
-		/**
-		 * 
-		 * @param fieldName corresponds to the value of @Related annotation in a field or property of owner class
-		 * @return
-		 */
-		public Builder inLinkedList(String fieldName) {
-			this.fieldName = fieldName;
-			fieldType = FIELD_LINKED_LIST;
 			return this;
 		}
 
@@ -275,17 +274,6 @@ public class Relationship {
 		public Builder inSet(String fieldName) {
 			this.fieldName = fieldName;
 			fieldType = FIELD_SET;
-			return this;
-		}
-		
-		/**
-		 * 
-		 * @param fieldName corresponds to the value of @Related annotation in a field or property of owner class
-		 * @return
-		 */
-		public Builder inStack(String fieldName) {
-			this.fieldName = fieldName;
-			fieldType = FIELD_DEQUE;
 			return this;
 		}
 		
