@@ -193,6 +193,55 @@ class GraphEntitySpec extends Specification {
 		stores[1].orders[1].store == stores[1]
 	}
 	
+	def 'Get a list of objects that may have the same parent objects'() {
+		given: 'GraphEntity objects for Store and Order tables'
+		GraphEntity storeEntity = new GraphEntity(Store.class, 's')
+		GraphEntity orderEntity = new GraphEntity(Order.class, 'ord')
+		
+		and: 'a Store record with 2 Orders'
+		Connection conn = null
+		try {
+			conn = H2.getConnection()
+			mapper.save(conn, new Customer('Albert'))
+			mapper.save(conn, new Store('Store 1'))
+			mapper.save(conn, new Store('Store 2'))
+			mapper.save(conn, new Order(1L, 1L))
+			mapper.save(conn, new Order(1L, 1L))
+			mapper.save(conn, new Order(1L, 2L))
+			mapper.save(conn, new Order(1L, 2L))
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		when: 'a Order can belong to one Store and a Store can have many Orders'
+		orderEntity.isRelatedToOne(storeEntity)
+			.inField('store')
+			.joinedBy('store_id', 'store_key')
+			.build()
+		storeEntity.isRelatedToMany(new GraphEntity(Order.class, 'ord2'))
+			.inList('orders')
+			.joinedBy('store_key', 'store_id')
+			.build()
+		
+		and: 'Orders are retrieved'
+		List<Order> orders = new ArrayList<>()
+		try {
+			conn = H2.getConnection()
+			mapper.createQuery(mapper.selectFrom(Order.class))
+				.toCollection(conn, orderEntity, orders, graphResolver)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		then: 'some Orders have the same Store'
+		orders[0].store == orders[1].store
+		orders[2].store == orders[3].store
+		
+		and: 'the Stores contain the same Orders'
+		orders[0].store.orders == [ orders[0], orders[1] ]
+		orders[2].store.orders == [ orders[2], orders[3] ]
+	}
+	
 	def 'Fetch 2 levels deep of relationships'() {
 		given: 'GraphEntity objects for Customer, Store, Order, and Product tables'
 		GraphEntity customerEntity = new GraphEntity(Customer.class, 'cus')

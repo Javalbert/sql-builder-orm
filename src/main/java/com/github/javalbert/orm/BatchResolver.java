@@ -20,8 +20,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -228,6 +230,7 @@ public class BatchResolver extends ObjectGraphResolver {
 			final GraphEntity relatedEntity = relationship.getRelatedEntity();
 			
 			if (entityColumnsMap.containsKey(relatedEntity)) {
+				logger.error(relatedEntity + " already handled and would have resulted in a circular dependency and a StackOverflowError. Create a new GraphEntity object with the same class but different alias.");
 				return null;
 			}
 
@@ -448,45 +451,141 @@ public class BatchResolver extends ObjectGraphResolver {
 	}
 	
 	private class Batch {
-		private Map<Object, Object> joinColumnValueOwnerMap = new HashMap<>();
-		private List<Object> joinColumnValues;
+		private final Map<Object, Object> joinColumnValueOwnerMap = new HashMap<>();
+		private Set<Object> joinColumnValues;
+		private final MemberAccess ownerFieldAccess;
+		private final FieldColumnMapping ownerJoinColumnMapping;
 		private final List<Object> owners = new ArrayList<>();
-		private FieldColumnMapping relatedJoinColumnMapping;
+		private final ClassRowMapping relatedClassMapping;
+		private final FieldColumnMapping relatedJoinColumnMapping;
+		private final MemberAccess relatedMemberAccess;
+		private final Relationship relationship;
 
 		public FieldColumnMapping getRelatedJoinColumnMapping() { return relatedJoinColumnMapping; }
 		
-		public void setJoinColumnMapping(FieldColumnMapping ownerJoinColumnMapping, FieldColumnMapping relatedJoinColumnMapping) {
-			this.relatedJoinColumnMapping = relatedJoinColumnMapping;
-			initJoinColumnValues(ownerJoinColumnMapping);
-		}
-
-		public List<Object> getJoinColumnValues() {
-			return joinColumnValues != null 
-					? Collections.unmodifiableList(joinColumnValues) 
-					: null;
-		}
-		
-		public Batch(List<Object> owners) {
+		public Batch(List<Object> owners, Relationship relationship) {
 			this.owners.addAll(owners);
+			this.relationship = relationship;
+			
+			ClassRowMapping ownerClassMapping = jdbcMapper.getMappings()
+					.get(relationship.getOwnerEntity().getClazz());
+			relatedClassMapping = jdbcMapper.getMappings()
+					.get(relationship.getRelatedEntity().getClazz());
+			
+			JoinColumn joinColumn = relationship.getJoinColumns().get(0);
+			
+			ownerFieldAccess = getOwnerFieldAccess(relatedClassMapping);
+			
+			ownerJoinColumnMapping = ownerClassMapping.getFieldColumnMappings()
+					.get(joinColumn.getOwnerClassColumn());
+			relatedJoinColumnMapping = relatedClassMapping.getFieldColumnMappings()
+					.get(joinColumn.getRelatedClassColumn());
+
+			relatedMemberAccess = ownerClassMapping.getRelatedMemberAccess(relationship);
 		}
 		
-		public Object getOwnerOfJoinColumnValue(Object joinColumnValue) {
-			return joinColumnValueOwnerMap.get(joinColumnValue);
+		/**
+		 * Does not support multiple join columns yet
+		 * @param statement
+		 */
+		public void setParametersTo(JdbcStatement statement) {
+			statement.setParameterList(
+					ownerJoinColumnMapping.getColumn(),
+					ownerJoinColumnMapping,
+					getJoinColumnValues());
 		}
 
-		private void initJoinColumnValues(FieldColumnMapping ownerJoinColumnMapping) {
+		public void setReferences(Object relatedObject, Object joinColumnValue) {
+			setReferences(relatedObject, joinColumnValue, joinColumnValueOwnerMap.get(joinColumnValue));
+		}
+
+		public void setReferences(Object relatedObject, Object joinColumnValue, CollectionFactory factory) {
+			setReferences(relatedObject, joinColumnValue, factory, joinColumnValueOwnerMap.get(joinColumnValue));
+		}
+
+		public void setReferences(Object relatedObject, Object joinColumnValue, MapFactory factory) {
+			setReferences(relatedObject, joinColumnValue, factory, joinColumnValueOwnerMap.get(joinColumnValue));
+		}
+		
+		protected void addJoinColumnValueToOwner(Object joinColumnValue, Object owner) {
+			joinColumnValueOwnerMap.put(joinColumnValue, owner);
+		}
+		
+		protected void setReferences(Object relatedObject, Object joinColumnValue, Object owner) {
+			assignOwnerField(relatedObject, owner);
+			relatedMemberAccess.set(owner, relatedObject);
+		}
+
+		protected void setReferences(
+				Object relatedObject,
+				Object joinColumnValue,
+				CollectionFactory factory,
+				Object owner) {
+			assignOwnerField(relatedObject, owner);
+
+			Collection collection = (Collection)relatedMemberAccess.get(owner);
+			if (collection == null) {
+				collection = factory.newInstance();
+				relatedMemberAccess.set(owner, collection);
+			}
+			collection.add(relatedObject);
+		}
+
+		protected void setReferences(
+				Object relatedObject,
+				Object joinColumnValue,
+				MapFactory factory,
+				Object owner) {
+			assignOwnerField(relatedObject, owner);
+
+			Map map = (Map)relatedMemberAccess.get(owner);
+			if (map == null) {
+				map = factory.newInstance();
+				relatedMemberAccess.set(owner, map);
+			}
+			Object key = relatedClassMapping.getMapKeyValue(relatedObject, relationship.getMapKeyName());
+			map.put(key, relatedObject);
+		}
+		
+		private void assignOwnerField(Object relatedObject, Object owner) {
+			if (ownerFieldAccess != null) {
+				ownerFieldAccess.set(relatedObject, owner);
+			}
+		}
+
+		private Set<Object> getJoinColumnValues() {
+			if (joinColumnValues != null) {
+				return joinColumnValues;
+			}
+			
 			joinColumnValueOwnerMap.clear();
 			
-			List<Object> joinColumnValues = new ArrayList<>();
+			this.joinColumnValues = new HashSet<>();
 			
 			for (Object owner : owners) {
 				Object joinColumnValue = ownerJoinColumnMapping.get(owner);
 				
 				joinColumnValues.add(joinColumnValue);
-				joinColumnValueOwnerMap.put(joinColumnValue, owner);
+				addJoinColumnValueToOwner(joinColumnValue, owner);
+			}
+			return  joinColumnValues;
+		}
+		
+		private MemberAccess getOwnerFieldAccess(ClassRowMapping relatedClassMapping) {
+			if (relationship.getInverseOwnerField() == null) {
+				return null;
 			}
 			
-			this.joinColumnValues = joinColumnValues;
+			MemberAccess ownerFieldAccess = relatedClassMapping
+					.getOwnerMemberAccess(relationship);
+			
+			if (ownerFieldAccess == null) {
+				StringBuilder warning = new StringBuilder("inverse owner field (")
+						.append(relationship.getInverseOwnerField())
+						.append(") not found");
+				logger.warn(warning.toString());
+			}
+			return ownerFieldAccess;
 		}
 	}
 	
@@ -524,24 +623,66 @@ public class BatchResolver extends ObjectGraphResolver {
 				ownersInBatch.add(owners.get(index));
 			}
 			
-			return new Batch(ownersInBatch);
+			return relationship.getType() == Relationship.TYPE_ONE_TO_MANY 
+					? new Batch(ownersInBatch, relationship)
+					: new RelatedToOneBatch(ownersInBatch, relationship);
+		}
+	}
+	
+	/**
+	 * Fetching related parent table objects from child records (that are the owner),
+	 * we must store the child records in a list because some of them may reference the
+	 * same parent object
+	 * @author Albert
+	 *
+	 */
+	private class RelatedToOneBatch extends Batch {
+		private final Map<Object, List<Object>> joinColumnValueOwnersMap = new HashMap<>();
+		
+		public RelatedToOneBatch(List<Object> owners, Relationship relationship) {
+			super(owners, relationship);
+		}
+		
+		@Override
+		protected void addJoinColumnValueToOwner(Object joinColumnValue, Object owner) {
+			List<Object> owners = joinColumnValueOwnersMap.get(joinColumnValue);
+			if (owners == null) {
+				owners = new ArrayList<>();
+				joinColumnValueOwnersMap.put(joinColumnValue, owners);
+			}
+			owners.add(owner);
+		}
+		
+		@Override
+		public void setReferences(Object relatedObject, Object joinColumnValue) {
+			for (Object owner : joinColumnValueOwnersMap.get(joinColumnValue)) {
+				setReferences(relatedObject, joinColumnValue, owner);
+			}
+		}
+		
+		@Override
+		public void setReferences(Object relatedObject, Object joinColumnValue, CollectionFactory factory) {
+			for (Object owner : joinColumnValueOwnersMap.get(joinColumnValue)) {
+				setReferences(relatedObject, joinColumnValue, factory, owner);
+			}
+		}
+		
+		@Override
+		public void setReferences(Object relatedObject, Object joinColumnValue, MapFactory factory) {
+			for (Object owner : joinColumnValueOwnersMap.get(joinColumnValue)) {
+				setReferences(relatedObject, joinColumnValue, factory, owner);
+			}
 		}
 	}
 	
 	private class RelationshipResolver {
 		private final ObjectCache objectCache;
-		private final MemberAccess ownerFieldAccess;
-		private final FieldColumnMapping ownerJoinColumnMapping;
 		private final ClassRowMapping relatedClassMapping;
-		private final FieldColumnMapping relatedJoinColumnMapping;
-		private final MemberAccess relatedMemberAccess;
 		private final RelatedObjectSelect relatedObjectsSelect;
 		private final Relationship relationship;
 		private final JdbcStatement statement;
 		
 		public RelationshipResolver(Relationship relationship, ObjectCache objectCache) {
-			ClassRowMapping ownerClassMapping = jdbcMapper.getMappings()
-					.get(relationship.getOwnerEntity().getClazz());
 			GraphEntity relatedEntity = relationship.getRelatedEntity();
 			
 			this.objectCache = objectCache;
@@ -549,18 +690,9 @@ public class BatchResolver extends ObjectGraphResolver {
 			relatedClassMapping = jdbcMapper.getMappings()
 					.get(relatedEntity.getClazz());
 			
-			JoinColumn joinColumn = relationship.getJoinColumns().get(0);
-			ownerJoinColumnMapping = ownerClassMapping.getFieldColumnMappings()
-					.get(joinColumn.getOwnerClassColumn());
-			relatedJoinColumnMapping = relatedClassMapping.getFieldColumnMappings()
-					.get(joinColumn.getRelatedClassColumn());
-			
 			relatedObjectsSelect = new RelatedObjectSelect(relationship);
 
-			relatedMemberAccess = ownerClassMapping.getRelatedMemberAccess(relationship);
-			
 			this.relationship = relationship;
-			ownerFieldAccess = getOwnerFieldAccess();
 			
 			statement = jdbcMapper.createQuery(relatedObjectsSelect.getSelect())
 					.cachePreparedStatement(true);
@@ -608,14 +740,6 @@ public class BatchResolver extends ObjectGraphResolver {
 		
 		/* BEGIN Private methods */
 		
-		private void assignOwnerField(Object object, Object owner) {
-			if (ownerFieldAccess == null) {
-				return;
-			}
-			
-			ownerFieldAccess.set(object, owner);
-		}
-		
 		private List getCollections(
 				Connection connection, 
 				Collection owners, 
@@ -625,7 +749,7 @@ public class BatchResolver extends ObjectGraphResolver {
 			
 			for (int i = 0; i < batchFactory.getBatchCount(); i++) {
 				Batch batch = batchFactory.createBatch(i);
-				setJoinParameters(batch);
+				batch.setParametersTo(statement);
 				queryBatchOfCollections(connection, batch, objects, factory);
 			}
 			return objects;
@@ -640,27 +764,10 @@ public class BatchResolver extends ObjectGraphResolver {
 			
 			for (int i = 0; i < batchFactory.getBatchCount(); i++) {
 				Batch batch = batchFactory.createBatch(i);
-				setJoinParameters(batch);
+				batch.setParametersTo(statement);
 				queryBatchOfMaps(connection, batch, mapValues, factory);
 			}
 			return mapValues;
-		}
-		
-		private MemberAccess getOwnerFieldAccess() {
-			if (relationship.getInverseOwnerField() == null) {
-				return null;
-			}
-			
-			MemberAccess ownerFieldAccess = relatedClassMapping
-					.getOwnerMemberAccess(relationship);
-			
-			if (ownerFieldAccess == null) {
-				StringBuilder warning = new StringBuilder("inverse owner field (")
-						.append(relationship.getInverseOwnerField())
-						.append(") not found");
-				logger.warn(warning.toString());
-			}
-			return ownerFieldAccess;
 		}
 		
 		private Object getRelatedObject(ResultSetHelper rs) throws SQLException {
@@ -713,16 +820,7 @@ public class BatchResolver extends ObjectGraphResolver {
 					Object joinValue = joinColumnMapping.getFromResultSet(rs);
 					Object relatedObject = getRelatedObject(rs);
 					
-					Object owner = batch.getOwnerOfJoinColumnValue(joinValue);
-					
-					assignOwnerField(relatedObject, owner);
-
-					Collection collection = (Collection)relatedMemberAccess.get(owner);
-					if (collection == null) {
-						collection = factory.newInstance();
-						relatedMemberAccess.set(owner, collection);
-					}
-					collection.add(relatedObject);
+					batch.setReferences(relatedObject, joinValue, factory);
 					
 					objects.add(relatedObject);
 				}
@@ -750,17 +848,7 @@ public class BatchResolver extends ObjectGraphResolver {
 					Object joinValue = joinColumnMapping.getFromResultSet(rs);
 					Object relatedObject = getRelatedObject(rs);
 					
-					Object owner = batch.getOwnerOfJoinColumnValue(joinValue);
-					
-					assignOwnerField(relatedObject, owner);
-
-					Map map = (Map)relatedMemberAccess.get(owner);
-					if (map == null) {
-						map = factory.newInstance();
-						relatedMemberAccess.set(owner, map);
-					}
-					Object key = relatedClassMapping.getMapKeyValue(relatedObject, relationship.getMapKeyName());
-					map.put(key, relatedObject);
+					batch.setReferences(relatedObject, joinValue, factory);
 					
 					mapValues.add(relatedObject);
 				}
@@ -787,11 +875,8 @@ public class BatchResolver extends ObjectGraphResolver {
 					Object joinValue = joinColumnMapping.getFromResultSet(rs);
 					Object relatedObject = getRelatedObject(rs);
 					
-					Object owner = batch.getOwnerOfJoinColumnValue(joinValue);
+					batch.setReferences(relatedObject, joinValue);
 					
-					assignOwnerField(relatedObject, owner);
-
-					relatedMemberAccess.set(owner, relatedObject);
 					uniqueResults.add(relatedObject);
 				}
 			} catch (SQLException e) {
@@ -799,15 +884,6 @@ public class BatchResolver extends ObjectGraphResolver {
 			} finally {
 				JdbcUtils.closeQuietly(rs);
 			}
-		}
-		
-		/**
-		 * Does not support multiple join columns yet
-		 * @param batch
-		 */
-		private void setJoinParameters(Batch batch) {
-			batch.setJoinColumnMapping(ownerJoinColumnMapping, relatedJoinColumnMapping);
-			statement.setParameterList(ownerJoinColumnMapping.getColumn(), ownerJoinColumnMapping, batch.getJoinColumnValues());
 		}
 		
 		private List uniqueResults(
@@ -818,7 +894,7 @@ public class BatchResolver extends ObjectGraphResolver {
 			
 			for (int i = 0; i < batchFactory.getBatchCount(); i++) {
 				Batch batch = batchFactory.createBatch(i);
-				setJoinParameters(batch);
+				batch.setParametersTo(statement);
 				queryBatchOfUniques(connection, batch, uniqueResults);
 			}
 			return uniqueResults;
