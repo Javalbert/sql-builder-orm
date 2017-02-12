@@ -139,6 +139,8 @@ public class FieldColumnMapper {
 	
 	public FieldColumnMapping mapFieldToColumn(Field field) {
 		field.setAccessible(true);
+
+		addRelatedMemberAccess(field);
 		
 		final String columnName = getColumnName(field);
 		final String alias = getAlias(field);
@@ -146,8 +148,6 @@ public class FieldColumnMapper {
 		if (Strings.isNullOrEmpty(columnName) && Strings.isNullOrEmpty(alias)) {
 			return null;
 		}
-		
-		addRelatedMemberAccess(field);
 		
 		final boolean primaryKey = isPrimaryKeyColumn(field);
 		final boolean version = isVersionColumn(field);
@@ -173,6 +173,11 @@ public class FieldColumnMapper {
 		
 		final Class clazz = method.getDeclaringClass();
 		
+		final Method getter = getPropertyMethod(method, true, clazz);
+		final Method setter = getPropertyMethod(method, false, clazz);
+		
+		addRelatedPropertyMember(method, getter, setter);
+		
 		final String columnName = getColumnName(method);
 		final String alias = getAlias(method);
 
@@ -192,11 +197,6 @@ public class FieldColumnMapper {
 					+ ") cannot have @Id and @Version annotations at the same time");
 		}
 
-		final Method getter = getPropertyMethod(method, true, clazz);
-		final Method setter = getPropertyMethod(method, false, clazz);
-		
-		addRelatedPropertyMember(method, getter, setter);
-		
 		final int jdbcType = getJdbcType(getter);
 		
 		return new PropertyAccessMapping(
@@ -249,7 +249,6 @@ public class FieldColumnMapper {
 			Method method, 
 			Method getter, 
 			Method setter) {
-		
 		Related related = method.getAnnotation(Related.class);
 		if (related == null) {
 			return;

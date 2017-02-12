@@ -27,10 +27,12 @@ public abstract class ObjectGraphResolver {
 		this.jdbcMapper = jdbcMapper;
 	}
 
-	public abstract <T> void resolveRelatedObjects(Connection connection, 
+	public abstract <T> void resolveRelatedObjects(
+			Connection connection, 
 			GraphEntity graphEntity, 
 			Collection<T> collection) throws SQLException;
-	public abstract void resolveRelatedObjects(Connection connection, 
+	public abstract void resolveRelatedObjects(
+			Connection connection, 
 			GraphEntity graphEntity, 
 			Object object) throws SQLException;
 	public abstract <T, C extends Collection<T>> C toCollection(

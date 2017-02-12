@@ -179,7 +179,7 @@ public class DataTypeHolder {
 		if (decimalVal == null) {
 			if (other.decimalVal != null)
 				return false;
-		} else if (HashEqualsUtils.equal(decimalVal, other.decimalVal))
+		} else if (!HashEqualsUtils.equal(decimalVal, other.decimalVal))
 			return false;
 		if (Double.doubleToLongBits(doubleVal) != Double.doubleToLongBits(other.doubleVal))
 			return false;

@@ -46,6 +46,31 @@ public final class H2 {
 				+ "user_id INT AUTO_INCREMENT PRIMARY KEY,"
 				+ "name VARCHAR(20),"
 				+ "version INT DEFAULT 0"
+				+ ")",
+		/* https://blog.tallan.com/wp-content/uploads/2008/09/onlinesales.gif */
+				"CREATE TABLE IF NOT EXISTS Customer ("
+				+ "customer_id IDENTITY,"
+				+ "full_name VARCHAR(50)"
+				+ ")",
+				"CREATE TABLE IF NOT EXISTS Store ("
+				+ "store_key IDENTITY,"
+				+ "store_name VARCHAR(50)"
+				+ ")",
+				"CREATE TABLE IF NOT EXISTS Orders ("
+				+ "order_id IDENTITY,"
+				+ "customer_id BIGINT NOT NULL,"
+				+ "store_id BIGINT,"
+				+ "sales_amount DECIMAL(13, 2),"
+				+ "order_datetime TIMESTAMP,"
+				+ "FOREIGN KEY (customer_id) REFERENCES Customer (customer_id),"
+				+ "FOREIGN KEY (store_id) REFERENCES Store (store_key)"
+				+ ")",
+				"CREATE TABLE IF NOT EXISTS Product ("
+				+ "product_id IDENTITY,"
+				+ "order_id BIGINT NOT NULL,"
+				+ "product_name VARCHAR(255),"
+				+ "price DECIMAL(10, 2),"
+				+ "FOREIGN KEY (order_id) REFERENCES Orders (order_id)"
 				+ ")");
 	}
 	
@@ -55,7 +80,15 @@ public final class H2 {
 					"DELETE FROM DataTypeHolder",
 					"DELETE FROM User",
 					"DELETE FROM User2",
-					"ALTER TABLE User2 ALTER COLUMN user_id RESTART WITH 1");
+					"ALTER TABLE User2 ALTER COLUMN user_id RESTART WITH 1",
+					"DELETE FROM Product",
+					"ALTER TABLE Product ALTER COLUMN product_id RESTART WITH 1",
+					"DELETE FROM Orders",
+					"ALTER TABLE Orders ALTER COLUMN order_id RESTART WITH 1",
+					"DELETE FROM Store",
+					"ALTER TABLE Store ALTER COLUMN store_key RESTART WITH 1",
+					"DELETE FROM Customer",
+					"ALTER TABLE Customer ALTER COLUMN customer_id RESTART WITH 1");
 		} catch (Exception ignored) {}
 	}
 	
@@ -88,7 +121,11 @@ public final class H2 {
 		executeStatements(
 				"DROP TABLE IF EXISTS DataTypeHolder",
 				"DROP TABLE IF EXISTS User",
-				"DROP TABLE IF EXISTS User2");
+				"DROP TABLE IF EXISTS User2",
+				"DROP TABLE IF EXISTS Product",
+				"DROP TABLE IF EXISTS Orders",
+				"DROP TABLE IF EXISTS Store",
+				"DROP TABLE IF EXISTS Customer");
 	}
 	
 	private H2() {}
