@@ -265,7 +265,7 @@ public class JdbcMapper {
 			GraphEntity<T> graphEntity,
 			Serializable id,
 			ObjectGraphResolver graphResolver) throws SQLException {
-		Object object = get(connection, graphEntity.getEntityClass(), id);
+		T object = get(connection, graphEntity.getEntityClass(), id);
 		graphResolver.resolveRelatedObjects(connection, graphEntity, object);
 		return graphEntity.getEntityClass().cast(object);
 	}
