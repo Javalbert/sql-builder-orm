@@ -34,7 +34,6 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
 
-@SuppressWarnings("deprecation")
 public class ResultSetHelper implements ResultSet {
 	private final ResultSet rs;
 
@@ -137,23 +136,29 @@ public class ResultSetHelper implements ResultSet {
 	/**
 	 * 
 	 * @param columnIndex
-	 * @return java.util.Date instead of java.sql.Timestamp
+	 * @return java.util.Date instead of java.sql.Timestamp if and
+	 * only if {@link Timestamp#getNanos()} <code>mod</code> 1,000,000 is 0
+	 * because fractional seconds less than 1 ms only matter for {@link Timestamp}
 	 * @throws SQLException
 	 */
 	public java.util.Date getTimestamp2(int columnIndex) throws SQLException {
 		Timestamp x = getTimestamp(columnIndex);
-		return x != null ? new java.util.Date(x.getTime()) : null;
+		return x != null && x.getNanos() % 1_000_000 == 0 
+				? new java.util.Date(x.getTime()) : x;
 	}
 	
 	/**
 	 * 
 	 * @param columnLabel
-	 * @return java.util.Date instead of java.sql.Timestamp
+	 * @return java.util.Date instead of java.sql.Timestamp if and
+	 * only if {@link Timestamp#getNanos()} <code>mod</code> 1,000,000 is 0
+	 * because fractional seconds less than 1 ms only matter for {@link Timestamp}
 	 * @throws SQLException
 	 */
 	public java.util.Date getTimestamp2(String columnLabel) throws SQLException {
 		Timestamp x = getTimestamp(columnLabel);
-		return x != null ? new java.util.Date(x.getTime()) : null;
+		return x != null && x.getNanos() % 1_000_000 == 0 
+				? new java.util.Date(x.getTime()) : x;
 	}
 	
 	/* BEGIN ResultSet interface methods */
@@ -223,6 +228,7 @@ public class ResultSetHelper implements ResultSet {
 		return rs.getDouble(columnIndex);
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
 		return rs.getBigDecimal(columnIndex, scale);
@@ -253,6 +259,7 @@ public class ResultSetHelper implements ResultSet {
 		return rs.getAsciiStream(columnIndex);
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public InputStream getUnicodeStream(int columnIndex) throws SQLException {
 		return rs.getUnicodeStream(columnIndex);
@@ -303,6 +310,7 @@ public class ResultSetHelper implements ResultSet {
 		return rs.getDouble(columnLabel);
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public BigDecimal getBigDecimal(String columnLabel, int scale) throws SQLException {
 		return rs.getBigDecimal(columnLabel, scale);
@@ -333,6 +341,7 @@ public class ResultSetHelper implements ResultSet {
 		return rs.getAsciiStream(columnLabel);
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public InputStream getUnicodeStream(String columnLabel) throws SQLException {
 		return rs.getUnicodeStream(columnLabel);

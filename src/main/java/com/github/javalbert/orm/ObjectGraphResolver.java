@@ -29,21 +29,21 @@ public abstract class ObjectGraphResolver {
 
 	public abstract <T> void resolveRelatedObjects(
 			Connection connection, 
-			GraphEntity graphEntity, 
+			GraphEntity<T> graphEntity, 
 			Collection<T> collection) throws SQLException;
-	public abstract void resolveRelatedObjects(
+	public abstract <T> void resolveRelatedObjects(
 			Connection connection, 
-			GraphEntity graphEntity, 
-			Object object) throws SQLException;
-	public abstract <T, C extends Collection<T>> C toCollection(
-			Connection connection, 
-			JdbcStatement statement, 
-			GraphEntity graphEntity, 
-			C collection) throws SQLException;
-	public abstract <T, C extends Collection<T>> C toCollection(
+			GraphEntity<T> graphEntity, 
+			T object) throws SQLException;
+	public abstract <T> Collection<T> toCollection(
 			Connection connection, 
 			JdbcStatement statement, 
-			GraphEntity graphEntity, 
-			C collection, 
+			GraphEntity<T> graphEntity, 
+			Collection<T> collection) throws SQLException;
+	public abstract <T> Collection<T> toCollection(
+			Connection connection, 
+			JdbcStatement statement, 
+			GraphEntity<T> graphEntity, 
+			Collection<T> collection, 
 			ObjectCache objectCache) throws SQLException;
 }

@@ -63,7 +63,6 @@ import com.github.javalbert.utils.string.Strings;
  * @author Albert
  *
  */
-@SuppressWarnings({ "unchecked", "rawtypes" })
 public class CartesianProductResolver extends ObjectGraphResolver {
 	private static final Logger logger = LoggerFactory.getLogger(CartesianProductResolver.class);
 	
@@ -72,8 +71,9 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 	}
 	
 	@Override
-	public <T> void resolveRelatedObjects(Connection connection, 
-			GraphEntity graphEntity, 
+	public <T> void resolveRelatedObjects(
+			Connection connection, 
+			GraphEntity<T> graphEntity, 
 			Collection<T> collection) throws SQLException {
 		RelatedObjectsQuery query = new RelatedObjectsQuery(graphEntity);
 		JdbcStatement statement = query.createStatement(collection);
@@ -81,27 +81,28 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 	}
 	
 	@Override
-	public void resolveRelatedObjects(Connection connection, 
-			GraphEntity graphEntity, 
-			Object object) throws SQLException {
+	public <T> void resolveRelatedObjects(
+			Connection connection, 
+			GraphEntity<T> graphEntity, 
+			T object) throws SQLException {
 		resolveRelatedObjects(connection, graphEntity, Collections.singletonList(object));
 	}
 	
 	@Override
-	public <T, C extends Collection<T>> C toCollection(
+	public <T> Collection<T> toCollection(
 			Connection connection, 
 			JdbcStatement statement, 
-			GraphEntity graphEntity, 
-			C collection) throws SQLException {
+			GraphEntity<T> graphEntity, 
+			Collection<T> collection) throws SQLException {
 		return toCollection(connection, statement, graphEntity, collection, null);
 	}
 	
 	@Override
-	public <T, C extends Collection<T>> C toCollection(
+	public <T> Collection<T> toCollection(
 			Connection connection, 
 			JdbcStatement statement, 
-			GraphEntity graphEntity, 
-			C collection, 
+			GraphEntity<T> graphEntity, 
+			Collection<T> collection, 
 			ObjectCache objectCache) throws SQLException {
 		CartesianProductQuery query = new CartesianProductQuery(statement, graphEntity);
 		
@@ -137,24 +138,28 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 	}
 	
 	private class CartesianProductQuery {
+		@SuppressWarnings("rawtypes")
 		private final Map<GraphEntity, ClassColumns> entityColumnsMap = new LinkedHashMap<>();
 		private final From from = new From();
+		@SuppressWarnings("rawtypes")
 		private final GraphEntity mainGraphEntity;
 		private int nextColumnStartIndex = 1;
 		private OrderBy orderBy = new OrderBy();
 		private final SelectList selectList = new SelectList();
 		private final SelectNodeFinder selectNodeFinder = new SelectNodeFinder();
 
+		@SuppressWarnings("rawtypes")
 		public Map<GraphEntity, ClassColumns> getEntityColumnsMap() { return entityColumnsMap; }
+		@SuppressWarnings("rawtypes")
 		public GraphEntity getMainGraphEntity() { return mainGraphEntity; }
 		
-		public CartesianProductQuery(JdbcStatement statement, GraphEntity mainGraphEntity) {
+		public CartesianProductQuery(JdbcStatement statement, GraphEntity<?> mainGraphEntity) {
 			this.mainGraphEntity = mainGraphEntity;
 			
 			statement.getSqlStatement().accept(selectNodeFinder);
 			
 			ClassRowMapping classRowMapping = jdbcMapper.getMappings()
-					.get(mainGraphEntity.getClazz());
+					.get(mainGraphEntity.getEntityClass());
 			
 			addMainEntitySelectList(statement);
 			ClassColumns classColumns = new ClassColumnsFactory(classRowMapping)
@@ -173,7 +178,7 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 			changeSelectStatement(statement);
 		}
 		
-		public <C extends Collection> C toCollection(C collection, ResultSetHelper rs, ObjectCache objectCache) throws SQLException {
+		public <T> Collection<T> toCollection(Collection<T> collection, ResultSetHelper rs, ObjectCache objectCache) throws SQLException {
 			CartesianProductResult result = new CartesianProductResult(this, objectCache);
 			return result.toCollection(collection, rs);
 		}
@@ -184,7 +189,7 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 			OrderBy statementOrderBy = selectNodeFinder.getOrderBy();
 			
 			if (statementOrderBy != null) {
-				for (Node node : statementOrderBy.getNodes()) {
+				for (@SuppressWarnings("rawtypes") Node node : statementOrderBy.getNodes()) {
 					if (node.getType() == Node.TYPE_COLUMN) {
 						com.github.javalbert.sqlbuilder.Column column = (com.github.javalbert.sqlbuilder.Column)node;
 						orderBy.tableAlias(mainGraphEntity.getTableAlias())
@@ -206,7 +211,7 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 		private void addMainEntitySelectList(JdbcStatement statement) {
 			SelectList list = selectNodeFinder.getSelectList();
 			
-			for (Node node : list.getNodes()) {
+			for (@SuppressWarnings("rawtypes") Node node : list.getNodes()) {
 				com.github.javalbert.sqlbuilder.Column column = (com.github.javalbert.sqlbuilder.Column)node;
 				selectList.tableAlias(mainGraphEntity.getTableAlias())
 						.column(column.getName());
@@ -214,6 +219,7 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 		}
 		
 		private void addRelationshipsOfRelated(Relationship related) {
+			@SuppressWarnings("unchecked")
 			Set<Relationship> relationships = related.getRelatedEntity()
 					.getRelationships();
 			for (Relationship relationship : relationships) {
@@ -234,13 +240,13 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 		}
 		
 		private boolean addSelectColumns(Relationship relationship) {
-			GraphEntity relatedEntity = relationship.getRelatedEntity();
+			GraphEntity<?> relatedEntity = relationship.getRelatedEntity();
 			
 			if (entityColumnsMap.containsKey(relatedEntity)) {
 				return false;
 			}
 			ClassRowMapping classRowMapping = jdbcMapper.getMappings()
-					.get(relatedEntity.getClazz());
+					.get(relatedEntity.getEntityClass());
 			
 			appendColumns(relatedEntity);
 			ClassColumns classColumns = new ClassColumnsFactory(classRowMapping)
@@ -250,9 +256,9 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 			return true;
 		}
 		
-		private void appendColumns(GraphEntity graphEntity) {
+		private void appendColumns(GraphEntity<?> graphEntity) {
 			ClassRowMapping classRowMapping = jdbcMapper.getMappings()
-					.get(graphEntity.getClazz());
+					.get(graphEntity.getEntityClass());
 			List<FieldColumnMapping> fieldColumnMappingList = classRowMapping.getFieldColumnMappingList();
 			
 			for (FieldColumnMapping fieldColumnMapping : fieldColumnMappingList) {
@@ -268,8 +274,8 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 		
 		private void appendToFrom(Relationship relationship) {
 			Condition joinCondition = new Condition();
-			GraphEntity ownerEntity = relationship.getOwnerEntity();
-			GraphEntity relatedEntity = relationship.getRelatedEntity();
+			GraphEntity<?> ownerEntity = relationship.getOwnerEntity();
+			GraphEntity<?> relatedEntity = relationship.getRelatedEntity();
 			
 			for (JoinColumn joinColumn : relationship.getJoinColumns()) {
 				joinCondition.predicate(new Predicate()
@@ -280,7 +286,7 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 			}
 			
 			ClassRowMapping classRowMapping = jdbcMapper.getMappings()
-					.get(relatedEntity.getClazz());
+					.get(relatedEntity.getEntityClass());
 			
 			from.leftOuterJoin()
 			.tableName(classRowMapping.getTableIdentifier())
@@ -293,7 +299,7 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 					|| relationship.getOrderByColumns().isEmpty()) {
 				return;
 			}
-			GraphEntity relatedEntity = relationship.getRelatedEntity();
+			GraphEntity<?> relatedEntity = relationship.getRelatedEntity();
 			
 			for (OrderByColumn column : relationship.getOrderByColumns()) {
 				orderBy.tableAlias(relatedEntity.getTableAlias())
@@ -363,7 +369,7 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 		
 		private class TableAliasAppender implements NodeVisitor {
 			@Override
-			public boolean visit(Node node) {
+			public boolean visit(@SuppressWarnings("rawtypes") Node node) {
 				if (node.getType() == Node.TYPE_COLUMN) {
 					com.github.javalbert.sqlbuilder.Column column = (com.github.javalbert.sqlbuilder.Column)node;
 					appendTableAlias(column);
@@ -393,7 +399,8 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 			this.query = query;
 		}
 
-		public <C extends Collection> C toCollection(C collection, ResultSetHelper rs) throws SQLException {
+		@SuppressWarnings("rawtypes")
+		public <T> Collection<T> toCollection(Collection<T> collection, ResultSetHelper rs) throws SQLException {
 			Map<GraphEntity, ClassColumns> entityColumnsMap = query.getEntityColumnsMap();
 			Collection<ClassColumns> classColumnsList = entityColumnsMap.values();
 			RelationshipManager relationshipManager = new RelationshipManager(query, classColumnsList.size());
@@ -410,11 +417,12 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 		
 		/* BEGIN Private methods */
 		
-		private <C extends Collection> void addObjectToCollection(C collection, CreateObjectResult result) {
+		@SuppressWarnings("unchecked")
+		private void addObjectToCollection(@SuppressWarnings("rawtypes") Collection collection, CreateObjectResult result) {
 			Object object = result.getObject();
 			
 			if (!result.isNew() 
-					|| query.getMainGraphEntity().getClazz() != object.getClass()) {
+					|| query.getMainGraphEntity().getEntityClass() != object.getClass()) {
 				return;
 			}
 			collection.add(object);
@@ -493,7 +501,8 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 		public Relationship getRelationship() { return relationship; }
 		public int getStartIndex() { return startIndex; }
 
-		public ClassColumns(ClassRowMapping classRowMapping, 
+		public ClassColumns(
+				ClassRowMapping classRowMapping, 
 				List<FieldColumnMapping> fieldColumnMappings, 
 				int startIndex, 
 				int endIndex, 
@@ -533,9 +542,9 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 		
 		public ObjectCache getObjectCache() { return objectCache; }
 		
-		public RelatedObjectsQuery(GraphEntity graphEntity) {
+		public RelatedObjectsQuery(GraphEntity<?> graphEntity) {
 			classRowMapping = jdbcMapper.getMappings()
-					.get(graphEntity.getClazz());
+					.get(graphEntity.getEntityClass());
 			
 			Set<String> columnsAdded = new HashSet<>();
 			SelectList list = new SelectList();
@@ -552,8 +561,8 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 			).where(where);
 		}
 		
-		public JdbcStatement createStatement(Collection collection) {
-			Collection idList = getIdList(classRowMapping, collection);
+		public JdbcStatement createStatement(Collection<?> collection) {
+			Collection<?> idList = getIdList(classRowMapping, collection);
 			
 			return jdbcMapper.createQuery(select)
 					.setParameterList(scalarPrimaryKeyMapping.getColumn(), 
@@ -563,7 +572,7 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 
 		/* BEGIN Private methods */
 		
-		private void addJoinColumns(SelectList list, GraphEntity graphEntity, Set<String> columnsAdded) {
+		private void addJoinColumns(SelectList list, GraphEntity<?> graphEntity, Set<String> columnsAdded) {
 			for (Relationship relationship : graphEntity.getRelationships()) {
 				for (JoinColumn joinColumn : relationship.getJoinColumns()) {
 					if (columnsAdded.contains(joinColumn.getOwnerClassColumn())) {
@@ -577,9 +586,10 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 			}
 		}
 		
-		private void addPrimaryKeyColumns(SelectList list, 
+		private void addPrimaryKeyColumns(
+				SelectList list, 
 				Where where, 
-				GraphEntity graphEntity, 
+				GraphEntity<?> graphEntity, 
 				Set<String> columnsAdded, 
 				ClassRowMapping classRowMapping) {
 			List<FieldColumnMapping> primaryKeyMappings = classRowMapping.getPrimaryKeyMappings();
@@ -605,7 +615,8 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 			}
 		}
 		
-		private Collection getIdList(ClassRowMapping classRowMapping, Collection collection) {
+		@SuppressWarnings({ "rawtypes", "unchecked" })
+		private Collection getIdList(ClassRowMapping classRowMapping, Collection<?> collection) {
 			objectCache = new ObjectCache();
 			
 			List ids = new ArrayList<>();
@@ -622,12 +633,14 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 	}
 	
 	private class RelationshipLink {
+		@SuppressWarnings("rawtypes")
 		private final Class clazz;
 		private final Serializable id;
+		@SuppressWarnings("rawtypes")
 		private final Class ownerClass;
 		private final Serializable ownerId;
 		
-		public RelationshipLink(Class ownerClass, Serializable ownerId, Class clazz, Serializable id) {
+		public RelationshipLink(Class<?> ownerClass, Serializable ownerId, Class<?> clazz, Serializable id) {
 			this.clazz = clazz;
 			this.id = id;
 			this.ownerClass = ownerClass;
@@ -680,6 +693,7 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 	
 	private class RelationshipManager {
 		private final Map<ClassColumns, Object> classObjects = new HashMap<>();
+		@SuppressWarnings("rawtypes")
 		private final Map<GraphEntity, ClassColumns> entityColumnsMap;
 		private final int objectsPerRow;
 		private final Set<RelationshipLink> relationshipLinks = new HashSet<>();
@@ -769,6 +783,7 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 			}
 		}
 
+		@SuppressWarnings("unchecked")
 		private void addToCollection(ClassColumns ownerColumns, 
 				Object owner, 
 				ClassColumns classColumns, 
@@ -777,6 +792,7 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 			MemberAccess collectionMember = ownerColumns.getClassRowMapping()
 					.getRelatedMemberAccess(classColumns.getRelationship());
 			
+			@SuppressWarnings("rawtypes")
 			Collection collection = (Collection)collectionMember.get(owner);
 			if (collection == null) {
 				collection = collectionFactory.newInstance();
@@ -791,6 +807,7 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 			fieldMember.set(owner, object);
 		}
 		
+		@SuppressWarnings("unchecked")
 		private void addToMap(Relationship relationship, 
 				ClassColumns ownerColumns, 
 				Object owner, 
@@ -800,6 +817,7 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 			MemberAccess mapMember = ownerColumns.getClassRowMapping()
 					.getRelatedMemberAccess(classColumns.getRelationship());
 			
+			@SuppressWarnings("rawtypes")
 			Map map = (Map)mapMember.get(owner);
 			if (map == null) {
 				map = mapFactory.newInstance();

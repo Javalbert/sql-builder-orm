@@ -46,7 +46,6 @@ import com.github.javalbert.utils.jdbc.ResultSetHelper;
 import com.github.javalbert.utils.reflection.MemberAccess;
 import com.github.javalbert.utils.string.Strings;
 
-@SuppressWarnings({ "rawtypes", "unchecked" })
 public class BatchResolver extends ObjectGraphResolver {
 	/* BEGIN Class members */
 	
@@ -68,36 +67,36 @@ public class BatchResolver extends ObjectGraphResolver {
 	@Override
 	public <T> void resolveRelatedObjects(
 			Connection connection, 
-			GraphEntity graphEntity, 
+			GraphEntity<T> graphEntity, 
 			Collection<T> collection) throws SQLException {
 		EntityQuery query = new EntityQuery(connection);
 		query.resolveRelationships(graphEntity, collection);
 	}
 	
 	@Override
-	public void resolveRelatedObjects(
+	public <T> void resolveRelatedObjects(
 			Connection connection, 
-			GraphEntity graphEntity, 
-			Object object) throws SQLException {
+			GraphEntity<T> graphEntity, 
+			T object) throws SQLException {
 		resolveRelatedObjects(connection, graphEntity, Collections.singletonList(object));
 	}
 	
 	@Override
-	public <T, C extends Collection<T>> C toCollection(
+	public <T> Collection<T> toCollection(
 			Connection connection, 
 			JdbcStatement statement, 
-			GraphEntity graphEntity, 
-			C collection) 
+			GraphEntity<T> graphEntity, 
+			Collection<T> collection) 
 			throws SQLException {
 		return toCollection(connection, statement, graphEntity, collection, null);
 	}
 	
 	@Override
-	public <T, C extends Collection<T>> C toCollection(
+	public <T> Collection<T> toCollection(
 			Connection connection, 
 			JdbcStatement statement,
-			GraphEntity graphEntity, 
-			C collection, 
+			GraphEntity<T> graphEntity, 
+			Collection<T> collection, 
 			ObjectCache objectCache) throws SQLException {
 		EntityQuery query = new EntityQuery(connection, objectCache);
 		return query.toCollection(graphEntity, statement, collection);
@@ -112,21 +111,22 @@ public class BatchResolver extends ObjectGraphResolver {
 	private class EntityColumns {
 		private final ClassRowMapping classRowMapping;
 		private final List<FieldColumnMapping> fieldColumnMappings;
+		@SuppressWarnings("rawtypes")
 		private final GraphEntity graphEntity;
 		private int lastPrimaryKeyIndex;
 		private final ObjectCache objectCache;
 		
-		public EntityColumns(GraphEntity graphEntity, ObjectCache objectCache) {
+		public EntityColumns(GraphEntity<?> graphEntity, ObjectCache objectCache) {
 			this(graphEntity, objectCache, null);
 		}
 		
-		public EntityColumns(GraphEntity graphEntity, ObjectCache objectCache, JdbcStatement statement) {
+		public EntityColumns(GraphEntity<?> graphEntity, ObjectCache objectCache, JdbcStatement statement) {
 			if (graphEntity == null) {
 				throw new NullPointerException("graphEntity cannot be null");
 			}
 			
 			classRowMapping = jdbcMapper.getMappings()
-					.get(graphEntity.getClazz());
+					.get(graphEntity.getEntityClass());
 			fieldColumnMappings = statement != null 
 					? jdbcMapper.getColumnMappings(classRowMapping, (Select)statement.getSqlStatement()) 
 					: classRowMapping.getFieldColumnMappingList();
@@ -173,7 +173,7 @@ public class BatchResolver extends ObjectGraphResolver {
 		
 		private Object newEntityInstance() {
 			try {
-				return graphEntity.getClazz().newInstance();
+				return graphEntity.getEntityClass().newInstance();
 			} catch (InstantiationException | IllegalAccessException e) {
 				return null;
 			}
@@ -182,6 +182,7 @@ public class BatchResolver extends ObjectGraphResolver {
 	
 	private class EntityQuery {
 		private final Connection connection;
+		@SuppressWarnings("rawtypes")
 		private final Map<GraphEntity, EntityColumns> entityColumnsMap = new HashMap<>();
 		private final ObjectCache objectCache;
 		
@@ -194,12 +195,12 @@ public class BatchResolver extends ObjectGraphResolver {
 			this.objectCache = objectCache != null ? objectCache : new ObjectCache();
 		}
 		
-		public void resolveRelationships(GraphEntity graphEntity, Collection collection) 
+		public <T> void resolveRelationships(GraphEntity<T> graphEntity, Collection<T> collection) 
 				throws SQLException {
 			resolveRelationships(connection, graphEntity, collection);
 		}
 		
-		public <C extends Collection<T>, T> C toCollection(GraphEntity graphEntity, JdbcStatement statement, C collection) 
+		public <T> Collection<T> toCollection(GraphEntity<T> graphEntity, JdbcStatement statement, Collection<T> collection) 
 			throws SQLException {
 			PreparedStatement stmt = null;
 			ResultSetHelper rs = null;
@@ -212,7 +213,7 @@ public class BatchResolver extends ObjectGraphResolver {
 				entityColumnsMap.put(graphEntity, entityColumns);
 				
 				while (rs.next()) {
-					T entity = (T)entityColumns.createFromResultSet(rs);
+					T entity = graphEntity.getEntityClass().cast(entityColumns.createFromResultSet(rs));
 					collection.add(entity);
 				}
 				
@@ -227,7 +228,7 @@ public class BatchResolver extends ObjectGraphResolver {
 		}
 		
 		private EntityColumns createRelatedEntityColumns(Relationship relationship) {
-			final GraphEntity relatedEntity = relationship.getRelatedEntity();
+			final GraphEntity<?> relatedEntity = relationship.getRelatedEntity();
 			
 			if (entityColumnsMap.containsKey(relatedEntity)) {
 				logger.error(relatedEntity + " already handled and would have resulted in a circular "
@@ -241,7 +242,8 @@ public class BatchResolver extends ObjectGraphResolver {
 			return entityColumns;
 		}
 		
-		private void resolveRelationships(Connection connection, GraphEntity graphEntity, Collection collection) 
+		@SuppressWarnings("unchecked")
+		private <T> void resolveRelationships(Connection connection, GraphEntity<T> graphEntity, Collection<T> collection) 
 				throws SQLException {
 			for (Relationship relationship : graphEntity.getRelationships()) {
 				EntityColumns entityColumns = createRelatedEntityColumns(relationship);
@@ -251,7 +253,7 @@ public class BatchResolver extends ObjectGraphResolver {
 				}
 				
 				RelationshipResolver resolver = new RelationshipResolver(relationship, objectCache);
-				Collection relatedObjects = resolver.getRelatedObjects(connection, collection);
+				Collection<?> relatedObjects = resolver.getRelatedObjects(connection, collection);
 				
 				resolveRelationships(connection, relationship.getRelatedEntity(), relatedObjects);
 			}
@@ -327,9 +329,11 @@ public class BatchResolver extends ObjectGraphResolver {
 	
 	private class RelatedObjectSelect {
 		private List<FieldColumnMapping> fieldColumnMappings;
+		@SuppressWarnings("rawtypes")
 		private final Class ownerClass;
 		private final String ownerTableAlias;
 		private int primaryKeyColumnIndex;
+		@SuppressWarnings("rawtypes")
 		private final Class relatedClass;
 		private final String relatedTableAlias;
 		private final Relationship relationship;
@@ -350,19 +354,19 @@ public class BatchResolver extends ObjectGraphResolver {
 		}
 		
 		public RelatedObjectSelect(Relationship relationship) {
-			GraphEntity ownerEntity = relationship.getOwnerEntity();
+			GraphEntity<?> ownerEntity = relationship.getOwnerEntity();
 			if (Strings.isNullOrEmpty(ownerEntity.getTableAlias())) {
 				throw new IllegalStateException(relationship + "'s owner entity is missing its table alias");
 			}
 			
-			GraphEntity relatedEntity = relationship.getRelatedEntity();
+			GraphEntity<?> relatedEntity = relationship.getRelatedEntity();
 			if (Strings.isNullOrEmpty(relatedEntity.getTableAlias())) {
 				throw new IllegalStateException(relationship + "'s related entity is missing its table alias");
 			}
 			
-			ownerClass = ownerEntity.getClazz();
+			ownerClass = ownerEntity.getEntityClass();
 			ownerTableAlias = ownerEntity.getTableAlias();
-			relatedClass = relatedEntity.getClazz();
+			relatedClass = relatedEntity.getEntityClass();
 			relatedTableAlias = relatedEntity.getTableAlias();
 			this.relationship = relationship;
 		}
@@ -470,9 +474,9 @@ public class BatchResolver extends ObjectGraphResolver {
 			this.relationship = relationship;
 			
 			ClassRowMapping ownerClassMapping = jdbcMapper.getMappings()
-					.get(relationship.getOwnerEntity().getClazz());
+					.get(relationship.getOwnerEntity().getEntityClass());
 			relatedClassMapping = jdbcMapper.getMappings()
-					.get(relationship.getRelatedEntity().getClazz());
+					.get(relationship.getRelatedEntity().getEntityClass());
 			
 			JoinColumn joinColumn = relationship.getJoinColumns().get(0);
 			
@@ -518,6 +522,7 @@ public class BatchResolver extends ObjectGraphResolver {
 			relatedMemberAccess.set(owner, relatedObject);
 		}
 
+		@SuppressWarnings("unchecked")
 		protected void setReferences(
 				Object relatedObject,
 				Object joinColumnValue,
@@ -525,6 +530,7 @@ public class BatchResolver extends ObjectGraphResolver {
 				Object owner) {
 			assignOwnerField(relatedObject, owner);
 
+			@SuppressWarnings("rawtypes")
 			Collection collection = (Collection)relatedMemberAccess.get(owner);
 			if (collection == null) {
 				collection = factory.newInstance();
@@ -533,6 +539,7 @@ public class BatchResolver extends ObjectGraphResolver {
 			collection.add(relatedObject);
 		}
 
+		@SuppressWarnings("unchecked")
 		protected void setReferences(
 				Object relatedObject,
 				Object joinColumnValue,
@@ -540,6 +547,7 @@ public class BatchResolver extends ObjectGraphResolver {
 				Object owner) {
 			assignOwnerField(relatedObject, owner);
 
+			@SuppressWarnings("rawtypes")
 			Map map = (Map)relatedMemberAccess.get(owner);
 			if (map == null) {
 				map = factory.newInstance();
@@ -600,7 +608,7 @@ public class BatchResolver extends ObjectGraphResolver {
 			return batchCount;
 		}
 		
-		public BatchFactory(Relationship relationship, Collection owners) {
+		public BatchFactory(Relationship relationship, Collection<?> owners) {
 			batchCount = (int)Math.ceil((double)owners.size() / relationship.getBatchSize());
 			this.owners.addAll(owners);
 			this.relationship = relationship;
@@ -685,12 +693,12 @@ public class BatchResolver extends ObjectGraphResolver {
 		private final JdbcStatement statement;
 		
 		public RelationshipResolver(Relationship relationship, ObjectCache objectCache) {
-			GraphEntity relatedEntity = relationship.getRelatedEntity();
+			GraphEntity<?> relatedEntity = relationship.getRelatedEntity();
 			
 			this.objectCache = objectCache;
 			
 			relatedClassMapping = jdbcMapper.getMappings()
-					.get(relatedEntity.getClazz());
+					.get(relatedEntity.getEntityClass());
 			
 			relatedObjectsSelect = new RelatedObjectSelect(relationship);
 
@@ -700,9 +708,10 @@ public class BatchResolver extends ObjectGraphResolver {
 					.cachePreparedStatement(true);
 		}
 		
-		public Collection getRelatedObjects(Connection connection, Collection owners) 
+		@SuppressWarnings("rawtypes")
+		public Collection getRelatedObjects(Connection connection, Collection<?> owners) 
 				throws SQLException {
-			List<Object> relatedObjects = null;
+			List<?> relatedObjects = null;
 			
 			try {
 				switch (relationship.getFieldType()) {
@@ -739,9 +748,10 @@ public class BatchResolver extends ObjectGraphResolver {
 		
 		/* BEGIN Private methods */
 		
+		@SuppressWarnings("rawtypes")
 		private List getCollections(
 				Connection connection, 
-				Collection owners, 
+				Collection<?> owners, 
 				CollectionFactory factory) throws SQLException {
 			BatchFactory batchFactory = new BatchFactory(relationship, owners);
 			List<Object> objects = new ArrayList<>();
@@ -754,9 +764,10 @@ public class BatchResolver extends ObjectGraphResolver {
 			return objects;
 		}
 		
+		@SuppressWarnings("rawtypes")
 		private List getMaps(
 				Connection connection, 
-				Collection owners, 
+				Collection<?> owners, 
 				MapFactory factory) throws SQLException {
 			BatchFactory batchFactory = new BatchFactory(relationship, owners);
 			List<Object> mapValues = new ArrayList<>();
@@ -885,9 +896,10 @@ public class BatchResolver extends ObjectGraphResolver {
 			}
 		}
 		
+		@SuppressWarnings("rawtypes")
 		private List uniqueResults(
 				Connection connection, 
-				Collection owners) throws SQLException {
+				Collection<?> owners) throws SQLException {
 			BatchFactory batchFactory = new BatchFactory(relationship, owners);
 			List<Object> uniqueResults = new ArrayList<>();
 			

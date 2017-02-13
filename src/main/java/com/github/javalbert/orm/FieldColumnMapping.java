@@ -36,7 +36,8 @@ public abstract class FieldColumnMapping implements MemberAccess {
 	public static final int JDBC_TYPE_STRING = 13;
 	public static final int JDBC_TYPE_TIMESTAMP = 14;
 	
-	public static Object getFromResultSet(int jdbcType, 
+	public static Object getFromResultSet(
+			int jdbcType, 
 			ResultSetHelper rs, 
 			int column) 
 			throws SQLException {
@@ -59,7 +60,8 @@ public abstract class FieldColumnMapping implements MemberAccess {
 		throw new IllegalArgumentException("Unsupported JDBC type: " + jdbcType);
 	}
 	
-	public static Object getFromResultSet(int jdbcType, 
+	public static Object getFromResultSet(
+			int jdbcType, 
 			ResultSetHelper rs, 
 			String columnLabel) 
 			throws SQLException {

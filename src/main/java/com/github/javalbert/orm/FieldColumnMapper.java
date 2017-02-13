@@ -26,7 +26,6 @@ import com.github.javalbert.utils.reflection.MemberAccess;
 import com.github.javalbert.utils.reflection.PropertyMemberAccess;
 import com.github.javalbert.utils.string.Strings;
 
-@SuppressWarnings({ "rawtypes", "unchecked" })
 public class FieldColumnMapper {
 	private final Map<String, FieldColumnMapping> fieldAliasMappings = new HashMap<>();
 	private final List<FieldColumnMapping> fieldColumnMappingList = new ArrayList<>();
@@ -53,7 +52,7 @@ public class FieldColumnMapper {
 		return Collections.unmodifiableMap(relatedMemberAccessMap);
 	}
 	
-	public FieldColumnMapper(Class clazz) {
+	public FieldColumnMapper(Class<?> clazz) {
 		fields = Collections.unmodifiableList(Arrays.asList(clazz.getDeclaredFields()));
 		fields.forEach(field -> fieldMap.put(field.getName(), field));
 		methods = Collections.unmodifiableList(Arrays.asList(clazz.getDeclaredMethods()));
@@ -171,7 +170,7 @@ public class FieldColumnMapper {
 	public FieldColumnMapping mapPropertyToColumn(Method method) {
 		method.setAccessible(true);
 		
-		final Class clazz = method.getDeclaringClass();
+		final Class<?> clazz = method.getDeclaringClass();
 		
 		final Method getter = getPropertyMethod(method, true, clazz);
 		final Method setter = getPropertyMethod(method, false, clazz);
@@ -258,7 +257,7 @@ public class FieldColumnMapper {
 		relatedMemberAccessMap.put(related.value(), propertyMember);
 	}
 	
-	private Method getPropertyMethod(Method method, boolean findGetter, Class clazz) {
+	private Method getPropertyMethod(Method method, boolean findGetter, Class<?> clazz) {
 		String methodName = method.getName();
 		String methodPrefixToFind = findGetter ? "get" : "set";
 		

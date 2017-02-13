@@ -12,9 +12,9 @@
  *******************************************************************************/
 package com.github.javalbert.orm;
 
-public class ImmutableGraphEntity extends GraphEntity {
-	public ImmutableGraphEntity(GraphEntity graphEntity) {
-		super(graphEntity.getClazz(), graphEntity.getTableAlias());
+public class ImmutableGraphEntity<T> extends GraphEntity<T> {
+	public ImmutableGraphEntity(GraphEntity<T> graphEntity) {
+		super(graphEntity.getEntityClass(), graphEntity.getTableAlias());
 		relationships.addAll(graphEntity.getRelationships());
 	}
 	
