@@ -16,10 +16,11 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-@SuppressWarnings("rawtypes")
 public class ObjectCache {
+	@SuppressWarnings("rawtypes")
 	private final Map<Class, Map<Serializable, Object>> classObjectsMap = new HashMap<>();
 	
+	@SuppressWarnings("rawtypes")
 	public Map<Class, Map<Serializable, Object>> getClassObjectsMap() { return classObjectsMap; }
 	
 	public void add(Object object, Serializable id) {
@@ -35,7 +36,7 @@ public class ObjectCache {
 		add(object, id);
 	}
 	
-	public Object get(Class clazz, Serializable id) {
+	public Object get(Class<?> clazz, Serializable id) {
 		return getClassObjects(clazz).get(id);
 	}
 	
@@ -65,7 +66,7 @@ public class ObjectCache {
 		throw new NullPointerException("object cannot be null");
 	}
 	
-	private Map<Serializable, Object> getClassObjects(Class clazz) {
+	private Map<Serializable, Object> getClassObjects(Class<?> clazz) {
 		Map<Serializable, Object> classObjects = classObjectsMap.get(clazz);
 		
 		if (classObjects == null) {

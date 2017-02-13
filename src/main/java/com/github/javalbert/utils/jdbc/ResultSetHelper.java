@@ -34,7 +34,6 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
 
-@SuppressWarnings("deprecation")
 public class ResultSetHelper implements ResultSet {
 	private final ResultSet rs;
 
@@ -229,6 +228,7 @@ public class ResultSetHelper implements ResultSet {
 		return rs.getDouble(columnIndex);
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
 		return rs.getBigDecimal(columnIndex, scale);
@@ -259,6 +259,7 @@ public class ResultSetHelper implements ResultSet {
 		return rs.getAsciiStream(columnIndex);
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public InputStream getUnicodeStream(int columnIndex) throws SQLException {
 		return rs.getUnicodeStream(columnIndex);
@@ -309,6 +310,7 @@ public class ResultSetHelper implements ResultSet {
 		return rs.getDouble(columnLabel);
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public BigDecimal getBigDecimal(String columnLabel, int scale) throws SQLException {
 		return rs.getBigDecimal(columnLabel, scale);
@@ -339,6 +341,7 @@ public class ResultSetHelper implements ResultSet {
 		return rs.getAsciiStream(columnLabel);
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public InputStream getUnicodeStream(String columnLabel) throws SQLException {
 		return rs.getUnicodeStream(columnLabel);

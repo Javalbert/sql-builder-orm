@@ -44,8 +44,8 @@ public class GraphEntity<T> {
 				.isRelatedToMany(relatedEntity);
 	}
 	
-	public ImmutableGraphEntity createImmutableClone() {
-		return new ImmutableGraphEntity(this);
+	public ImmutableGraphEntity<T> createImmutableClone() {
+		return new ImmutableGraphEntity<T>(this);
 	}
 	
 	public Builder isRelatedToOne(GraphEntity<?> relatedEntity) {

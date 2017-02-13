@@ -439,15 +439,21 @@ public class JdbcMapper {
 		return objects;
 	}
 
-	<K, T> Map<K, T> toMap(Class<T> clazz, Select select, ResultSet rs, Map<K, T> map, String mapKeyName) throws SQLException {
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	Map toMap(
+			Class<?> clazz,
+			Select select,
+			ResultSet rs,
+			Map map,
+			String mapKeyName) throws SQLException {
 		ResultSetHelper rsHelper = new ResultSetHelper(rs);
 		
 		ClassRowMapping classRowMapping = getClassRowMapping(clazz);
 		List<FieldColumnMapping> columnMappings = getColumnMappings(classRowMapping, select);
 		
 		while (rs.next()) {
-			T object = createObject(clazz, columnMappings, rsHelper);
-			K key = classRowMapping.getMapKeyValue(object, mapKeyName);
+			Object object = createObject(clazz, columnMappings, rsHelper);
+			Object key = classRowMapping.getMapKeyValue(object, mapKeyName);
 			map.put(key, object);
 		}
 		return map;

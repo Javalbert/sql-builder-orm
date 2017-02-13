@@ -512,11 +512,13 @@ public class JdbcStatement {
 		}
 	}
 	
-	public <K, T> Map<K, T> toLinkedMap(Connection connection, Class<T> clazz) throws SQLException {
+	@SuppressWarnings("rawtypes")
+	public Map toLinkedMap(Connection connection, Class<?> clazz) throws SQLException {
 		return toLinkedMap(connection, clazz, null);
 	}
 	
-	public <K, T> Map<K, T> toLinkedMap(Connection connection, Class<T> clazz, String mapKeyName) throws SQLException {
+	@SuppressWarnings("rawtypes")
+	public Map toLinkedMap(Connection connection, Class<?> clazz, String mapKeyName) throws SQLException {
 		return toMap(connection, clazz, mapKeyName, new LinkedHashMap<>());
 	}
 	
@@ -539,15 +541,18 @@ public class JdbcStatement {
 		return list;
 	}
 
-	public <K, T> Map<K, T> toMap(Connection connection, Class<T> clazz) throws SQLException {
+	@SuppressWarnings("rawtypes")
+	public Map toMap(Connection connection, Class<?> clazz) throws SQLException {
 		return toMap(connection, clazz, null);
 	}
 	
-	public <K, T> Map<K, T> toMap(Connection connection, Class<T> clazz, String mapKeyName) throws SQLException {
+	@SuppressWarnings("rawtypes")
+	public Map toMap(Connection connection, Class<?> clazz, String mapKeyName) throws SQLException {
 		return toMap(connection, clazz, mapKeyName, new HashMap<>());
 	}
 	
-	public <K, T> Map<K, T> toMap(Connection connection, Class<T> clazz, String mapKeyName, Map<K, T> map) throws SQLException {
+	@SuppressWarnings("rawtypes")
+	public Map toMap(Connection connection, Class<?> clazz, String mapKeyName, Map map) throws SQLException {
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
 		

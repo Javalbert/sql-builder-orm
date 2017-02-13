@@ -37,7 +37,6 @@ import com.github.javalbert.sqlbuilder.vendor.Vendor;
 import com.github.javalbert.utils.reflection.MemberAccess;
 import com.github.javalbert.utils.string.Strings;
 
-@SuppressWarnings({ "rawtypes", "unchecked" })
 public class ClassRowMapping {
 	private static void appendColumnEqualsParam(Where where, FieldColumnMapping fieldColumnMapping, boolean appendAnd) {
 		if (appendAnd) {
@@ -51,6 +50,7 @@ public class ClassRowMapping {
 	
 	private FieldColumnMapping autoIncrementIdMapping;
 	private String catalog;
+	@SuppressWarnings("rawtypes")
 	private final Class clazz;
 	private Delete deleteById;
 	private Delete deleteByIdAndVersion;
@@ -58,6 +58,7 @@ public class ClassRowMapping {
 	private final List<FieldColumnMapping> fieldColumnMappingList;
 	private final Map<String, FieldColumnMapping> fieldColumnMappings;
 	private From from;
+	@SuppressWarnings("rawtypes")
 	private Class idClass;
 	private List<FieldColumnMapping> idClassMappings;
 	private Insert insert;
@@ -75,6 +76,7 @@ public class ClassRowMapping {
 	private FieldColumnMapping versionColumnMapping;
 	
 	public String getCatalog() { return catalog; }
+	@SuppressWarnings("rawtypes")
 	public Class getClazz() { return clazz; }
 	public Delete getDeleteById() { return deleteById; }
 	public Delete getDeleteByIdAndVersion() { return deleteByIdAndVersion; }
@@ -93,11 +95,11 @@ public class ClassRowMapping {
 	public Update getUpdateById() { return updateById; }
 	public Vendor getVendor() { return vendor; }
 	
-	public ClassRowMapping(Class clazz) {
+	public ClassRowMapping(@SuppressWarnings("rawtypes") Class clazz) {
 		this(clazz, ANSI.INSTANCE);
 	}
 	
-	public ClassRowMapping(Class clazz, Vendor vendor) {
+	public ClassRowMapping(@SuppressWarnings("rawtypes") Class clazz, Vendor vendor) {
 		this.clazz = clazz;
 		this.vendor = vendor;
 
@@ -109,6 +111,7 @@ public class ClassRowMapping {
 		this.fieldColumnMappings = fieldColumnMapper.getFieldColumnMappings();
 		this.relatedMemberAccessMap = fieldColumnMapper.getRelatedMemberAccessMap();
 		
+		@SuppressWarnings("unchecked")
 		Table tableAnno = (Table)clazz.getAnnotation(Table.class);
 		if (tableAnno != null) {
 			catalog = tableAnno.catalog();
@@ -126,15 +129,15 @@ public class ClassRowMapping {
 		initUpdateById();
 	}
 
-	public <K> K getMapKeyValue(Object object) {
+	public Object getMapKeyValue(Object object) {
 		return getMapKeyValue(object, null);
 	}
 	
-	public <K> K getMapKeyValue(Object object, String mapKeyName) {
+	public Object getMapKeyValue(Object object, String mapKeyName) {
 		boolean pkMapKey = mapKeyName == null;
 		
 		if (pkMapKey) {
-			return (K)getOrCreateId(object);
+			return getOrCreateId(object);
 		}
 		FieldColumnMapping mapKeyMapping = mapKeyMappings.get(mapKeyName);
 		
@@ -142,7 +145,7 @@ public class ClassRowMapping {
 			throw new IllegalStateException("mapKeyName (" + mapKeyName 
 					+ ") does not exist for object class (" + object.getClass() + ")");
 		}
-		return (K)mapKeyMapping.get(object);
+		return mapKeyMapping.get(object);
 	}
 
 	public Serializable getOrCreateId(Object object) {
@@ -314,12 +317,13 @@ public class ClassRowMapping {
 	}
 	
 	private void initIdClassData() {
+		@SuppressWarnings("unchecked")
 		IdClass idClassAnno = (IdClass)clazz.getAnnotation(IdClass.class);
 		
 		if (idClassAnno == null) {
 			return;
 		}
-		Class idClass = idClassAnno.value();
+		Class<?> idClass = idClassAnno.value();
 		this.idClass = idClass;
 		
 		FieldColumnMapper fieldColumnMapper = new FieldColumnMapper(idClass);
