@@ -52,7 +52,6 @@ import com.github.javalbert.sqlbuilder.Where;
 import com.github.javalbert.sqlbuilder.With;
 import com.github.javalbert.utils.collections.CollectionUtils;
 
-@SuppressWarnings({ "rawtypes", "unchecked" })
 public class SqlParser {
 	public static final String REGEX_SPLIT = "\\s|%|'|\\(|\\)|\\*|\\+|,|-|\\.|\\/|<=|<>|<|=|>=|>";
 
@@ -150,7 +149,7 @@ public class SqlParser {
 		return nextTokenIndex;
 	}
 
-	private static void addPendingTable(TableNameSpecifier specifier, StringBuilder tableName) {
+	private static void addPendingTable(TableNameSpecifier<?> specifier, StringBuilder tableName) {
 		if (tableName.length() > 0) {
 			specifier.tableName(tableName.toString());
 			tableName.setLength(0);
@@ -393,7 +392,7 @@ public class SqlParser {
 		}
 	}
 	
-	private static void parseColumnParenthesesGroup(ParseToken groupToken, ExpressionBuilding parent) {
+	private static void parseColumnParenthesesGroup(ParseToken groupToken, ExpressionBuilding<?> parent) {
 		if (!groupToken.getToken().equals(ParseTree.TOKEN_PARENTHESES_GROUP)) {
 			throw new IllegalArgumentException("groupToken's token must be " + ParseTree.TOKEN_PARENTHESES_GROUP);
 		}
@@ -547,7 +546,7 @@ public class SqlParser {
 		}
 	}
 	
-	private static int parseExpression(ExpressionBuilding builder, List<ParseToken> nodes, int i) {
+	private static int parseExpression(ExpressionBuilding<?> builder, List<ParseToken> nodes, int i) {
 		int expressionEndIndex = getFirstIndex(nodes, i, TOKEN_SET_EXPRESSION_END);
 		int lastExpressionIndex = getLastExpressionIndex(nodes, i, expressionEndIndex);
 		if (lastExpressionIndex < 0 
@@ -907,7 +906,7 @@ public class SqlParser {
 			
 			ParseToken node = nodes.get(i);
 			
-			ExpressionBuilding function = null;
+			ExpressionBuilding<?> function = null;
 			final String token = node.getToken();
 			
 			switch (token.toUpperCase()) {
@@ -1044,11 +1043,11 @@ public class SqlParser {
 		helper.addLastColumn();
 	}
 	
-	private static boolean parsePendingColumn(ExpressionCaseHelper helper, ColumnBuilder builder) {
+	private static boolean parsePendingColumn(ExpressionCaseHelper helper, ColumnBuilder<?> builder) {
 		return parsePendingColumn(helper.pendingString, builder);
 	}
 	
-	private static boolean parsePendingColumn(StringBuilder pendingString, ColumnBuilder builder) {
+	private static boolean parsePendingColumn(StringBuilder pendingString, ColumnBuilder<?> builder) {
 		if (pendingString.length() <= 0) {
 			return false;
 		}
@@ -1338,6 +1337,7 @@ public class SqlParser {
 	 *
 	 */
 	private static class ExpressionCaseHelper {
+		@SuppressWarnings("rawtypes")
 		private final ExpressionBuilding builder;
 		private boolean expectingDot;
 		private final StringBuilder pendingString;
@@ -1347,7 +1347,7 @@ public class SqlParser {
 			this.alwaysAppendColumn = alwaysAppendColumn;
 		}
 		
-		public ExpressionCaseHelper(ExpressionBuilding builder) {
+		public ExpressionCaseHelper(ExpressionBuilding<?> builder) {
 			this.builder = builder;
 			pendingString = new StringBuilder();
 		}
@@ -1377,6 +1377,7 @@ public class SqlParser {
 			}
 		}
 
+		@SuppressWarnings("unchecked")
 		public void caseDefault(ParseToken node, int i) {
 			String token = node.getToken();
 			
@@ -1397,7 +1398,7 @@ public class SqlParser {
 		}
 		
 		public void caseParenthesesGroup(ParseToken node) {
-			ExpressionBuilding parenthesesParent = createFunction();
+			ExpressionBuilding<?> parenthesesParent = createFunction();
 			parseColumnParenthesesGroup(node, parenthesesParent);
 		}
 		
@@ -1406,6 +1407,7 @@ public class SqlParser {
 		 * after calling this
 		 * @return either a Function object if pendingString is not empty, or just the builder
 		 */
+		@SuppressWarnings("rawtypes")
 		public ExpressionBuilding createFunction() {
 			if (pendingString.length() == 0) {
 				return builder;
@@ -1475,7 +1477,7 @@ public class SqlParser {
 		
 		private void handleInlineViewAlias() {
 			if (tableName.length() > 0 && !from.getNodes().isEmpty()) {
-				Node lastNode = from.getNodes().get(from.getNodes().size() - 1);
+				Node<?> lastNode = from.getNodes().get(from.getNodes().size() - 1);
 				
 				if (lastNode instanceof Select) {
 					from.as(tableName.toString());
@@ -1558,11 +1560,13 @@ public class SqlParser {
 	
 	/* END Static classes */
 	
+	@SuppressWarnings("rawtypes")
 	private SqlStatement sqlStatement;
 	private int statementType;
 	private final List<String> tokens = new ArrayList<>();
 
-	public <T extends SqlStatement> T getSqlStatement() { return (T)sqlStatement; }
+	@SuppressWarnings("rawtypes")
+	public SqlStatement getSqlStatement() { return sqlStatement; }
 	public int getStatementType() { return statementType; }
 	
 	public SqlParser parse(String sql) {
