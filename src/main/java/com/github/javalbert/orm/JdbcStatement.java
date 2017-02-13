@@ -47,7 +47,6 @@ import com.github.javalbert.utils.ClassUtils;
 import com.github.javalbert.utils.jdbc.JdbcUtils;
 import com.github.javalbert.utils.jdbc.PreparedStatementImpl;
 import com.github.javalbert.utils.jdbc.ResultSetHelper;
-import com.google.gson.JsonObject;
 
 public class JdbcStatement {
 	private final static Logger logger = LoggerFactory.getLogger(JdbcStatement.class);
@@ -493,23 +492,6 @@ public class JdbcStatement {
 		Deque<T> deque = new ArrayDeque<>();
 		toCollection(connection, clazz, deque);
 		return deque;
-	}
-	
-	public List<JsonObject> toJsonList(Connection connection) throws SQLException {
-		PreparedStatement stmt = null;
-		ResultSet rs = null;
-		
-		try {
-			stmt = createPreparedStatement(connection);
-			rs = stmt.executeQuery();
-			
-			return JdbcUtils.toJsonList(stmt);
-		} catch (SQLException e) {
-			throw e;
-		} finally {
-			JdbcUtils.closeQuietly(rs);
-			close(stmt);
-		}
 	}
 	
 	@SuppressWarnings("rawtypes")
