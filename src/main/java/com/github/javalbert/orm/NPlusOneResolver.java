@@ -128,7 +128,7 @@ public class NPlusOneResolver extends ObjectGraphResolver {
 			}
 			
 			classRowMapping = jdbcMapper.getMappings()
-					.get(graphEntity.getClazz());
+					.get(graphEntity.getEntityClass());
 			fieldColumnMappings = statement != null 
 					? jdbcMapper.getColumnMappings(classRowMapping, (Select)statement.getSqlStatement()) 
 					: classRowMapping.getFieldColumnMappingList();
@@ -175,7 +175,7 @@ public class NPlusOneResolver extends ObjectGraphResolver {
 		
 		private Object newEntityInstance() {
 			try {
-				return graphEntity.getClazz().newInstance();
+				return graphEntity.getEntityClass().newInstance();
 			} catch (InstantiationException | IllegalAccessException e) {
 				return null;
 			}
@@ -240,7 +240,7 @@ public class NPlusOneResolver extends ObjectGraphResolver {
 			return entityColumns;
 		}
 		
-		private void resolveRelationships(Connection connection, GraphEntity graphEntity, Collection collection) 
+		private void resolveRelationships(Connection connection, GraphEntity<?> graphEntity, Collection collection) 
 				throws SQLException {
 			for (Relationship relationship : graphEntity.getRelationships()) {
 				EntityColumns entityColumns = createRelatedEntityColumns(relationship);
@@ -360,9 +360,9 @@ public class NPlusOneResolver extends ObjectGraphResolver {
 				throw new IllegalStateException(relationship + "'s related entity is missing its table alias");
 			}
 			
-			ownerClass = ownerEntity.getClazz();
+			ownerClass = ownerEntity.getEntityClass();
 			ownerTableAlias = ownerEntity.getTableAlias();
-			relatedClass = relatedEntity.getClazz();
+			relatedClass = relatedEntity.getEntityClass();
 			relatedTableAlias = relatedEntity.getTableAlias();
 			this.relationship = relationship;
 		}
@@ -447,13 +447,13 @@ public class NPlusOneResolver extends ObjectGraphResolver {
 			GraphEntity relatedEntity = relationship.getRelatedEntity();
 
 			relatedClassMapping = jdbcMapper.getMappings()
-					.get(relatedEntity.getClazz());
+					.get(relatedEntity.getEntityClass());
 			
 			this.relatedEntityColumns = relatedEntityColumns;
 			this.relationship = relationship;
 			
 			ClassRowMapping ownerClassMapping = jdbcMapper.getMappings()
-					.get(relationship.getOwnerEntity().getClazz());
+					.get(relationship.getOwnerEntity().getEntityClass());
 			
 			joinColumnMappings = getJoinColumnMappings(relationship, ownerClassMapping);
 			

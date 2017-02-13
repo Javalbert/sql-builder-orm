@@ -23,7 +23,6 @@ import com.github.javalbert.sqlbuilder.SortType;
  * @author Albert
  *
  */
-@SuppressWarnings({ "unchecked" })
 public class Relationship {
 	public static final int FIELD_DEQUE = 1;
 	public static final int FIELD_LINKED_MAP = 2;
@@ -43,7 +42,9 @@ public class Relationship {
 	private final List<JoinColumn> joinColumns;
 	private final String mapKeyName;
 	private final List<OrderByColumn> orderByColumns;
+	@SuppressWarnings("rawtypes")
 	private final GraphEntity ownerEntity;
+	@SuppressWarnings("rawtypes")
 	private final GraphEntity relatedEntity;
 	private final int type;
 	
@@ -58,10 +59,13 @@ public class Relationship {
 	public List<JoinColumn> getJoinColumns() { return Collections.unmodifiableList(joinColumns); }
 	public String getMapKeyName() { return mapKeyName; }
 	public List<OrderByColumn> getOrderByColumns() { return Collections.unmodifiableList(orderByColumns); }
+	@SuppressWarnings("rawtypes")
 	public GraphEntity getOwnerEntity() { return ownerEntity; }
+	@SuppressWarnings("rawtypes")
 	public GraphEntity getRelatedEntity() { return relatedEntity; }
 	public int getType() { return type; }
 	
+	@SuppressWarnings("unchecked")
 	private Relationship(Builder builder) {
 		batchSize = builder.batchSize;
 		fieldName = builder.fieldName;
@@ -132,11 +136,13 @@ public class Relationship {
 		private List<JoinColumn> joinColumns;
 		private String mapKeyName;
 		private List<OrderByColumn> orderByColumns;
+		@SuppressWarnings("rawtypes")
 		private GraphEntity ownerEntity;
+		@SuppressWarnings("rawtypes")
 		private GraphEntity relatedEntity;
 		private int type;
 		
-		protected Builder(GraphEntity ownerEntity) {
+		protected Builder(GraphEntity<?> ownerEntity) {
 			if (ownerEntity == null) {
 				throw new NullPointerException("ownerEntity cannot be null");
 			}
@@ -277,13 +283,13 @@ public class Relationship {
 			return this;
 		}
 		
-		public Builder isRelatedToMany(GraphEntity relatedEntity) {
+		public Builder isRelatedToMany(GraphEntity<?> relatedEntity) {
 			this.relatedEntity = relatedEntity;
 			type = TYPE_ONE_TO_MANY;
 			return this;
 		}
 		
-		public Builder isRelatedToOne(GraphEntity relatedEntity) {
+		public Builder isRelatedToOne(GraphEntity<?> relatedEntity) {
 			this.relatedEntity = relatedEntity;
 			type = TYPE_N_TO_ONE;
 			return this;

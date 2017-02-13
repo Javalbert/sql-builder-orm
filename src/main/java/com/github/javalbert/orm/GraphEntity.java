@@ -19,28 +19,27 @@ import java.util.Set;
 import com.github.javalbert.orm.Relationship.Builder;
 import com.github.javalbert.utils.string.Strings;
 
-@SuppressWarnings("rawtypes")
-public class GraphEntity {
-	protected final Class clazz;
+public class GraphEntity<T> {
+	protected final Class<T> entityClass;
 	protected final Set<Relationship> relationships = new LinkedHashSet<>();
 	protected final String tableAlias;
 	
-	public Class getClazz() { return clazz; }
+	public Class<T> getEntityClass() { return entityClass; }
 	public Set<Relationship> getRelationships() { return Collections.unmodifiableSet(relationships); }
 	public String getTableAlias() { return tableAlias; }
 
-	public GraphEntity(Class clazz, String tableAlias) {
-		if (clazz == null) {
-			throw new NullPointerException("clazz cannot be null");
+	public GraphEntity(Class<T> entityClass, String tableAlias) {
+		if (entityClass == null) {
+			throw new NullPointerException("entityClass cannot be null");
 		} else if (Strings.isNullOrEmpty(tableAlias)) {
 			throw new IllegalArgumentException("tableAlias cannot be null or empty");
 		}
 		
-		this.clazz = clazz;
+		this.entityClass = entityClass;
 		this.tableAlias = tableAlias;
 	}
 
-	public Builder isRelatedToMany(GraphEntity relatedEntity) {
+	public Builder isRelatedToMany(GraphEntity<?> relatedEntity) {
 		return new Relationship.Builder(this)
 				.isRelatedToMany(relatedEntity);
 	}
@@ -49,7 +48,7 @@ public class GraphEntity {
 		return new ImmutableGraphEntity(this);
 	}
 	
-	public Builder isRelatedToOne(GraphEntity relatedEntity) {
+	public Builder isRelatedToOne(GraphEntity<?> relatedEntity) {
 		return new Relationship.Builder(this)
 				.isRelatedToOne(relatedEntity);
 	}
@@ -62,7 +61,7 @@ public class GraphEntity {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((clazz == null) ? 0 : clazz.hashCode());
+		result = prime * result + ((entityClass == null) ? 0 : entityClass.hashCode());
 		result = prime * result + ((tableAlias == null) ? 0 : tableAlias.hashCode());
 		return result;
 	}
@@ -75,11 +74,11 @@ public class GraphEntity {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		GraphEntity other = (GraphEntity) obj;
-		if (clazz == null) {
-			if (other.clazz != null)
+		GraphEntity<?> other = (GraphEntity<?>) obj;
+		if (entityClass == null) {
+			if (other.entityClass != null)
 				return false;
-		} else if (!clazz.equals(other.clazz))
+		} else if (!entityClass.equals(other.entityClass))
 			return false;
 		if (tableAlias == null) {
 			if (other.tableAlias != null)
@@ -91,6 +90,6 @@ public class GraphEntity {
 	
 	@Override
 	public String toString() {
-		return "GraphEntity [clazz=" + clazz + ", tableAlias=" + tableAlias + "]";
+		return "GraphEntity [entityClass=" + entityClass + ", tableAlias=" + tableAlias + "]";
 	}
 }

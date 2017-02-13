@@ -148,13 +148,13 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 		public Map<GraphEntity, ClassColumns> getEntityColumnsMap() { return entityColumnsMap; }
 		public GraphEntity getMainGraphEntity() { return mainGraphEntity; }
 		
-		public CartesianProductQuery(JdbcStatement statement, GraphEntity mainGraphEntity) {
+		public CartesianProductQuery(JdbcStatement statement, GraphEntity<?> mainGraphEntity) {
 			this.mainGraphEntity = mainGraphEntity;
 			
 			statement.getSqlStatement().accept(selectNodeFinder);
 			
 			ClassRowMapping classRowMapping = jdbcMapper.getMappings()
-					.get(mainGraphEntity.getClazz());
+					.get(mainGraphEntity.getEntityClass());
 			
 			addMainEntitySelectList(statement);
 			ClassColumns classColumns = new ClassColumnsFactory(classRowMapping)
@@ -240,7 +240,7 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 				return false;
 			}
 			ClassRowMapping classRowMapping = jdbcMapper.getMappings()
-					.get(relatedEntity.getClazz());
+					.get(relatedEntity.getEntityClass());
 			
 			appendColumns(relatedEntity);
 			ClassColumns classColumns = new ClassColumnsFactory(classRowMapping)
@@ -252,7 +252,7 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 		
 		private void appendColumns(GraphEntity graphEntity) {
 			ClassRowMapping classRowMapping = jdbcMapper.getMappings()
-					.get(graphEntity.getClazz());
+					.get(graphEntity.getEntityClass());
 			List<FieldColumnMapping> fieldColumnMappingList = classRowMapping.getFieldColumnMappingList();
 			
 			for (FieldColumnMapping fieldColumnMapping : fieldColumnMappingList) {
@@ -280,7 +280,7 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 			}
 			
 			ClassRowMapping classRowMapping = jdbcMapper.getMappings()
-					.get(relatedEntity.getClazz());
+					.get(relatedEntity.getEntityClass());
 			
 			from.leftOuterJoin()
 			.tableName(classRowMapping.getTableIdentifier())
@@ -414,7 +414,7 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 			Object object = result.getObject();
 			
 			if (!result.isNew() 
-					|| query.getMainGraphEntity().getClazz() != object.getClass()) {
+					|| query.getMainGraphEntity().getEntityClass() != object.getClass()) {
 				return;
 			}
 			collection.add(object);
@@ -535,7 +535,7 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 		
 		public RelatedObjectsQuery(GraphEntity graphEntity) {
 			classRowMapping = jdbcMapper.getMappings()
-					.get(graphEntity.getClazz());
+					.get(graphEntity.getEntityClass());
 			
 			Set<String> columnsAdded = new HashSet<>();
 			SelectList list = new SelectList();
@@ -563,7 +563,7 @@ public class CartesianProductResolver extends ObjectGraphResolver {
 
 		/* BEGIN Private methods */
 		
-		private void addJoinColumns(SelectList list, GraphEntity graphEntity, Set<String> columnsAdded) {
+		private void addJoinColumns(SelectList list, GraphEntity<?> graphEntity, Set<String> columnsAdded) {
 			for (Relationship relationship : graphEntity.getRelationships()) {
 				for (JoinColumn joinColumn : relationship.getJoinColumns()) {
 					if (columnsAdded.contains(joinColumn.getOwnerClassColumn())) {

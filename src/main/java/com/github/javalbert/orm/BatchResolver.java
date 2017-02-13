@@ -126,7 +126,7 @@ public class BatchResolver extends ObjectGraphResolver {
 			}
 			
 			classRowMapping = jdbcMapper.getMappings()
-					.get(graphEntity.getClazz());
+					.get(graphEntity.getEntityClass());
 			fieldColumnMappings = statement != null 
 					? jdbcMapper.getColumnMappings(classRowMapping, (Select)statement.getSqlStatement()) 
 					: classRowMapping.getFieldColumnMappingList();
@@ -173,7 +173,7 @@ public class BatchResolver extends ObjectGraphResolver {
 		
 		private Object newEntityInstance() {
 			try {
-				return graphEntity.getClazz().newInstance();
+				return graphEntity.getEntityClass().newInstance();
 			} catch (InstantiationException | IllegalAccessException e) {
 				return null;
 			}
@@ -241,7 +241,7 @@ public class BatchResolver extends ObjectGraphResolver {
 			return entityColumns;
 		}
 		
-		private void resolveRelationships(Connection connection, GraphEntity graphEntity, Collection collection) 
+		private void resolveRelationships(Connection connection, GraphEntity<?> graphEntity, Collection collection) 
 				throws SQLException {
 			for (Relationship relationship : graphEntity.getRelationships()) {
 				EntityColumns entityColumns = createRelatedEntityColumns(relationship);
@@ -360,9 +360,9 @@ public class BatchResolver extends ObjectGraphResolver {
 				throw new IllegalStateException(relationship + "'s related entity is missing its table alias");
 			}
 			
-			ownerClass = ownerEntity.getClazz();
+			ownerClass = ownerEntity.getEntityClass();
 			ownerTableAlias = ownerEntity.getTableAlias();
-			relatedClass = relatedEntity.getClazz();
+			relatedClass = relatedEntity.getEntityClass();
 			relatedTableAlias = relatedEntity.getTableAlias();
 			this.relationship = relationship;
 		}
@@ -470,9 +470,9 @@ public class BatchResolver extends ObjectGraphResolver {
 			this.relationship = relationship;
 			
 			ClassRowMapping ownerClassMapping = jdbcMapper.getMappings()
-					.get(relationship.getOwnerEntity().getClazz());
+					.get(relationship.getOwnerEntity().getEntityClass());
 			relatedClassMapping = jdbcMapper.getMappings()
-					.get(relationship.getRelatedEntity().getClazz());
+					.get(relationship.getRelatedEntity().getEntityClass());
 			
 			JoinColumn joinColumn = relationship.getJoinColumns().get(0);
 			
@@ -690,7 +690,7 @@ public class BatchResolver extends ObjectGraphResolver {
 			this.objectCache = objectCache;
 			
 			relatedClassMapping = jdbcMapper.getMappings()
-					.get(relatedEntity.getClazz());
+					.get(relatedEntity.getEntityClass());
 			
 			relatedObjectsSelect = new RelatedObjectSelect(relationship);
 

@@ -482,7 +482,7 @@ public class JdbcStatement {
 	
 	public <T> Collection<T> toCollection(
 			Connection connection, 
-			GraphEntity graphEntity, 
+			GraphEntity<T> graphEntity, 
 			Collection<T> collection, 
 			ObjectGraphResolver graphResolver) 
 			throws SQLException {

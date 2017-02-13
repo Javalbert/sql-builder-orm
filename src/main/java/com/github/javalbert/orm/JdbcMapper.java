@@ -42,7 +42,6 @@ import com.github.javalbert.utils.ClassUtils;
 import com.github.javalbert.utils.jdbc.JdbcUtils;
 import com.github.javalbert.utils.jdbc.ResultSetHelper;
 
-@SuppressWarnings({ "rawtypes", "unchecked" })
 public class JdbcMapper {
 	/* BEGIN Class members */
 	
@@ -158,9 +157,11 @@ public class JdbcMapper {
 	
 	/* END Class members */
 	
+	@SuppressWarnings("rawtypes")
 	private final Map<Class, ClassRowMapping> mappings = new HashMap<>();
 	private final Vendor vendor;
 	
+	@SuppressWarnings("rawtypes")
 	public Map<Class, ClassRowMapping> getMappings() { return Collections.unmodifiableMap(mappings); }
 	public Vendor getVendor() { return vendor; }
 	
@@ -185,7 +186,7 @@ public class JdbcMapper {
 		return createQuery(null);
 	}
 	
-	public JdbcStatement createQuery(SqlStatement sqlStatement) {
+	public JdbcStatement createQuery(SqlStatement<?> sqlStatement) {
 		return new JdbcStatement(this, sqlStatement);
 	}
 	
@@ -193,7 +194,7 @@ public class JdbcMapper {
 		return deleteByObject(connection, object, getClassRowMapping(object.getClass()));
 	}
 	
-	public boolean delete(Connection connection, Class clazz, Serializable id) throws SQLException {
+	public boolean delete(Connection connection, Class<?> clazz, Serializable id) throws SQLException {
 		return deleteById(connection, getClassRowMapping(clazz), id);
 	}
 	
@@ -261,12 +262,12 @@ public class JdbcMapper {
 
 	public <T> T get(
 			Connection connection,
-			GraphEntity graphEntity,
+			GraphEntity<T> graphEntity,
 			Serializable id,
 			ObjectGraphResolver graphResolver) throws SQLException {
-		T object = (T)get(connection, graphEntity.getClazz(), id);
+		Object object = get(connection, graphEntity.getEntityClass(), id);
 		graphResolver.resolveRelatedObjects(connection, graphEntity, object);
-		return object;
+		return graphEntity.getEntityClass().cast(object);
 	}
 	
 	public List<FieldColumnMapping> getColumnMappings(ClassRowMapping classRowMapping, Select select) {
@@ -278,7 +279,7 @@ public class JdbcMapper {
 		select.accept(finder);
 		SelectList selectList = finder.getSelectList();
 		
-		for (Node columnNode : selectList.getNodes()) {
+		for (Node<?> columnNode : selectList.getNodes()) {
 			Aliasable aliasable = (Aliasable)columnNode;
 			
 			// Give priority to column aliases because PreparedStatement objects' get*(String columnLabel) 
@@ -328,7 +329,7 @@ public class JdbcMapper {
 		return refresh(connection, object, selectStatement, columnMappings);
 	}
 	
-	public void register(Class clazz) {
+	public void register(Class<?> clazz) {
 		if (!clazz.isAnnotationPresent(Entity.class) 
 				|| mappings.containsKey(clazz)) {
 			return;
@@ -340,10 +341,12 @@ public class JdbcMapper {
 	
 	public void register(String packageName) {
 		try {
-			for (Class clazz : ClassUtils.getClasses(packageName)) {
+			for (Class<?> clazz : ClassUtils.getClasses(packageName)) {
 				register(clazz);
 			}
-		} catch (ClassNotFoundException | IOException e) {}
+		} catch (ClassNotFoundException | IOException e) {
+			logger.error("Could not register classes in package " + packageName, e);
+		}
 	}
 
 	public void save(Connection connection, Object object) throws SQLException {
@@ -381,11 +384,11 @@ public class JdbcMapper {
 		return result;
 	}
 	
-	public Select selectById(Class clazz) {
+	public Select selectById(Class<?> clazz) {
 		return getClassRowMapping(clazz).getSelectById();
 	}
 	
-	public Select selectFrom(Class clazz) {
+	public Select selectFrom(Class<?> clazz) {
 		ClassRowMapping mapping = getClassRowMapping(clazz);
 		return new Select().list(mapping.getSelectList())
 				.from(mapping.getFrom());
@@ -423,7 +426,7 @@ public class JdbcMapper {
 		return object;
 	}
 	
-	<T, C extends Collection> C toCollection(Class<T> clazz, Select select, ResultSet rs, C objects) throws SQLException {
+	<T> Collection<T> toCollection(Class<T> clazz, Select select, ResultSet rs, Collection<T> objects) throws SQLException {
 		ResultSetHelper rsHelper = new ResultSetHelper(rs);
 		
 		ClassRowMapping classRowMapping = getClassRowMapping(clazz);
@@ -436,7 +439,7 @@ public class JdbcMapper {
 		return objects;
 	}
 
-	<K, T> Map<K, T> toMap(Class<T> clazz, Select select, ResultSet rs, Map map, String mapKeyName) throws SQLException {
+	<K, T> Map<K, T> toMap(Class<T> clazz, Select select, ResultSet rs, Map<K, T> map, String mapKeyName) throws SQLException {
 		ResultSetHelper rsHelper = new ResultSetHelper(rs);
 		
 		ClassRowMapping classRowMapping = getClassRowMapping(clazz);
@@ -474,7 +477,7 @@ public class JdbcMapper {
 		return deletedRows > 0;
 	}
 	
-	private ClassRowMapping getClassRowMapping(Class clazz) {
+	private ClassRowMapping getClassRowMapping(Class<?> clazz) {
 		ClassRowMapping classRowMapping = mappings.get(clazz);
 		if (classRowMapping == null) {
 			throw new IllegalStateException("Entity " + clazz + " not registered");

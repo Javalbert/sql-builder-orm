@@ -34,8 +34,8 @@ class GraphEntitySpec extends Specification {
 	
 	def 'Fetch child records of a parent object in a list joined by columns with the same name'() {
 		given: 'GraphEntity objects for Customer and Order tables'
-		GraphEntity customerEntity = new GraphEntity(Customer.class, 'cus')
-		GraphEntity orderEntity = new GraphEntity(Order.class, 'ord')
+		GraphEntity<Customer> customerEntity = new GraphEntity<>(Customer.class, 'cus')
+		GraphEntity<Order> orderEntity = new GraphEntity<>(Order.class, 'ord')
 		
 		and: 'a Customer record with 2 Orders'
 		Connection conn = null
@@ -70,8 +70,8 @@ class GraphEntitySpec extends Specification {
 	
 	def 'Fetch child records of a parent object joined by columns with different names'() {
 		given: 'GraphEntity objects for Store and Order tables'
-		GraphEntity storeEntity = new GraphEntity(Store.class, 's')
-		GraphEntity orderEntity = new GraphEntity(Order.class, 'ord')
+		GraphEntity<Store> storeEntity = new GraphEntity<>(Store.class, 's')
+		GraphEntity<Order> orderEntity = new GraphEntity<>(Order.class, 'ord')
 		
 		and: 'a Store record with 2 Orders'
 		Connection conn = null
@@ -107,8 +107,8 @@ class GraphEntitySpec extends Specification {
 	@Unroll('Fetch child container and expect its implementation is #implementationClass')
 	def 'Fetch different implementations for holding child objects'() {
 		given: 'GraphEntity objects for Order and Product tables'
-		GraphEntity orderEntity = new GraphEntity(Order.class, 'ord')
-		GraphEntity productEntity = new GraphEntity(Product.class, 'prod')
+		GraphEntity<Order> orderEntity = new GraphEntity<>(Order.class, 'ord')
+		GraphEntity<Product> productEntity = new GraphEntity<>(Product.class, 'prod')
 		
 		and: 'a Order record with 2 Products'
 		Connection conn = null
@@ -151,8 +151,8 @@ class GraphEntitySpec extends Specification {
 	
 	def 'Fetch child records of parent objects and set a reference to the parent in the child objects'() {
 		given: 'GraphEntity objects for Store and Order tables'
-		GraphEntity storeEntity = new GraphEntity(Store.class, 's')
-		GraphEntity orderEntity = new GraphEntity(Order.class, 'ord')
+		GraphEntity<Store> storeEntity = new GraphEntity<>(Store.class, 's')
+		GraphEntity<Order> orderEntity = new GraphEntity<>(Order.class, 'ord')
 		
 		and: '2 Stores with 2 Orders each'
 		Connection conn = null
@@ -195,8 +195,8 @@ class GraphEntitySpec extends Specification {
 	
 	def 'Get a list of objects that may have the same parent objects'() {
 		given: 'GraphEntity objects for Store and Order tables'
-		GraphEntity storeEntity = new GraphEntity(Store.class, 's')
-		GraphEntity orderEntity = new GraphEntity(Order.class, 'ord')
+		GraphEntity<Store> storeEntity = new GraphEntity<>(Store.class, 's')
+		GraphEntity<Order> orderEntity = new GraphEntity<>(Order.class, 'ord')
 		
 		and: 'a Store record with 2 Orders'
 		Connection conn = null
@@ -218,7 +218,7 @@ class GraphEntitySpec extends Specification {
 			.inField('store')
 			.joinedBy('store_id', 'store_key')
 			.build()
-		storeEntity.isRelatedToMany(new GraphEntity(Order.class, 'ord2'))
+		storeEntity.isRelatedToMany(new GraphEntity<>(Order.class, 'ord2'))
 			.inList('orders')
 			.joinedBy('store_key', 'store_id')
 			.build()
@@ -244,10 +244,10 @@ class GraphEntitySpec extends Specification {
 	
 	def 'Fetch 2 levels deep of relationships'() {
 		given: 'GraphEntity objects for Customer, Store, Order, and Product tables'
-		GraphEntity customerEntity = new GraphEntity(Customer.class, 'cus')
-		GraphEntity storeEntity = new GraphEntity(Store.class, 's')
-		GraphEntity orderEntity = new GraphEntity(Order.class, 'ord')
-		GraphEntity productEntity = new GraphEntity(Product.class, 'prod')
+		GraphEntity<Customer> customerEntity = new GraphEntity<>(Customer.class, 'cus')
+		GraphEntity<Store> storeEntity = new GraphEntity<>(Store.class, 's')
+		GraphEntity<Order> orderEntity = new GraphEntity<>(Order.class, 'ord')
+		GraphEntity<Product> productEntity = new GraphEntity<>(Product.class, 'prod')
 		
 		and: 'a Customer with a Order that has a Store and a Product'
 		Connection conn = null
@@ -292,8 +292,8 @@ class GraphEntitySpec extends Specification {
 	
 	def 'Fetch an ordered list of children'() {
 		given: 'GraphEntity objects for Order and Product'
-		GraphEntity orderEntity = new GraphEntity(Order.class, 'ord')
-		GraphEntity productEntity = new GraphEntity(Product.class, 'prod')
+		GraphEntity<Order> orderEntity = new GraphEntity<>(Order.class, 'ord')
+		GraphEntity<Product> productEntity = new GraphEntity<>(Product.class, 'prod')
 		
 		and: 'a Order with 4 Products'
 		Connection conn = null
