@@ -137,23 +137,29 @@ public class ResultSetHelper implements ResultSet {
 	/**
 	 * 
 	 * @param columnIndex
-	 * @return java.util.Date instead of java.sql.Timestamp
+	 * @return java.util.Date instead of java.sql.Timestamp if and
+	 * only if {@link Timestamp#getNanos()} <code>mod</code> 1,000,000 is 0
+	 * because fractional seconds less than 1 ms only matter for {@link Timestamp}
 	 * @throws SQLException
 	 */
 	public java.util.Date getTimestamp2(int columnIndex) throws SQLException {
 		Timestamp x = getTimestamp(columnIndex);
-		return x != null ? new java.util.Date(x.getTime()) : null;
+		return x != null && x.getNanos() % 1_000_000 == 0 
+				? new java.util.Date(x.getTime()) : x;
 	}
 	
 	/**
 	 * 
 	 * @param columnLabel
-	 * @return java.util.Date instead of java.sql.Timestamp
+	 * @return java.util.Date instead of java.sql.Timestamp if and
+	 * only if {@link Timestamp#getNanos()} <code>mod</code> 1,000,000 is 0
+	 * because fractional seconds less than 1 ms only matter for {@link Timestamp}
 	 * @throws SQLException
 	 */
 	public java.util.Date getTimestamp2(String columnLabel) throws SQLException {
 		Timestamp x = getTimestamp(columnLabel);
-		return x != null ? new java.util.Date(x.getTime()) : null;
+		return x != null && x.getNanos() % 1_000_000 == 0 
+				? new java.util.Date(x.getTime()) : x;
 	}
 	
 	/* BEGIN ResultSet interface methods */

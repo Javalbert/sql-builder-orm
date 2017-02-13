@@ -18,6 +18,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -48,7 +49,6 @@ import com.github.javalbert.utils.jdbc.PreparedStatementImpl;
 import com.github.javalbert.utils.jdbc.ResultSetHelper;
 import com.google.gson.JsonObject;
 
-@SuppressWarnings({ "rawtypes", "unchecked" })
 public class JdbcStatement {
 	private final static Logger logger = LoggerFactory.getLogger(JdbcStatement.class);
 	
@@ -77,58 +77,58 @@ public class JdbcStatement {
 	
 	private static final Pattern PARAM_PATTERN = Pattern.compile(":\\w+");
 	
-	private static Collection toJdbcDataTypeCollection(
-			Class clazz,
+	private static <T> Collection<T> toJdbcDataTypeCollection(
+			Class<T> clazz,
 			ResultSetHelper rs,
-			Collection collection) throws SQLException {
+			Collection<T> collection) throws SQLException {
 		switch (clazz.getCanonicalName()) {
 			case ClassUtils.NAME_BOOLEAN:
 			case ClassUtils.NAME_JAVA_LANG_BOOLEAN:
 				while (rs.next()) {
-					collection.add(rs.getBoolean2(1));
+					collection.add(clazz.cast(rs.getBoolean2(1)));
 				}
 				break;
 			case ClassUtils.NAME_DOUBLE:
 			case ClassUtils.NAME_JAVA_LANG_DOUBLE:
 				while (rs.next()) {
-					collection.add(rs.getDouble2(1));
+					collection.add(clazz.cast(rs.getDouble2(1)));
 				}
 				break;
 			case ClassUtils.NAME_FLOAT:
 			case ClassUtils.NAME_JAVA_LANG_FLOAT:
 				while (rs.next()) {
-					collection.add(rs.getFloat2(1));
+					collection.add(clazz.cast(rs.getFloat2(1)));
 				}
 				break;
 			case ClassUtils.NAME_JAVA_LANG_INTEGER:
 				while (rs.next()) {
-					collection.add(rs.getInt2(1));
+					collection.add(clazz.cast(rs.getInt2(1)));
 				}
 				break;
 			case ClassUtils.NAME_LONG:
 			case ClassUtils.NAME_JAVA_LANG_LONG:
 				while (rs.next()) {
-					collection.add(rs.getLong2(1));
+					collection.add(clazz.cast(rs.getLong2(1)));
 				}
 				break;
 			case ClassUtils.NAME_JAVA_LANG_STRING:
 				while (rs.next()) {
-					collection.add(rs.getString(1));
+					collection.add(clazz.cast(rs.getString(1)));
 				}
 				break;
 			case ClassUtils.NAME_JAVA_MATH_BIG_DECIMAL:
 				while (rs.next()) {
-					collection.add(rs.getBigDecimal(1));
+					collection.add(clazz.cast(rs.getBigDecimal(1)));
 				}
 				break;
 			case ClassUtils.NAME_JAVA_SQL_TIMESTAMP:
 				while (rs.next()) {
-					collection.add(rs.getTimestamp2(1));
+					collection.add(clazz.cast(rs.getTimestamp(1)));
 				}
 				break;
 			case ClassUtils.NAME_JAVA_UTIL_DATE:
 				while (rs.next()) {
-					collection.add(rs.getDate2(1));
+					collection.add(clazz.cast(rs.getDate2(1)));
 				}
 				break;
 		}
@@ -155,10 +155,12 @@ public class JdbcStatement {
 	private boolean shouldInitSql = true;
 	private boolean shouldReplacePreparedStatement;
 	private String sql;
+	@SuppressWarnings("rawtypes")
 	private SqlStatement sqlStatement;
 	
 	public List<int[]> getBatchRowCountsList() { return batchRowCountsList; }
 	public int getMaxBatchSize() { return maxBatchSize; }
+	@SuppressWarnings("rawtypes")
 	public SqlStatement getSqlStatement() { return sqlStatement; }
 	
 	public JdbcStatement(JdbcMapper jdbcMapper) {
@@ -170,7 +172,7 @@ public class JdbcStatement {
 	 * @param sqlStatement
 	 * @param jdbcMapper
 	 */
-	public JdbcStatement(JdbcMapper jdbcMapper, SqlStatement sqlStatement) {
+	public JdbcStatement(JdbcMapper jdbcMapper, SqlStatement<?> sqlStatement) {
 		if (jdbcMapper == null) {
 			throw new NullPointerException("jdbcMapper cannot be null");
 		}
@@ -271,10 +273,10 @@ public class JdbcStatement {
 			
 			switch (param.getParamType()) {
 				case PARAM_TYPE_BIG_DECIMAL:
-					stmt.setBigDecimal(parameterIndex, param.getValue());
+					stmt.setBigDecimal(parameterIndex, (BigDecimal)param.getValue());
 					break;
 				case PARAM_TYPE_BOOLEAN:
-					Boolean booleanObj = param.getValue();
+					Boolean booleanObj = (Boolean)param.getValue();
 					if (booleanObj != null) {
 						stmt.setBoolean(parameterIndex, booleanObj);
 					} else {
@@ -282,10 +284,10 @@ public class JdbcStatement {
 					}
 					break;
 				case PARAM_TYPE_DATE:
-					stmt.setDate(parameterIndex, param.getValue());
+					stmt.setDate(parameterIndex, (java.sql.Date)param.getValue());
 					break;
 				case PARAM_TYPE_DOUBLE:
-					Double doubleObj = param.getValue();
+					Double doubleObj = (Double)param.getValue();
 					if (doubleObj != null) {
 						stmt.setDouble(parameterIndex, doubleObj);
 					} else {
@@ -293,7 +295,7 @@ public class JdbcStatement {
 					}
 					break;
 				case PARAM_TYPE_FLOAT:
-					Float floatObj = param.getValue();
+					Float floatObj = (Float)param.getValue();
 					if (floatObj != null) {
 						stmt.setFloat(parameterIndex, floatObj);
 					} else {
@@ -301,7 +303,7 @@ public class JdbcStatement {
 					}
 					break;
 				case PARAM_TYPE_INTEGER:
-					Integer integer = param.getValue();
+					Integer integer = (Integer)param.getValue();
 					if (integer != null) {
 						stmt.setInt(parameterIndex, integer);
 					} else {
@@ -311,21 +313,21 @@ public class JdbcStatement {
 				case PARAM_TYPE_LIST_BIG_DECIMAL:
 					CollectionParam bigDecimalsParam = (CollectionParam)param;
 					
-					for (BigDecimal bigDecimal : (Collection<BigDecimal>)bigDecimalsParam.getCollection()) {
+					for (BigDecimal bigDecimal : bigDecimalsParam.<BigDecimal>getCollection()) {
 						stmt.setBigDecimal(parameterIndex++, bigDecimal);
 					}
 					break;
 				case PARAM_TYPE_LIST_DATE:
 					CollectionParam datesParam = (CollectionParam)param;
 					
-					for (java.sql.Date date : (Collection<java.sql.Date>)datesParam.getCollection()) {
+					for (java.sql.Date date : datesParam.<java.sql.Date>getCollection()) {
 						stmt.setDate(parameterIndex++, date);
 					}
 					break;
 				case PARAM_TYPE_LIST_DOUBLE:
 					CollectionParam doublesParam = (CollectionParam)param;
 					
-					for (Double doubleElement : (Collection<Double>)doublesParam.getCollection()) {
+					for (Double doubleElement : doublesParam.<Double>getCollection()) {
 						if (doubleElement != null) {
 							stmt.setDouble(parameterIndex++, doubleElement);
 						} else {
@@ -336,7 +338,7 @@ public class JdbcStatement {
 				case PARAM_TYPE_LIST_FLOAT:
 					CollectionParam floatsParam = (CollectionParam)param;
 					
-					for (Float floatElement : (Collection<Float>)floatsParam.getCollection()) {
+					for (Float floatElement : floatsParam.<Float>getCollection()) {
 						if (floatElement != null) {
 							stmt.setFloat(parameterIndex++, floatElement);
 						} else {
@@ -347,7 +349,7 @@ public class JdbcStatement {
 				case PARAM_TYPE_LIST_INTEGER:
 					CollectionParam integersParam = (CollectionParam)param;
 					
-					for (Integer integerElement : (Collection<Integer>)integersParam.getCollection()) {
+					for (Integer integerElement : integersParam.<Integer>getCollection()) {
 						if (integerElement != null) {
 							stmt.setInt(parameterIndex++, integerElement);
 						} else {
@@ -358,7 +360,7 @@ public class JdbcStatement {
 				case PARAM_TYPE_LIST_LONG:
 					CollectionParam longsParam = (CollectionParam)param;
 					
-					for (Long longElement : (Collection<Long>)longsParam.getCollection()) {
+					for (Long longElement : longsParam.<Long>getCollection()) {
 						if (longElement != null) {
 							stmt.setLong(parameterIndex++, longElement);
 						} else {
@@ -369,19 +371,19 @@ public class JdbcStatement {
 				case PARAM_TYPE_LIST_STRING:
 					CollectionParam stringsParam = (CollectionParam)param;
 					
-					for (String str : (Collection<String>)stringsParam.getCollection()) {
+					for (String str : stringsParam.<String>getCollection()) {
 						stmt.setString(parameterIndex++, str);
 					}
 					break;
 				case PARAM_TYPE_LIST_TIMESTAMP:
 					CollectionParam timestampsParam = (CollectionParam)param;
 					
-					for (java.sql.Timestamp timestamp : (Collection<java.sql.Timestamp>)timestampsParam.getCollection()) {
+					for (java.sql.Timestamp timestamp : timestampsParam.<java.sql.Timestamp>getCollection()) {
 						stmt.setTimestamp(parameterIndex++, timestamp);
 					}
 					break;
 				case PARAM_TYPE_LONG:
-					Long longObj = param.getValue();
+					Long longObj = (Long)param.getValue();
 					if (longObj != null) {
 						stmt.setLong(parameterIndex, longObj);
 					} else {
@@ -409,19 +411,29 @@ public class JdbcStatement {
 					stmt.setLong(parameterIndex, longParam.getLongValue());
 					break;
 				case PARAM_TYPE_STRING:
-					stmt.setString(parameterIndex, param.getValue());
+					stmt.setString(parameterIndex, (String)param.getValue());
 					break;
 				case PARAM_TYPE_TIMESTAMP:
-					stmt.setTimestamp(parameterIndex, param.getValue());
+					stmt.setTimestamp(parameterIndex, (java.sql.Timestamp)param.getValue());
 					break;
 			}
 		}
 	}
 
-	public Collection toJdbcDataTypeCollection(
+	/**
+	 * A note on {@link Timestamp}:<br>
+	 * This method will return a collection of {@link Timestamp} and never {@link Date} objects
+	 * <br>
+	 * @param connection
+	 * @param clazz
+	 * @param collection
+	 * @return
+	 * @throws SQLException
+	 */
+	public <T> Collection<T> toJdbcDataTypeCollection(
 			Connection connection, 
-			Class clazz, 
-			Collection collection) 
+			Class<T> clazz, 
+			Collection<T> collection) 
 			throws SQLException {
 		PreparedStatement stmt = null;
 		ResultSetHelper rs = null;
@@ -439,18 +451,18 @@ public class JdbcStatement {
 		}
 	}
 
-	public <T, C extends Collection<T>> C toCollection(
+	public <T> Collection<T> toCollection(
 			Class<T> clazz, 
 			ResultSet rs, 
-			C collection) 
+			Collection<T> collection) 
 			throws SQLException {
 		return jdbcMapper.toCollection(clazz, (Select)sqlStatement, rs, collection);
 	}
 	
-	public <T, C extends Collection<T>> C toCollection(
+	public <T> Collection<T> toCollection(
 			Connection connection, 
 			Class<T> clazz, 
-			C collection) 
+			Collection<T> collection) 
 			throws SQLException {
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
@@ -468,17 +480,19 @@ public class JdbcStatement {
 		}
 	}
 	
-	public <T, C extends Collection<T>> C toCollection(
+	public <T> Collection<T> toCollection(
 			Connection connection, 
 			GraphEntity graphEntity, 
-			C collection, 
+			Collection<T> collection, 
 			ObjectGraphResolver graphResolver) 
 			throws SQLException {
 		return graphResolver.toCollection(connection, this, graphEntity, collection);
 	}
 
 	public <T> Deque<T> toDeque(Connection connection, Class<T> clazz) throws SQLException {
-		return toCollection(connection, clazz, new ArrayDeque<>());
+		Deque<T> deque = new ArrayDeque<>();
+		toCollection(connection, clazz, deque);
+		return deque;
 	}
 	
 	public List<JsonObject> toJsonList(Connection connection) throws SQLException {
@@ -514,11 +528,15 @@ public class JdbcStatement {
 	 * @throws SQLException
 	 */
 	public <T> Set<T> toLinkedSet(Connection connection, Class<T> clazz) throws SQLException {
-		return toCollection(connection, clazz, new LinkedHashSet<>());
+		Set<T> set = new LinkedHashSet<>();
+		toCollection(connection, clazz, set);
+		return set;
 	}
 	
 	public <T> List<T> toList(Connection connection, Class<T> clazz) throws SQLException {
-		return toCollection(connection, clazz, new ArrayList<>());
+		List<T> list = new ArrayList<>();
+		toCollection(connection, clazz, list);
+		return list;
 	}
 
 	public <K, T> Map<K, T> toMap(Connection connection, Class<T> clazz) throws SQLException {
@@ -554,7 +572,9 @@ public class JdbcStatement {
 	 * @throws SQLException
 	 */
 	public <T> Set<T> toSet(Connection connection, Class<T> clazz) throws SQLException {
-		return toCollection(connection, clazz, new HashSet<>());
+		Set<T> set = new HashSet<>();
+		toCollection(connection, clazz, set);
+		return set;
 	}
 	
 	public <T> T uniqueResult(Connection connection, Class<T> clazz) throws SQLException {
@@ -695,7 +715,7 @@ public class JdbcStatement {
 		BooleanParam param = (BooleanParam)params.get(name);
 		
 		if (param == null) {
-			param = new BooleanParam(name, x);
+			param = new BooleanParam(x);
 			params.put(name, param);
 		} else {
 			param.setBooleanValue(x);
@@ -739,7 +759,7 @@ public class JdbcStatement {
 		DoubleParam param = (DoubleParam)params.get(name);
 		
 		if (param == null) {
-			param = new DoubleParam(name, x);
+			param = new DoubleParam(x);
 			params.put(name, param);
 		} else {
 			param.setDoubleValue(x);
@@ -759,7 +779,7 @@ public class JdbcStatement {
 		FloatParam param = (FloatParam)params.get(name);
 		
 		if (param == null) {
-			param = new FloatParam(name, x);
+			param = new FloatParam(x);
 			params.put(name, param);
 		} else {
 			param.setFloatValue(x);
@@ -779,7 +799,7 @@ public class JdbcStatement {
 		IntParam param = (IntParam)params.get(name);
 		
 		if (param == null) {
-			param = new IntParam(name, x);
+			param = new IntParam(x);
 			params.put(name, param);
 		} else {
 			param.setIntValue(x);
@@ -799,7 +819,7 @@ public class JdbcStatement {
 		LongParam param = (LongParam)params.get(name);
 		
 		if (param == null) {
-			param = new LongParam(name, x);
+			param = new LongParam(x);
 			params.put(name, param);
 		} else {
 			param.setLongValue(x);
@@ -850,11 +870,11 @@ public class JdbcStatement {
 		return this;
 	}
 
-	public JdbcStatement setParameterList(String name, FieldColumnMapping fieldColumnMapping, Collection x) {
+	public JdbcStatement setParameterList(String name, FieldColumnMapping fieldColumnMapping, Collection<?> x) {
 		return setParameterList(name, fieldColumnMapping.getJdbcType(), x);
 	}
 	
-	public JdbcStatement setParameterList(String name, int jdbcType, Collection x) {
+	public JdbcStatement setParameterList(String name, int jdbcType, Collection<?> x) {
 		int paramType = 0;
 		switch (jdbcType) {
 			case FieldColumnMapping.JDBC_TYPE_BIG_DECIMAL: paramType = PARAM_TYPE_LIST_BIG_DECIMAL; break;
@@ -884,34 +904,35 @@ public class JdbcStatement {
 	}
 	
 	/**
-	 * Will create a java.sql.Timestamp object if x is not null
+	 * Will create a java.sql.Timestamp object if <b>x</b> is not an instance of java.sql.Timestamp
 	 * @param name
 	 * @param x
 	 * @return
 	 */
 	public JdbcStatement setTimestamp(String name, Date x) {
-		if (x != null) {
+		if (x != null && !(x instanceof java.sql.Timestamp)) {
 			x = new java.sql.Timestamp(x.getTime());
 		}
 		return setObject(name, PARAM_TYPE_TIMESTAMP, x);
 	}
 	
 	/**
-	 * Will create an ArrayList of java.sql.Timestamp objects
+	 * Will create an ArrayList of java.sql.Timestamp objects, converting any java.util.Date objects in <b>x</b>.
 	 * @param name
 	 * @param x
 	 * @return
 	 */
-	public JdbcStatement setTimestamps(String name, Collection<Date> x) {
+	public JdbcStatement setTimestamps(String name, Collection<? extends Date> x) {
 		List<java.sql.Timestamp> timestamps = new ArrayList<>();
 		
 		for (Date date : x) {
-			timestamps.add(date != null ? new java.sql.Timestamp(date.getTime()) : null);
+			timestamps.add(date != null && !(date instanceof java.sql.Timestamp) 
+					? new java.sql.Timestamp(date.getTime()) : null);
 		}
 		return setCollection(name, PARAM_TYPE_LIST_TIMESTAMP, timestamps);
 	}
 	
-	public JdbcStatement sqlStatement(SqlStatement sqlStatement) {
+	public JdbcStatement sqlStatement(SqlStatement<?> sqlStatement) {
 		this.sqlStatement = sqlStatement;
 		shouldInitJdbcSql = true;
 		shouldInitSql = true;
@@ -1036,7 +1057,7 @@ public class JdbcStatement {
 		shouldInitSql = false;
 	}
 	
-	private JdbcStatement setCollection(String name, int paramType, Collection x) {
+	private JdbcStatement setCollection(String name, int paramType, Collection<?> x) {
 		if (x == null || x.isEmpty()) {
 			throw new IllegalArgumentException("collection of param '" + name + "' cannot be null or empty");
 		}
@@ -1044,7 +1065,7 @@ public class JdbcStatement {
 		CollectionParam param = (CollectionParam)params.get(name);
 		
 		if (param == null) {
-			param = new CollectionParam(name, paramType, x);
+			param = new CollectionParam(paramType, x);
 			params.put(name, param);
 		} else {
 			if (!shouldInitJdbcSql && param.getCollection().size() != x.size()) {
@@ -1060,7 +1081,7 @@ public class JdbcStatement {
 		JdbcParam param = params.get(name);
 		
 		if (param == null) {
-			param = new JdbcParam(name, paramType, x);
+			param = new JdbcParam(paramType, x);
 			params.put(name, param);
 		} else {
 			param.setValue(x);
@@ -1078,20 +1099,22 @@ public class JdbcStatement {
 		public boolean getBooleanValue() { return booleanValue; }
 		public void setBooleanValue(boolean booleanValue) { this.booleanValue = booleanValue; }
 
-		public BooleanParam(String name, boolean booleanValue) {
-			super(name, PARAM_TYPE_PRIMITIVE_BOOLEAN);
+		public BooleanParam(boolean booleanValue) {
+			super(PARAM_TYPE_PRIMITIVE_BOOLEAN);
 			this.booleanValue = booleanValue;
 		}
 	}
 	
 	private class CollectionParam extends JdbcParam {
+		@SuppressWarnings("rawtypes")
 		private Collection collection;
 		
-		public Collection getCollection() { return collection; }
-		public void setCollection(Collection collection) { this.collection = collection; }
+		@SuppressWarnings("unchecked")
+		public <T> Collection<T> getCollection() { return collection; }
+		public void setCollection(Collection<?> collection) { this.collection = collection; }
 		
-		public CollectionParam(String name, int paramType, Collection collection) {
-			super(name, paramType);
+		public CollectionParam(int paramType, Collection<?> collection) {
+			super(paramType);
 			this.collection = collection;
 		}
 	}
@@ -1102,8 +1125,8 @@ public class JdbcStatement {
 		public double getDoubleValue() { return doubleValue; }
 		public void setDoubleValue(double doubleValue) { this.doubleValue = doubleValue; }
 		
-		public DoubleParam(String name, double doubleValue) {
-			super(name, PARAM_TYPE_PRIMITIVE_DOUBLE);
+		public DoubleParam(double doubleValue) {
+			super(PARAM_TYPE_PRIMITIVE_DOUBLE);
 			this.doubleValue = doubleValue;
 		}
 	}
@@ -1114,8 +1137,8 @@ public class JdbcStatement {
 		public float getFloatValue() { return floatValue; }
 		public void setFloatValue(float floatValue) { this.floatValue = floatValue; }
 		
-		public FloatParam(String name, float floatValue) {
-			super(name, PARAM_TYPE_PRIMITIVE_FLOAT);
+		public FloatParam(float floatValue) {
+			super(PARAM_TYPE_PRIMITIVE_FLOAT);
 			this.floatValue = floatValue;
 		}
 	}
@@ -1126,31 +1149,27 @@ public class JdbcStatement {
 		public int getIntValue() { return intValue; }
 		public void setIntValue(int intValue) { this.intValue = intValue; }
 		
-		public IntParam(String name, int intValue) {
-			super(name, PARAM_TYPE_PRIMITIVE_INT);
+		public IntParam(int intValue) {
+			super(PARAM_TYPE_PRIMITIVE_INT);
 			this.intValue = intValue;
 		}
 	}
 
 	private class JdbcParam {
 		private final int paramType;
-		private final String name;
 		private Object value;
 		
 		public int getParamType() { return paramType; }
-		@SuppressWarnings("unused")
-		public String getName() { return name; }
-		public <T> T getValue() { return (T)value; }
+		public Object getValue() { return value; }
 		public void setValue(Object value) { this.value = value; }
 		
-		public JdbcParam(String name, int paramType, Object value) {
+		public JdbcParam(int paramType, Object value) {
 			this.paramType = paramType;
-			this.name = name;
 			this.value = value;
 		}
 		
-		protected JdbcParam(String name, int paramType) {
-			this(name, paramType, null);
+		protected JdbcParam(int paramType) {
+			this(paramType, null);
 		}
 	}
 	
@@ -1160,8 +1179,8 @@ public class JdbcStatement {
 		public long getLongValue() { return longValue; }
 		public void setLongValue(long longValue) { this.longValue = longValue; }
 		
-		public LongParam(String name, long longValue) {
-			super(name, PARAM_TYPE_PRIMITIVE_LONG);
+		public LongParam(long longValue) {
+			super(PARAM_TYPE_PRIMITIVE_LONG);
 			this.longValue = longValue;
 		}
 	}
@@ -1172,7 +1191,7 @@ public class JdbcStatement {
 		public Set<String> getNames() { return names; }
 		
 		@Override
-		public boolean visit(Node node) {
+		public boolean visit(@SuppressWarnings("rawtypes") Node node) {
 			if (node.getType() != Node.TYPE_PARAM) {
 				return true;
 			}
