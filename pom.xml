@@ -30,12 +30,11 @@
 	
 	<properties>
 		
-		<!-- START Dependencies -->
-		
 		<commons-io.version>2.5</commons-io.version>
 		<commons-lang.version>3.5</commons-lang.version>
-		
-		<!-- END Dependencies -->
+		<jdk.version>1.8</jdk.version>
+		<maven-compiler.version>3.6.0</maven-compiler.version>
+		<slf4j.version>1.7.22</slf4j.version>
 		
 		<!-- START Test Properties -->
 		
@@ -45,10 +44,7 @@
 		<h2.version>1.4.193</h2.version>
 		<jacoco.coveredratio>0.30</jacoco.coveredratio>
 		<jacoco.version>0.7.8</jacoco.version>
-		<jdk.version>1.8</jdk.version>
-		<maven-compiler.version>3.6.0</maven-compiler.version>
 		<objenesis.version>2.4</objenesis.version>
-		<slf4j.version>1.7.22</slf4j.version>
 		<spock.version>1.0-groovy-2.4</spock.version>
 		<spock-reports.version>1.2.13</spock-reports.version>
 		<surefire-plugin.version>2.19.1</surefire-plugin.version>
@@ -59,8 +55,6 @@
 	
 	<dependencies>
 	
-		<!-- START Dependencies -->
-		
 		<dependency>
 		    <groupId>commons-io</groupId>
 		    <artifactId>commons-io</artifactId>
@@ -73,7 +67,11 @@
 		    <version>${commons-lang.version}</version>
 		</dependency>
 		
-		<!-- END Dependencies -->
+		<dependency>
+		    <groupId>org.slf4j</groupId>
+		    <artifactId>slf4j-api</artifactId>
+		    <version>${slf4j.version}</version>
+		</dependency>
 		
 		<!-- START Test Dependencies -->
 		
@@ -114,12 +112,6 @@
 			<artifactId>objenesis</artifactId>
 			<version>${objenesis.version}</version>
 			<scope>test</scope>
-		</dependency>
-		
-		<dependency>
-		    <groupId>org.slf4j</groupId>
-		    <artifactId>slf4j-api</artifactId>
-		    <version>${slf4j.version}</version>
 		</dependency>
 		
 		<dependency>
