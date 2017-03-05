@@ -119,7 +119,8 @@ public abstract class FieldColumnMapping implements MemberAccess {
 	public boolean isPrimaryKey() { return primaryKey; }
 	public boolean isVersion() { return version; }
 	
-	protected FieldColumnMapping(String column, 
+	protected FieldColumnMapping(
+			String column, 
 			String alias, 
 			int jdbcType, 
 			String mapKeyName, 
