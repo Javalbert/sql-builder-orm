@@ -60,30 +60,6 @@ public abstract class FieldColumnMapping implements MemberAccess {
 		throw new IllegalArgumentException("Unsupported JDBC type: " + jdbcType);
 	}
 	
-	public static Object getFromResultSet(
-			int jdbcType, 
-			ResultSetHelper rs, 
-			String columnLabel) 
-			throws SQLException {
-		switch (jdbcType) {
-			case JDBC_TYPE_BIG_DECIMAL: return rs.getBigDecimal(columnLabel);
-			case JDBC_TYPE_BOOLEAN: return rs.getBoolean2(columnLabel);
-			case JDBC_TYPE_DATE: return rs.getDate2(columnLabel);
-			case JDBC_TYPE_DOUBLE: return rs.getDouble2(columnLabel);
-			case JDBC_TYPE_FLOAT: return rs.getFloat2(columnLabel);
-			case JDBC_TYPE_INTEGER: return rs.getInt2(columnLabel);
-			case JDBC_TYPE_LONG: return rs.getLong2(columnLabel);
-			case JDBC_TYPE_PRIMITIVE_BOOLEAN: return rs.getBoolean(columnLabel);
-			case JDBC_TYPE_PRIMITIVE_DOUBLE: return rs.getDouble(columnLabel);
-			case JDBC_TYPE_PRIMITIVE_FLOAT: return rs.getFloat(columnLabel);
-			case JDBC_TYPE_PRIMITIVE_INT: return rs.getInt(columnLabel);
-			case JDBC_TYPE_PRIMITIVE_LONG: return rs.getLong(columnLabel);
-			case JDBC_TYPE_STRING: return rs.getString(columnLabel);
-			case JDBC_TYPE_TIMESTAMP: return rs.getTimestamp2(columnLabel);
-		}
-		throw new IllegalArgumentException("Unsupported JDBC type: " + jdbcType);
-	}
-	
 	public static int getJdbcType(Class clazz) {
 		switch (clazz.getCanonicalName()) {
 			case ClassUtils.NAME_BOOLEAN: return JDBC_TYPE_PRIMITIVE_BOOLEAN;
@@ -140,27 +116,23 @@ public abstract class FieldColumnMapping implements MemberAccess {
 		return getFromResultSet(jdbcType, rs, column);
 	}
 	
-	public Object getFromResultSet(ResultSetHelper rs) throws SQLException {
-		return getFromResultSet(jdbcType, rs, Strings.isNullOrEmpty(column) ? alias : column);
+	public int getColumnIndex(ResultSetHelper rs) throws SQLException {
+		return rs.findColumn(Strings.isNullOrEmpty(column) ? alias : column);
 	}
 	
-	public Object getFromResultSet(ResultSetHelper rs, String columnLabel) throws SQLException {
-		return getFromResultSet(jdbcType, rs, columnLabel);
-	}
-
 	public void setFromResultSet(Object instance, ResultSetHelper rs, int column) throws SQLException {
 		Object value = getFromResultSet(rs, column);
 		set(instance, value);
 	}
 	
-	public void setFromResultSet(Object instance, ResultSetHelper rs) throws SQLException {
-		setFromResultSet(instance, rs, Strings.isNullOrEmpty(column) ? alias : column);
-	}
+//	public void setFromResultSet(Object instance, ResultSetHelper rs) throws SQLException {
+//		setFromResultSet(instance, rs, Strings.isNullOrEmpty(column) ? alias : column);
+//	}
 
-	public void setFromResultSet(Object instance, ResultSetHelper rs, String columnLabel) throws SQLException {
-		Object value = getFromResultSet(rs, columnLabel);
-		set(instance, value);
-	}
+//	public void setFromResultSet(Object instance, ResultSetHelper rs, String columnLabel) throws SQLException {
+//		Object value = getFromResultSet(rs, columnLabel);
+//		set(instance, value);
+//	}
 
 	@Override
 	public String toString() {

@@ -146,8 +146,7 @@ public class NPlusOneResolver extends ObjectGraphResolver {
 			Object object = newEntityInstance();
 			
 			for (int i = 0; i < fieldColumnMappings.size(); i++) {
-				FieldColumnMapping fieldColumnMapping = fieldColumnMappings.get(i);
-				fieldColumnMapping.setFromResultSet(object, rs);
+				fieldColumnMappings.get(i).setFromResultSet(object, rs, i + 1);
 				
 				if (i == lastPrimaryKeyIndex) {
 					Object existing = objectCache.get(classRowMapping, object);
