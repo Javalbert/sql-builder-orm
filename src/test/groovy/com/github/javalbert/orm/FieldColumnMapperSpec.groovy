@@ -2,7 +2,7 @@ package com.github.javalbert.orm
 
 import com.github.javalbert.domain.Person
 import com.github.javalbert.domain.Person2
-
+import java.beans.PropertyDescriptor
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 
@@ -94,33 +94,16 @@ class FieldColumnMapperSpec extends Specification {
 		thrown(IllegalArgumentException)
 	}
 	
-	def 'Add field column mapping by looking at its accessor method instead of field'() {
-		given: 'method that gets last name'
-		Method getLastName = mapper.getMethod('getLastName')
+	def 'Add field column mapping by looking at its property instead of field'() {
+		given: 'property that represents last name'
+		PropertyDescriptor lastNameProperty = mapper.getProperty('lastName')
 		
-		when: 'creating and adding the last name mapping via getter method'
-		FieldColumnMapping mapping = mapper.mapPropertyToColumn(getLastName)
+		when: 'creating and adding the last name mapping via property'
+		FieldColumnMapping mapping = mapper.mapPropertyToColumn(lastNameProperty)
 		mapper.addMapping(mapping)
 		
 		then: 'mapping of last name is added'
 		!mapper.getFieldColumnMappingList().isEmpty()
 		!mapper.getFieldColumnMappings().isEmpty()
-	}
-	
-	def 'Throw error when a property has @Column annotation defined in both getter and setter'() {
-		given: 'getter and setter of last name in Person2 class'
-		Method getLastName = mapper2.getMethod('getLastName')
-		Method setLastName = mapper2.getMethod('setLastName')
-		
-		and: 'FieldColumnMapping objects for getter and setter'
-		FieldColumnMapping mappingViaGetter = mapper2.mapPropertyToColumn(getLastName)
-		FieldColumnMapping mappingViaSetter = mapper2.mapPropertyToColumn(setLastName)
-		
-		when: 'adding the mappings'
-		mapper2.addMapping(mappingViaGetter)
-		mapper2.addMapping(mappingViaSetter)
-		
-		then: 'throw error'
-		thrown(IllegalArgumentException)
 	}
 }

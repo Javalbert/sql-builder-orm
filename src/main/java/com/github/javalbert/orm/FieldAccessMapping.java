@@ -13,10 +13,14 @@
 package com.github.javalbert.orm;
 
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.util.Date;
 
+import com.github.javalbert.reflection.ClassAccessFactory;
+import com.github.javalbert.reflection.FieldAccess;
 import com.github.javalbert.utils.string.Strings;
 
-public class FieldAccessMapping extends FieldColumnMapping {
+public class FieldAccessMapping<T> extends FieldColumnMapping<T> {
 	private static String initMapKeyName(String column, String alias, Field field) {
 		MapKey mapKey = field.getAnnotation(MapKey.class);
 		String mapKeyName = mapKey != null ? mapKey.value() : null;
@@ -27,11 +31,12 @@ public class FieldAccessMapping extends FieldColumnMapping {
 				: field.getName();
 	}
 	
-	private final Field field;
-	
-	public Field getField() { return field; }
+	private final FieldAccess<T> fieldAccess;
+	private final int fieldIndex;
 
-	public FieldAccessMapping(String column, 
+	public FieldAccessMapping(
+			Class<T> clazz,
+			String column, 
 			String alias, 
 			Field field, 
 			int jdbcType, 
@@ -39,22 +44,82 @@ public class FieldAccessMapping extends FieldColumnMapping {
 			GeneratedValue generatedValue, 
 			boolean version) {
 		super(column, alias, jdbcType, initMapKeyName(column, alias, field), primaryKey, generatedValue, version);
-		this.field = field;
+		fieldAccess = ClassAccessFactory.get(clazz);
+		fieldIndex = fieldAccess.fieldIndex(field.getName());
 	}
 
 	@Override
-	public Object get(Object instance) {
-		try {
-			return field.get(instance);
-		} catch (IllegalArgumentException | IllegalAccessException e) {
-			return null;
-		}
+	public Object get(T instance) {
+		return fieldAccess.getField(instance, fieldIndex);
 	}
 
 	@Override
-	public void set(Object instance, Object value) {
-		try {
-			field.set(instance, value);
-		} catch (IllegalArgumentException | IllegalAccessException e) {}
+	public void set(T instance, Object x) {
+		fieldAccess.setField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setBoolean(T instance, boolean x) {
+		fieldAccess.setBooleanField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setDouble(T instance, double x) {
+		fieldAccess.setDoubleField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setFloat(T instance, float x) {
+		fieldAccess.setFloatField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setInt(T instance, int x) {
+		fieldAccess.setIntField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setLong(T instance, long x) {
+		fieldAccess.setLongField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setBoxedBoolean(T instance, Boolean x) {
+		fieldAccess.setBoxedBooleanField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setBoxedDouble(T instance, Double x) {
+		fieldAccess.setBoxedDoubleField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setBoxedFloat(T instance, Float x) {
+		fieldAccess.setBoxedFloatField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setBoxedInt(T instance, Integer x) {
+		fieldAccess.setBoxedIntField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setBoxedLong(T instance, Long x) {
+		fieldAccess.setBoxedLongField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setBigDecimal(T instance, BigDecimal x) {
+		fieldAccess.setBigDecimalField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setDate(T instance, Date x) {
+		fieldAccess.setDateField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setString(T instance, String x) {
+		fieldAccess.setStringField(instance, fieldIndex, x);
 	}
 }

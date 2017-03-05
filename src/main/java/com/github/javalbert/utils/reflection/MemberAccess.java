@@ -12,7 +12,26 @@
  *******************************************************************************/
 package com.github.javalbert.utils.reflection;
 
-public interface MemberAccess {
-	Object get(Object instance);
-	void set(Object instance, Object value);
+import java.math.BigDecimal;
+import java.util.Date;
+
+public interface MemberAccess<T> {
+	Object get(T instance);
+	void set(T instance, Object x);
+	
+	void setBoolean(T instance, boolean x);
+	void setDouble(T instance, double x);
+	void setFloat(T instance, float x);
+	void setInt(T instance, int x);
+	void setLong(T instance, long x);
+	
+	void setBoxedBoolean(T instance, Boolean x);
+	void setBoxedDouble(T instance, Double x);
+	void setBoxedFloat(T instance, Float x);
+	void setBoxedInt(T instance, Integer x);
+	void setBoxedLong(T instance, Long x);
+	
+	void setBigDecimal(T instance, BigDecimal x);
+	void setDate(T instance, Date x);
+	void setString(T instance, String x);
 }

@@ -12,34 +12,94 @@
  *******************************************************************************/
 package com.github.javalbert.utils.reflection;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.beans.PropertyDescriptor;
+import java.math.BigDecimal;
+import java.util.Date;
 
-public class PropertyMemberAccess implements MemberAccess {
-	private final Method getter;
-	private final Method setter;
+import com.github.javalbert.reflection.ClassAccessFactory;
+import com.github.javalbert.reflection.PropertyAccess;
+
+public class PropertyMemberAccess<T> implements MemberAccess<T> {
+	private final PropertyAccess<T> propertyAccess;
+	private final int propertyIndex;
 	
-	public Method getGetter() { return getter; }
-	public Method getSetter() { return setter; }
-	
-	public PropertyMemberAccess(Method getter, Method setter) {
-		this.getter = getter;
-		this.setter = setter;
+	public PropertyMemberAccess(Class<T> clazz, PropertyDescriptor propertyDescriptor) {
+		propertyAccess = ClassAccessFactory.get(clazz);
+		propertyIndex = propertyAccess.propertyIndex(propertyDescriptor.getName());
 	}
 	
 	@Override
-	public Object get(Object instance) {
-		try {
-			return getter.invoke(instance);
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-			return null;
-		}
+	public Object get(T instance) {
+		return propertyAccess.getProperty(instance, propertyIndex);
 	}
 	
 	@Override
-	public void set(Object instance, Object value) {
-		try {
-			setter.invoke(instance, value);
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {}
+	public void set(T instance, Object x) {
+		propertyAccess.setProperty(instance, propertyIndex, x);
+	}
+
+	@Override
+	public void setBoolean(T instance, boolean x) {
+		propertyAccess.setBooleanProperty(instance, propertyIndex, x);
+	}
+
+	@Override
+	public void setDouble(T instance, double x) {
+		propertyAccess.setDoubleProperty(instance, propertyIndex, x);
+	}
+
+	@Override
+	public void setFloat(T instance, float x) {
+		propertyAccess.setFloatProperty(instance, propertyIndex, x);
+	}
+
+	@Override
+	public void setInt(T instance, int x) {
+		propertyAccess.setIntProperty(instance, propertyIndex, x);
+	}
+
+	@Override
+	public void setLong(T instance, long x) {
+		propertyAccess.setLongProperty(instance, propertyIndex, x);
+	}
+
+	@Override
+	public void setBoxedBoolean(T instance, Boolean x) {
+		propertyAccess.setBoxedBooleanProperty(instance, propertyIndex, x);
+	}
+
+	@Override
+	public void setBoxedDouble(T instance, Double x) {
+		propertyAccess.setBoxedDoubleProperty(instance, propertyIndex, x);
+	}
+
+	@Override
+	public void setBoxedFloat(T instance, Float x) {
+		propertyAccess.setBoxedFloatProperty(instance, propertyIndex, x);
+	}
+
+	@Override
+	public void setBoxedInt(T instance, Integer x) {
+		propertyAccess.setBoxedIntProperty(instance, propertyIndex, x);
+	}
+
+	@Override
+	public void setBoxedLong(T instance, Long x) {
+		propertyAccess.setBoxedLongProperty(instance, propertyIndex, x);
+	}
+
+	@Override
+	public void setBigDecimal(T instance, BigDecimal x) {
+		propertyAccess.setBigDecimalProperty(instance, propertyIndex, x);
+	}
+
+	@Override
+	public void setDate(T instance, Date x) {
+		propertyAccess.setDateProperty(instance, propertyIndex, x);
+	}
+
+	@Override
+	public void setString(T instance, String x) {
+		propertyAccess.setStringProperty(instance, propertyIndex, x);
 	}
 }

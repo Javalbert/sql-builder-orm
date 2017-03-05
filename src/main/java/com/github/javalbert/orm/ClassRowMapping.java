@@ -13,6 +13,9 @@
 package com.github.javalbert.orm;
 
 import java.io.Serializable;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,6 +37,7 @@ import com.github.javalbert.sqlbuilder.Update;
 import com.github.javalbert.sqlbuilder.Where;
 import com.github.javalbert.sqlbuilder.vendor.ANSI;
 import com.github.javalbert.sqlbuilder.vendor.Vendor;
+import com.github.javalbert.utils.jdbc.ResultSetHelper;
 import com.github.javalbert.utils.reflection.MemberAccess;
 import com.github.javalbert.utils.string.Strings;
 
@@ -190,8 +194,16 @@ public class ClassRowMapping {
 		return primaryKeyMappings.size() == 1;
 	}
 	
-	public void setAutoIncrementId(Object object, int id) {
-		autoIncrementIdMapping.set(object, id);
+	/**
+	 * ResultSet cursor will be moved to next
+	 * @param object
+	 * @param generatedKeys {@link ResultSet} from calling {@link PreparedStatement#getGeneratedKeys()}
+	 * @throws SQLException 
+	 */
+	public void setAutoIncrementId(Object object, ResultSetHelper generatedKeys) throws SQLException {
+		if (generatedKeys.next()) {
+			autoIncrementIdMapping.setFromResultSet(object, generatedKeys, 1);
+		}
 	}
 
 	public void setIdParameters(JdbcStatement statement, Serializable id) {

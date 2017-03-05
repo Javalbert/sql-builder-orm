@@ -13,29 +13,93 @@
 package com.github.javalbert.utils.reflection;
 
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.util.Date;
 
-public class FieldMemberAccess implements MemberAccess {
-	private final Field field;
+import com.github.javalbert.reflection.ClassAccessFactory;
+import com.github.javalbert.reflection.FieldAccess;
+
+public class FieldMemberAccess<T> implements MemberAccess<T> {
+	private final FieldAccess<T> fieldAccess;
+	private final int fieldIndex;
 	
-	public Field getField() { return field; }
-	
-	public FieldMemberAccess(Field field) {
-		this.field = field;
-	}
-	
-	@Override
-	public Object get(Object instance) {
-		try {
-			return field.get(instance);
-		} catch (IllegalArgumentException | IllegalAccessException e) {
-			return null;
-		}
+	public FieldMemberAccess(Class<T> clazz, Field field) {
+		fieldAccess = ClassAccessFactory.get(clazz);
+		fieldIndex = fieldAccess.fieldIndex(field.getName());
 	}
 
 	@Override
-	public void set(Object instance, Object value) {
-		try {
-			field.set(instance, value);
-		} catch (IllegalArgumentException | IllegalAccessException e) {}
+	public Object get(T instance) {
+		return fieldAccess.getField(instance, fieldIndex);
+	}
+
+	@Override
+	public void set(T instance, Object x) {
+		fieldAccess.setField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setBoolean(T instance, boolean x) {
+		fieldAccess.setBooleanField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setDouble(T instance, double x) {
+		fieldAccess.setDoubleField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setFloat(T instance, float x) {
+		fieldAccess.setFloatField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setInt(T instance, int x) {
+		fieldAccess.setIntField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setLong(T instance, long x) {
+		fieldAccess.setLongField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setBoxedBoolean(T instance, Boolean x) {
+		fieldAccess.setBoxedBooleanField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setBoxedDouble(T instance, Double x) {
+		fieldAccess.setBoxedDoubleField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setBoxedFloat(T instance, Float x) {
+		fieldAccess.setBoxedFloatField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setBoxedInt(T instance, Integer x) {
+		fieldAccess.setBoxedIntField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setBoxedLong(T instance, Long x) {
+		fieldAccess.setBoxedLongField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setBigDecimal(T instance, BigDecimal x) {
+		fieldAccess.setBigDecimalField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setDate(T instance, Date x) {
+		fieldAccess.setDateField(instance, fieldIndex, x);
+	}
+
+	@Override
+	public void setString(T instance, String x) {
+		fieldAccess.setStringField(instance, fieldIndex, x);
 	}
 }
