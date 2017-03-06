@@ -20,7 +20,7 @@ import com.github.javalbert.utils.reflection.MemberAccess;
 import com.github.javalbert.utils.string.Strings;
 
 @SuppressWarnings("rawtypes")
-public abstract class FieldColumnMapping<T> implements MemberAccess<T> {
+public abstract class FieldColumnMapping implements MemberAccess {
 	public static final int JDBC_TYPE_BIG_DECIMAL = 1;
 	public static final int JDBC_TYPE_BOOLEAN = 2;
 	public static final int JDBC_TYPE_DATE = 3;
@@ -120,7 +120,7 @@ public abstract class FieldColumnMapping<T> implements MemberAccess<T> {
 		return rs.findColumn(Strings.isNullOrEmpty(column) ? alias : column);
 	}
 	
-	public void setFromResultSet(T instance, ResultSetHelper rs, int column) throws SQLException {
+	public void setFromResultSet(Object instance, ResultSetHelper rs, int column) throws SQLException {
 		switch (jdbcType) {
 			case JDBC_TYPE_BIG_DECIMAL: setBigDecimal(instance, rs.getBigDecimal(column)); break;
 			case JDBC_TYPE_BOOLEAN: setBoxedBoolean(instance, rs.getBoolean2(column)); break;

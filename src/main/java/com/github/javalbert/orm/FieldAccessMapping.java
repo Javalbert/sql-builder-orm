@@ -20,7 +20,7 @@ import com.github.javalbert.reflection.ClassAccessFactory;
 import com.github.javalbert.reflection.FieldAccess;
 import com.github.javalbert.utils.string.Strings;
 
-public class FieldAccessMapping<T> extends FieldColumnMapping<T> {
+public class FieldAccessMapping extends FieldColumnMapping {
 	private static String initMapKeyName(String column, String alias, Field field) {
 		MapKey mapKey = field.getAnnotation(MapKey.class);
 		String mapKeyName = mapKey != null ? mapKey.value() : null;
@@ -31,12 +31,13 @@ public class FieldAccessMapping<T> extends FieldColumnMapping<T> {
 				: field.getName();
 	}
 	
-	private final FieldAccess<T> fieldAccess;
+	@SuppressWarnings("rawtypes")
+	private final FieldAccess fieldAccess;
 	private final int fieldIndex;
 
 	public FieldAccessMapping(
-			Class<T> clazz,
-			String column, 
+			Class<?> clazz,
+			String column,
 			String alias, 
 			Field field, 
 			int jdbcType, 
@@ -48,78 +49,93 @@ public class FieldAccessMapping<T> extends FieldColumnMapping<T> {
 		fieldIndex = fieldAccess.fieldIndex(field.getName());
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public Object get(T instance) {
+	public Object get(Object instance) {
 		return fieldAccess.getField(instance, fieldIndex);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public void set(T instance, Object x) {
+	public void set(Object instance, Object x) {
 		fieldAccess.setField(instance, fieldIndex, x);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public void setBoolean(T instance, boolean x) {
+	public void setBoolean(Object instance, boolean x) {
 		fieldAccess.setBooleanField(instance, fieldIndex, x);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public void setDouble(T instance, double x) {
+	public void setDouble(Object instance, double x) {
 		fieldAccess.setDoubleField(instance, fieldIndex, x);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public void setFloat(T instance, float x) {
+	public void setFloat(Object instance, float x) {
 		fieldAccess.setFloatField(instance, fieldIndex, x);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public void setInt(T instance, int x) {
+	public void setInt(Object instance, int x) {
 		fieldAccess.setIntField(instance, fieldIndex, x);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public void setLong(T instance, long x) {
+	public void setLong(Object instance, long x) {
 		fieldAccess.setLongField(instance, fieldIndex, x);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public void setBoxedBoolean(T instance, Boolean x) {
+	public void setBoxedBoolean(Object instance, Boolean x) {
 		fieldAccess.setBoxedBooleanField(instance, fieldIndex, x);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public void setBoxedDouble(T instance, Double x) {
+	public void setBoxedDouble(Object instance, Double x) {
 		fieldAccess.setBoxedDoubleField(instance, fieldIndex, x);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public void setBoxedFloat(T instance, Float x) {
+	public void setBoxedFloat(Object instance, Float x) {
 		fieldAccess.setBoxedFloatField(instance, fieldIndex, x);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public void setBoxedInt(T instance, Integer x) {
+	public void setBoxedInt(Object instance, Integer x) {
 		fieldAccess.setBoxedIntField(instance, fieldIndex, x);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public void setBoxedLong(T instance, Long x) {
+	public void setBoxedLong(Object instance, Long x) {
 		fieldAccess.setBoxedLongField(instance, fieldIndex, x);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public void setBigDecimal(T instance, BigDecimal x) {
+	public void setBigDecimal(Object instance, BigDecimal x) {
 		fieldAccess.setBigDecimalField(instance, fieldIndex, x);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public void setDate(T instance, Date x) {
+	public void setDate(Object instance, Date x) {
 		fieldAccess.setDateField(instance, fieldIndex, x);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public void setString(T instance, String x) {
+	public void setString(Object instance, String x) {
 		fieldAccess.setStringField(instance, fieldIndex, x);
 	}
 }

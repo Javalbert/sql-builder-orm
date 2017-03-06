@@ -42,7 +42,10 @@ import com.github.javalbert.utils.reflection.MemberAccess;
 import com.github.javalbert.utils.string.Strings;
 
 public class ClassRowMapping {
-	private static void appendColumnEqualsParam(Where where, FieldColumnMapping fieldColumnMapping, boolean appendAnd) {
+	private static void appendColumnEqualsParam(
+			Where where,
+			FieldColumnMapping fieldColumnMapping,
+			boolean appendAnd) {
 		if (appendAnd) {
 			where.and();
 		}

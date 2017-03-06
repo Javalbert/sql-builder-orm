@@ -15,23 +15,23 @@ package com.github.javalbert.utils.reflection;
 import java.math.BigDecimal;
 import java.util.Date;
 
-public interface MemberAccess<T> {
-	Object get(T instance);
-	void set(T instance, Object x);
+public interface MemberAccess {
+	Object get(Object instance);
+	void set(Object instance, Object x);
 	
-	void setBoolean(T instance, boolean x);
-	void setDouble(T instance, double x);
-	void setFloat(T instance, float x);
-	void setInt(T instance, int x);
-	void setLong(T instance, long x);
+	void setBoolean(Object instance, boolean x);
+	void setDouble(Object instance, double x);
+	void setFloat(Object instance, float x);
+	void setInt(Object instance, int x);
+	void setLong(Object instance, long x);
 	
-	void setBoxedBoolean(T instance, Boolean x);
-	void setBoxedDouble(T instance, Double x);
-	void setBoxedFloat(T instance, Float x);
-	void setBoxedInt(T instance, Integer x);
-	void setBoxedLong(T instance, Long x);
+	void setBoxedBoolean(Object instance, Boolean x);
+	void setBoxedDouble(Object instance, Double x);
+	void setBoxedFloat(Object instance, Float x);
+	void setBoxedInt(Object instance, Integer x);
+	void setBoxedLong(Object instance, Long x);
 	
-	void setBigDecimal(T instance, BigDecimal x);
-	void setDate(T instance, Date x);
-	void setString(T instance, String x);
+	void setBigDecimal(Object instance, BigDecimal x);
+	void setDate(Object instance, Date x);
+	void setString(Object instance, String x);
 }

@@ -30,7 +30,7 @@ import com.github.javalbert.utils.reflection.MemberAccess;
 import com.github.javalbert.utils.reflection.PropertyMemberAccess;
 import com.github.javalbert.utils.string.Strings;
 
-public class FieldColumnMapper<T> {
+public class FieldColumnMapper {
 	public static String getAlias(Field field) {
 		Alias aliasAnnotation = field.getAnnotation(Alias.class);
 		return aliasAnnotation != null ? Strings.safeTrim(aliasAnnotation.value()) : null;
@@ -119,33 +119,33 @@ public class FieldColumnMapper<T> {
 				.orElse(false);
 	}
 	
-	private final Class<T> clazz;
-	private final Map<String, FieldColumnMapping<T>> fieldAliasMappings = new HashMap<>();
-	private final List<FieldColumnMapping<T>> fieldColumnMappingList = new ArrayList<>();
-	private final Map<String, FieldColumnMapping<T>> fieldColumnMappings = new HashMap<>();
+	private final Class<?> clazz;
+	private final Map<String, FieldColumnMapping> fieldAliasMappings = new HashMap<>();
+	private final List<FieldColumnMapping> fieldColumnMappingList = new ArrayList<>();
+	private final Map<String, FieldColumnMapping> fieldColumnMappings = new HashMap<>();
 	private final Map<String, Field> fieldMap = new HashMap<>();
 	private final List<Field> fields;
 	private final Map<String, PropertyDescriptor> propertyDescriptorMap = new HashMap<>();
 	private final List<PropertyDescriptor> propertyDescriptors;
-	private final Map<String, MemberAccess<T>> relatedMemberAccessMap = new HashMap<>();
+	private final Map<String, MemberAccess> relatedMemberAccessMap = new HashMap<>();
 	
-	public Map<String, FieldColumnMapping<T>> getFieldAliasMappings() {
+	public Map<String, FieldColumnMapping> getFieldAliasMappings() {
 		return Collections.unmodifiableMap(fieldAliasMappings);
 	}
 
-	public List<FieldColumnMapping<T>> getFieldColumnMappingList() {
+	public List<FieldColumnMapping> getFieldColumnMappingList() {
 		return Collections.unmodifiableList(fieldColumnMappingList);
 	}
 
-	public Map<String, FieldColumnMapping<T>> getFieldColumnMappings() {
+	public Map<String, FieldColumnMapping> getFieldColumnMappings() {
 		return Collections.unmodifiableMap(fieldColumnMappings);
 	}
 	
-	public Map<String, MemberAccess<T>> getRelatedMemberAccessMap() {
+	public Map<String, MemberAccess> getRelatedMemberAccessMap() {
 		return Collections.unmodifiableMap(relatedMemberAccessMap);
 	}
 	
-	public FieldColumnMapper(Class<T> clazz) {
+	public FieldColumnMapper(Class<?> clazz) {
 		this.clazz = clazz;
 		
 		fields = Collections.unmodifiableList(Arrays.asList(clazz.getDeclaredFields()));
@@ -164,7 +164,7 @@ public class FieldColumnMapper<T> {
 		return fieldMap.get(name);
 	}
 
-	public FieldColumnMapping<T> getMapping(String column) {
+	public FieldColumnMapping getMapping(String column) {
 		return fieldColumnMappings.get(column);
 	}
 	
@@ -183,7 +183,7 @@ public class FieldColumnMapper<T> {
 			.forEach(this::addMapping);
 	}
 	
-	public FieldColumnMapping<T> mapFieldToColumn(Field field) {
+	public FieldColumnMapping mapFieldToColumn(Field field) {
 		field.setAccessible(true);
 
 		addRelatedMemberAccess(field);
@@ -204,7 +204,7 @@ public class FieldColumnMapper<T> {
 		
 		final int jdbcType = getJdbcType(field);
 		
-		return new FieldAccessMapping<>(
+		return new FieldAccessMapping(
 				clazz,
 				columnName,
 				alias,
@@ -215,7 +215,7 @@ public class FieldColumnMapper<T> {
 				version);
 	}
 	
-	public FieldColumnMapping<T> mapPropertyToColumn(PropertyDescriptor propertyDescriptor) {
+	public FieldColumnMapping mapPropertyToColumn(PropertyDescriptor propertyDescriptor) {
 		addRelatedPropertyMember(propertyDescriptor);
 		
 		final String columnName = getColumnName(propertyDescriptor);
@@ -244,7 +244,7 @@ public class FieldColumnMapper<T> {
 					.orElse(null);
 		}
 		
-		return new PropertyAccessMapping<T>(
+		return new PropertyAccessMapping(
 				clazz,
 				columnName,
 				alias,
@@ -261,7 +261,7 @@ public class FieldColumnMapper<T> {
 			.forEach(this::addMapping);
 	}
 	
-	private void addMapping(FieldColumnMapping<T> mapping) {
+	private void addMapping(FieldColumnMapping mapping) {
 		if (mapping == null) {
 			return;
 		}
@@ -286,7 +286,7 @@ public class FieldColumnMapper<T> {
 			return;
 		}
 		
-		FieldMemberAccess<T> fieldMember = new FieldMemberAccess<>(clazz, field);
+		FieldMemberAccess fieldMember = new FieldMemberAccess(clazz, field);
 		relatedMemberAccessMap.put(related.value(), fieldMember);
 	}
 	
@@ -304,7 +304,7 @@ public class FieldColumnMapper<T> {
 			return;
 		}
 		
-		PropertyMemberAccess<T> propertyMember = new PropertyMemberAccess<>(clazz, propertyDescriptor);
+		PropertyMemberAccess propertyMember = new PropertyMemberAccess(clazz, propertyDescriptor);
 		relatedMemberAccessMap.put(related.value(), propertyMember);
 	}
 }
