@@ -27,6 +27,82 @@ import com.github.javalbert.utils.reflection.PropertyMemberAccess;
 import com.github.javalbert.utils.string.Strings;
 
 public class FieldColumnMapper {
+	public static String getAlias(Field field) {
+		Alias aliasAnnotation = field.getAnnotation(Alias.class);
+		return aliasAnnotation != null ? Strings.safeTrim(aliasAnnotation.value()) : null;
+	}
+	
+	public static String getAlias(Method method) {
+		Alias aliasAnnotation = method.getAnnotation(Alias.class);
+		return aliasAnnotation != null ? Strings.safeTrim(aliasAnnotation.value()) : null;
+	}
+	
+	public static String getColumnName(Field field) {
+		Column column = field.getAnnotation(Column.class);
+		if (column == null) {
+			return null;
+		}
+
+		String columnName = Strings.safeTrim(column.value());
+		if (Strings.isNullOrEmpty(columnName)) {
+			columnName = field.getName();
+		}
+		return columnName;
+	}
+	
+	public static String getColumnName(Method method) {
+		Column column = method.getAnnotation(Column.class);
+		return column != null ? Strings.safeTrim(column.value()) : null;
+	}
+	
+	public static int getJdbcType(Field field) {
+		boolean timestamp = field.isAnnotationPresent(IsTimestamp.class);
+		return timestamp ? FieldColumnMapping.JDBC_TYPE_TIMESTAMP : FieldColumnMapping.getJdbcType(field.getType());
+	}
+	
+	public static int getJdbcType(Method getterMethod) {
+		boolean timestamp = getterMethod.isAnnotationPresent(IsTimestamp.class);
+		return timestamp ? FieldColumnMapping.JDBC_TYPE_TIMESTAMP : FieldColumnMapping.getJdbcType(getterMethod.getReturnType());
+	}
+	
+	public static boolean isPrimaryKeyColumn(Field field) {
+		return field.isAnnotationPresent(Id.class);
+	}
+	
+	public static boolean isPrimaryKeyColumn(Method method) {
+		return method.isAnnotationPresent(Id.class);
+	}
+	
+	public static boolean isVersionColumn(Field field) {
+		return field.isAnnotationPresent(Version.class);
+	}
+	
+	public static boolean isVersionColumn(Method method) {
+		return method.isAnnotationPresent(Version.class);
+	}
+	
+	private static Method getPropertyMethod(Method method, boolean findGetter, Class<?> clazz) {
+		String methodName = method.getName();
+		String methodPrefixToFind = findGetter ? "get" : "set";
+		
+		boolean found = methodName.startsWith(methodPrefixToFind);
+		if (found) {
+			return method;
+		}
+		
+		try {
+			String prefixReplacement = findGetter ? "set" : "get";
+			methodName = methodPrefixToFind + methodName.replaceFirst(prefixReplacement, "");
+			
+			method = findGetter ? clazz.getDeclaredMethod(methodName) 
+					: clazz.getDeclaredMethod(methodName, method.getReturnType());
+			method.setAccessible(true);
+			return method;
+		} catch (NoSuchMethodException | SecurityException e) {
+			return null;
+		}
+	}
+	
 	private final Map<String, FieldColumnMapping> fieldAliasMappings = new HashMap<>();
 	private final List<FieldColumnMapping> fieldColumnMappingList = new ArrayList<>();
 	private final Map<String, FieldColumnMapping> fieldColumnMappings = new HashMap<>();
@@ -58,47 +134,9 @@ public class FieldColumnMapper {
 		methods = Collections.unmodifiableList(Arrays.asList(clazz.getDeclaredMethods()));
 		methods.forEach(method -> methodMap.put(method.getName(), method));
 	}
-
-	public String getAlias(Field field) {
-		Alias aliasAnnotation = field.getAnnotation(Alias.class);
-		return aliasAnnotation != null ? Strings.safeTrim(aliasAnnotation.value()) : null;
-	}
-	
-	public String getAlias(Method method) {
-		Alias aliasAnnotation = method.getAnnotation(Alias.class);
-		return aliasAnnotation != null ? Strings.safeTrim(aliasAnnotation.value()) : null;
-	}
-	
-	public String getColumnName(Field field) {
-		Column column = field.getAnnotation(Column.class);
-		if (column == null) {
-			return null;
-		}
-
-		String columnName = Strings.safeTrim(column.value());
-		if (Strings.isNullOrEmpty(columnName)) {
-			columnName = field.getName();
-		}
-		return columnName;
-	}
-	
-	public String getColumnName(Method method) {
-		Column column = method.getAnnotation(Column.class);
-		return column != null ? Strings.safeTrim(column.value()) : null;
-	}
 	
 	public Field getField(String name) {
 		return fieldMap.get(name);
-	}
-	
-	public int getJdbcType(Field field) {
-		boolean timestamp = field.isAnnotationPresent(IsTimestamp.class);
-		return timestamp ? FieldColumnMapping.JDBC_TYPE_TIMESTAMP : FieldColumnMapping.getJdbcType(field.getType());
-	}
-	
-	public int getJdbcType(Method getterMethod) {
-		boolean timestamp = getterMethod.isAnnotationPresent(IsTimestamp.class);
-		return timestamp ? FieldColumnMapping.JDBC_TYPE_TIMESTAMP : FieldColumnMapping.getJdbcType(getterMethod.getReturnType());
 	}
 
 	public FieldColumnMapping getMapping(String column) {
@@ -107,22 +145,6 @@ public class FieldColumnMapper {
 	
 	public Method getMethod(String name) {
 		return methodMap.get(name);
-	}
-	
-	public boolean isPrimaryKeyColumn(Field field) {
-		return field.isAnnotationPresent(Id.class);
-	}
-	
-	public boolean isPrimaryKeyColumn(Method method) {
-		return method.isAnnotationPresent(Id.class);
-	}
-	
-	public boolean isVersionColumn(Field field) {
-		return field.isAnnotationPresent(Version.class);
-	}
-	
-	public boolean isVersionColumn(Method method) {
-		return method.isAnnotationPresent(Version.class);
 	}
 	
 	public void mapAll() {
@@ -215,7 +237,7 @@ public class FieldColumnMapper {
 			.forEach(this::addMapping);
 	}
 	
-	void addMapping(FieldColumnMapping mapping) {
+	private void addMapping(FieldColumnMapping mapping) {
 		if (mapping == null) {
 			return;
 		}
@@ -255,27 +277,5 @@ public class FieldColumnMapper {
 		
 		PropertyMemberAccess propertyMember = new PropertyMemberAccess(getter, setter);
 		relatedMemberAccessMap.put(related.value(), propertyMember);
-	}
-	
-	private Method getPropertyMethod(Method method, boolean findGetter, Class<?> clazz) {
-		String methodName = method.getName();
-		String methodPrefixToFind = findGetter ? "get" : "set";
-		
-		boolean found = methodName.startsWith(methodPrefixToFind);
-		if (found) {
-			return method;
-		}
-		
-		try {
-			String prefixReplacement = findGetter ? "set" : "get";
-			methodName = methodPrefixToFind + methodName.replaceFirst(prefixReplacement, "");
-			
-			method = findGetter ? clazz.getDeclaredMethod(methodName) 
-					: clazz.getDeclaredMethod(methodName, method.getReturnType());
-			method.setAccessible(true);
-			return method;
-		} catch (NoSuchMethodException | SecurityException e) {
-			return null;
-		}
 	}
 }

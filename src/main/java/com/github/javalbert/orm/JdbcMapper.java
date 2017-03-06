@@ -67,9 +67,9 @@ public class JdbcMapper {
 	}
 	
 	private static void save(
-			Connection connection, 
-			Object object, 
-			JdbcStatement insertStatement, 
+			Connection connection,
+			Object object,
+			JdbcStatement insertStatement,
 			ClassRowMapping classRowMapping) 
 			throws SQLException {
 		PreparedStatement stmt = null;
@@ -93,20 +93,28 @@ public class JdbcMapper {
 		}
 	}
 	
+	/**
+	 * 
+	 * @param instance
+	 * @param columnMappings a list that is returned from
+	 * {@link JdbcMapper#getColumnMappings(ClassRowMapping, Select)} method
+	 * @param rs
+	 * @throws SQLException
+	 */
 	private static void setObjectProperties(
-			Object instance, 
-			List<FieldColumnMapping> columnMappings, 
-			ResultSetHelper rs) 
+			Object instance,
+			List<FieldColumnMapping> columnMappings,
+			ResultSetHelper rs)
 			throws SQLException {
-		for (FieldColumnMapping fieldColumnMapping : columnMappings) {
-			fieldColumnMapping.setFromResultSet(instance, rs);
+		for (int i = 0; i < columnMappings.size(); i++) {
+			columnMappings.get(i).setFromResultSet(instance, rs, i + 1);
 		}
 	}
 	
 	private static boolean refresh(
-			Connection connection, 
-			Object object, 
-			JdbcStatement selectStatement, 
+			Connection connection,
+			Object object,
+			JdbcStatement selectStatement,
 			List<FieldColumnMapping> columnMappings) throws SQLException {
 		PreparedStatement stmt = null;
 		ResultSetHelper rs = null;
@@ -135,10 +143,10 @@ public class JdbcMapper {
 	}
 
 	private static <T> T uniqueResultById(
-			Connection connection, 
-			Class<T> clazz, 
-			Serializable id, 
-			ClassRowMapping classRowMapping, 
+			Connection connection,
+			Class<T> clazz,
+			Serializable id,
+			ClassRowMapping classRowMapping,
 			JdbcStatement selectStatement) throws SQLException {
 		classRowMapping.setIdParameters(selectStatement, id);
 		T object = selectStatement.uniqueResult(connection, clazz);
@@ -270,6 +278,13 @@ public class JdbcMapper {
 		return graphEntity.getEntityClass().cast(object);
 	}
 	
+	/**
+	 * 
+	 * @param classRowMapping
+	 * @param select
+	 * @return a list of {@link FieldColumnMapping}s in the same order in the {@link SelectList}
+	 * in <b>select</b>
+	 */
 	public List<FieldColumnMapping> getColumnMappings(ClassRowMapping classRowMapping, Select select) {
 		List<FieldColumnMapping> columnMappings = new ArrayList<>();
 		Map<String, FieldColumnMapping> fieldColumnMappings = classRowMapping.getFieldColumnMappings();
