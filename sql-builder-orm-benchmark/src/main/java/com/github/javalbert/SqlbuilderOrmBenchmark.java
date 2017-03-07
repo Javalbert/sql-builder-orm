@@ -62,9 +62,9 @@ public class SqlbuilderOrmBenchmark {
 			row.setVarcharVal("Wing Street");
 			
 			try {
-				H2DB.createTables();
+				H2.createTables();
 				
-				connection = H2DB.getConnection();
+				connection = H2.getConnection();
 				
 				jdbcMapper.register(DataTypeHolder.class);
 				jdbcMapper.save(connection, row);
@@ -106,15 +106,15 @@ public class SqlbuilderOrmBenchmark {
 			sessionFactory = HibernateUtils.createSessionFactory();
 			
 			try {
-				H2DB.createTables();
+				H2.createTables();
 				
-				session = sessionFactory.openStatelessSession(H2DB.getConnection());
+				session = sessionFactory.openStatelessSession(H2.getConnection());
 				session.beginTransaction();
 				id = (int)session.insert(row);
 				session.getTransaction().commit();
 				session.close();
 				
-				session = sessionFactory.openStatelessSession(H2DB.getConnection());
+				session = sessionFactory.openStatelessSession(H2.getConnection());
 				session.beginTransaction();
 			} catch (ClassNotFoundException | SQLException e) {
 				e.printStackTrace();

@@ -21,7 +21,7 @@ import java.util.Deque;
 
 import com.github.javalbert.utils.jdbc.JdbcUtils;
 
-public final class H2DB {
+public final class H2 {
 	public static void createTables() throws ClassNotFoundException, SQLException {
 		executeStatements(
 				"CREATE TABLE IF NOT EXISTS DataTypeHolder ("
@@ -76,5 +76,5 @@ public final class H2DB {
 				"DROP TABLE IF EXISTS DataTypeHolder");
 	}
 	
-	private H2DB() {}
+	private H2() {}
 }

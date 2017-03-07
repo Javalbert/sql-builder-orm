@@ -23,7 +23,7 @@ import com.github.javalbert.orm.IsTimestamp;
 import com.github.javalbert.orm.Table;
 
 /**
- * <a href="http://www.h2database.com/html/datatypes.html">H2DB data types</a>
+ * <a href="http://www.h2database.com/html/datatypes.html">H2 data types</a>
  * @author Albert
  *
  */
