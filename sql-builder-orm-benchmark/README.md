@@ -4,8 +4,9 @@ Test environment: Intel Core i7-4790k, Windows 10 x64 + High Performance Power P
 
 | Benchmark | Mode | Samples | Score | Score error | Units |
 |---|---|---:|---:|---:|---|
-| testRetrieval | avgt | 200 | 4151.798 | 16.910 | ns/op |
-| testRetrievalHibernateStatelessSession | avgt | 200 | 4262.625 | 19.036 | ns/op |
+| testRetrievalHibernateStatelessSession | avgt | 200 | 4457.475 | 23.510 | ns/op |
+| testRetrievalJdbc | avgt | 200 | 620.240 | 1.411 | ns/op |
+| testRetrievalSqlbuilderOrm | avgt | 200 | 4369.478 | 17.966 | ns/op |
 <!---
 |  |  |  |  |  |  |
 --->
