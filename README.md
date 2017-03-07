@@ -14,7 +14,6 @@
 - Object graphs decided at runtime instead of compile time annotations
 
 ## TODO
-- Add JMH benchmarks (ReflectASM vs reflection, Hibernate)
 - Adding JUnit tests using Spock
 - Conform to ANSI SQL
 - Implement MERGE statement
