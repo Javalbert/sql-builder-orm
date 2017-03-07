@@ -38,7 +38,8 @@ public class PropertyAccessMapping extends FieldColumnMapping {
 	public Method getGetter() { return getter; }
 	public Method getSetter() { return setter; }
 
-	protected PropertyAccessMapping(String column, 
+	protected PropertyAccessMapping(
+			String column, 
 			String alias, 
 			Method getter, 
 			Method setter, 

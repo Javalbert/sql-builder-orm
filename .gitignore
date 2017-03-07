@@ -1,4 +1,8 @@
 /.settings/
+/sql-builder-orm-benchmark/.settings/
+/sql-builder-orm-benchmark/target/
+/sql-builder-orm-benchmark/.classpath
+/sql-builder-orm-benchmark/.project
 /target/
 /.classpath
 /.project

@@ -141,8 +141,7 @@ public class BatchResolver extends ObjectGraphResolver {
 			Object object = newEntityInstance();
 			
 			for (int i = 0; i < fieldColumnMappings.size(); i++) {
-				FieldColumnMapping fieldColumnMapping = fieldColumnMappings.get(i);
-				fieldColumnMapping.setFromResultSet(object, rs);
+				fieldColumnMappings.get(i).setFromResultSet(object, rs, i + 1);
 				
 				if (i == lastPrimaryKeyIndex) {
 					Object existing = objectCache.get(classRowMapping, object);
@@ -393,6 +392,13 @@ public class BatchResolver extends ObjectGraphResolver {
 			return from;
 		}
 		
+		/**
+		 * 
+		 * @param relatedClassMapping
+		 * @return a {@link SelectList} whose columns are in the same order as the
+		 * list that returns from calling {@link ClassRowMapping#getFieldColumnMappingList()}
+		 * on <b>relatedClassMapping</b>
+		 */
 		private SelectList createRelatedSelectList(ClassRowMapping relatedClassMapping) {
 			initFieldColumnMappings(relatedClassMapping);
 			
@@ -786,7 +792,7 @@ public class BatchResolver extends ObjectGraphResolver {
 			List<FieldColumnMapping> fieldColumnMappings = relatedObjectsSelect.getFieldColumnMappings();
 			for (int i = 0; i < fieldColumnMappings.size(); i++) {
 				FieldColumnMapping fieldColumnMapping = fieldColumnMappings.get(i);
-				Object value = fieldColumnMapping.getFromResultSet(rs);
+				Object value = fieldColumnMapping.getFromResultSet(rs, i + 1);
 				fieldColumnMapping.set(relatedObject, value);
 				
 				if (i != relatedObjectsSelect.getPrimaryKeyColumnIndex()) {
@@ -824,10 +830,12 @@ public class BatchResolver extends ObjectGraphResolver {
 				PreparedStatement stmt = statement.getPreparedStatement(connection);
 				
 				rs = new ResultSetHelper(stmt.executeQuery());
+
+				FieldColumnMapping joinColumnMapping = batch.getRelatedJoinColumnMapping();
+				int joinValueColumn = joinColumnMapping.getColumnIndex(rs);
+				
 				while (rs.next()) {
-					FieldColumnMapping joinColumnMapping = batch.getRelatedJoinColumnMapping();
-					
-					Object joinValue = joinColumnMapping.getFromResultSet(rs);
+					Object joinValue = joinColumnMapping.getFromResultSet(rs, joinValueColumn);
 					Object relatedObject = getRelatedObject(rs);
 					
 					batch.setReferences(relatedObject, joinValue, factory);
@@ -852,10 +860,12 @@ public class BatchResolver extends ObjectGraphResolver {
 				PreparedStatement stmt = statement.getPreparedStatement(connection);
 				
 				rs = new ResultSetHelper(stmt.executeQuery());
+
+				FieldColumnMapping joinColumnMapping = batch.getRelatedJoinColumnMapping();
+				int joinValueColumn = joinColumnMapping.getColumnIndex(rs);
+				
 				while (rs.next()) {
-					FieldColumnMapping joinColumnMapping = batch.getRelatedJoinColumnMapping();
-					
-					Object joinValue = joinColumnMapping.getFromResultSet(rs);
+					Object joinValue = joinColumnMapping.getFromResultSet(rs, joinValueColumn);
 					Object relatedObject = getRelatedObject(rs);
 					
 					batch.setReferences(relatedObject, joinValue, factory);
@@ -879,10 +889,12 @@ public class BatchResolver extends ObjectGraphResolver {
 				PreparedStatement stmt = statement.getPreparedStatement(connection);
 				
 				rs = new ResultSetHelper(stmt.executeQuery());
+				
+				FieldColumnMapping joinColumnMapping = batch.getRelatedJoinColumnMapping();
+				int joinValueColumn = joinColumnMapping.getColumnIndex(rs);
+				
 				while (rs.next()) {
-					FieldColumnMapping joinColumnMapping = batch.getRelatedJoinColumnMapping();
-					
-					Object joinValue = joinColumnMapping.getFromResultSet(rs);
+					Object joinValue = joinColumnMapping.getFromResultSet(rs, joinValueColumn);
 					Object relatedObject = getRelatedObject(rs);
 					
 					batch.setReferences(relatedObject, joinValue);
