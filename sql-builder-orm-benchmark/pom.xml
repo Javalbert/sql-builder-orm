@@ -47,6 +47,16 @@
 			<artifactId>sql-builder-orm</artifactId>
 			<version>${sql-builder-orm.version}</version>
 		</dependency>
+		<dependency>
+		    <groupId>org.hibernate</groupId>
+		    <artifactId>hibernate-core</artifactId>
+		    <version>${hibernate.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.slf4j</groupId>
+		    <artifactId>slf4j-simple</artifactId>
+		    <version>${slf4j.version}</version>
+		</dependency>
 	</dependencies>
 
 	<properties>
@@ -55,6 +65,8 @@
 		<javac.target>1.8</javac.target>
 		<uberjar.name>benchmarks</uberjar.name>
 		<h2.version>1.4.193</h2.version>
+		<hibernate.version>5.2.8.Final</hibernate.version>
+		<slf4j.version>1.7.24</slf4j.version>
 		<sql-builder-orm.version>0.1.0</sql-builder-orm.version>
 	</properties>
 
@@ -84,7 +96,8 @@
 							<finalName>${uberjar.name}</finalName>
 							<transformers>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>org.openjdk.jmh.Main</mainClass>
+<!-- 									<mainClass>org.openjdk.jmh.Main</mainClass> -->
+									<mainClass>com.github.javalbert.SqlbuilderOrmBenchmark</mainClass>
 								</transformer>
 							</transformers>
 							<filters>

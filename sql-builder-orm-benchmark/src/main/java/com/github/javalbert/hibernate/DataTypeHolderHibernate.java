@@ -10,17 +10,17 @@
  * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See
  * the License for the specific language governing permissions and limitations under the License.
  *******************************************************************************/
-package com.github.javalbert;
+package com.github.javalbert.hibernate;
 
 import java.math.BigDecimal;
 import java.util.Date;
 
-import com.github.javalbert.orm.Column;
-import com.github.javalbert.orm.Entity;
-import com.github.javalbert.orm.GeneratedValue;
-import com.github.javalbert.orm.Id;
-import com.github.javalbert.orm.IsTimestamp;
-import com.github.javalbert.orm.Table;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
  * <a href="http://www.h2database.com/html/datatypes.html">H2DB data types</a>
@@ -29,29 +29,28 @@ import com.github.javalbert.orm.Table;
  */
 @Entity
 @Table(name = "DataTypeHolder")
-public class DataTypeHolder {
+public class DataTypeHolderHibernate {
 	@Id
-	@GeneratedValue
-	@Column("id")
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "id")
 	private int id;
-	@Column("int_val")
+	@Column(name = "int_val")
 	private int intVal;
-	@Column("boolean_val")
+	@Column(name = "boolean_val")
 	private boolean booleanVal;
-	@Column("bigint_val")
+	@Column(name = "bigint_val")
 	private long bigintVal;
-	@Column("decimal_val")
+	@Column(name = "decimal_val")
 	private BigDecimal decimalVal;
-	@Column("double_val")
+	@Column(name = "double_val")
 	private double doubleVal;
-	@Column("real_val")
+	@Column(name = "real_val")
 	private float realVal;
-	@Column("date_val")
+	@Column(name = "date_val")
 	private Date dateVal;
-	@IsTimestamp
-	@Column("timestamp_val")
+	@Column(name = "timestamp_val")
 	private Date timestampVal;
-	@Column("varchar_val")
+	@Column(name = "varchar_val")
 	private String varcharVal;
 	
 	public int getId() {
@@ -115,9 +114,9 @@ public class DataTypeHolder {
 		this.varcharVal = varcharVal;
 	}
 	
-	public DataTypeHolder() {}
+	public DataTypeHolderHibernate() {}
 	
-	public DataTypeHolder(
+	public DataTypeHolderHibernate(
 			int id,
 			int intVal,
 			boolean booleanVal,

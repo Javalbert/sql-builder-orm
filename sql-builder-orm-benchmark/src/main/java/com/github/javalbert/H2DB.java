@@ -25,7 +25,7 @@ public final class H2DB {
 	public static void createTables() throws ClassNotFoundException, SQLException {
 		executeStatements(
 				"CREATE TABLE IF NOT EXISTS DataTypeHolder ("
-				+ "id INT PRIMARY KEY,"
+				+ "id IDENTITY,"
 				+ "int_val INT NOT NULL,"
 				+ "boolean_val BOOLEAN NOT NULL,"
 				+ "bigint_val BIGINT NOT NULL,"
@@ -41,7 +41,8 @@ public final class H2DB {
 	public static void deleteRecords() {
 		try {
 			executeStatements(
-					"DELETE FROM DataTypeHolder");
+					"DELETE FROM DataTypeHolder",
+					"ALTER TABLE DataTypeHolder ALTER COLUMN id RESTART WITH 1");
 		} catch (Exception ignored) {}
 	}
 	
