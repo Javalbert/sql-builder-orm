@@ -15,6 +15,8 @@ package com.github.javalbert;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -40,50 +42,9 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 import com.github.javalbert.hibernate.DataTypeHolderHibernate;
 import com.github.javalbert.hibernate.HibernateUtils;
 import com.github.javalbert.orm.JdbcMapper;
+import com.github.javalbert.utils.jdbc.JdbcUtils;
 
 public class SqlbuilderOrmBenchmark {
-	@State(Scope.Thread)
-	public static class RetrievalState {
-		public Connection connection;
-		public int id;
-		public JdbcMapper jdbcMapper = new JdbcMapper();
-		
-		@Setup(Level.Trial)
-		public void doSetup() {
-			DataTypeHolder row = new DataTypeHolder();
-			row.setIntVal(Integer.MAX_VALUE);
-			row.setBooleanVal(true);
-			row.setBigintVal(Long.MAX_VALUE);
-			row.setDecimalVal(BigDecimal.TEN);
-			row.setDoubleVal(Double.MAX_VALUE);
-			row.setRealVal(Float.MAX_VALUE);
-			row.setDateVal(Date.valueOf(LocalDate.of(2017, 3, 5)));
-			row.setDateVal(Timestamp.valueOf(LocalDateTime.of(2017, 3, 5, 20, 45)));
-			row.setVarcharVal("Wing Street");
-			
-			try {
-				H2.createTables();
-				
-				connection = H2.getConnection();
-				
-				jdbcMapper.register(DataTypeHolder.class);
-				jdbcMapper.save(connection, row);
-				id = row.getId();
-			} catch (ClassNotFoundException | SQLException e) {
-				e.printStackTrace();
-			}
-		}
-		
-		@TearDown(Level.Trial)
-        public void doTearDown() {
-			try {
-				connection.close();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-        }
-	}
-	
 	@State(Scope.Thread)
 	public static class RetrievalHibernateStatelessSessionState {
 		public int id;
@@ -100,7 +61,7 @@ public class SqlbuilderOrmBenchmark {
 			row.setDoubleVal(Double.MAX_VALUE);
 			row.setRealVal(Float.MAX_VALUE);
 			row.setDateVal(Date.valueOf(LocalDate.of(2017, 3, 5)));
-			row.setDateVal(Timestamp.valueOf(LocalDateTime.of(2017, 3, 5, 20, 45)));
+			row.setTimestampVal(Timestamp.valueOf(LocalDateTime.of(2017, 3, 5, 20, 45)));
 			row.setVarcharVal("Wing Street");
 			
 			sessionFactory = HibernateUtils.createSessionFactory();
@@ -129,6 +90,107 @@ public class SqlbuilderOrmBenchmark {
         }
 	}
 	
+	@State(Scope.Thread)
+	public static class RetrievalJdbcState {
+		public Connection connection;
+		public int id;
+		
+		@Setup(Level.Trial)
+		public void doSetup() {
+			PreparedStatement stmt = null;
+			ResultSet generatedKeys = null;
+			try {
+				H2.createTables();
+				
+				connection = H2.getConnection();
+				
+				stmt = connection.prepareStatement(
+						"INSERT INTO DataTypeHolder ("
+						+ "int_val,"
+						+ "boolean_val,"
+						+ "bigint_val,"
+						+ "decimal_val,"
+						+ "double_val,"
+						+ "real_val,"
+						+ "date_val,"
+						+ "timestamp_val,"
+						+ "varchar_val) "
+						+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+						PreparedStatement.RETURN_GENERATED_KEYS);
+				stmt.setInt(1, Integer.MAX_VALUE);
+				stmt.setBoolean(2, true);
+				stmt.setLong(3, Long.MAX_VALUE);
+				stmt.setBigDecimal(4, BigDecimal.TEN);
+				stmt.setDouble(5, Double.MAX_VALUE);
+				stmt.setFloat(6, Float.MAX_VALUE);
+				stmt.setDate(7, Date.valueOf(LocalDate.of(2017, 3, 5)));
+				stmt.setTimestamp(8, Timestamp.valueOf(LocalDateTime.of(2017, 3, 5, 20, 45)));
+				stmt.setString(9, "Wing Street");
+				stmt.executeUpdate();
+				
+				generatedKeys = stmt.getGeneratedKeys();
+				generatedKeys.next();
+				id = generatedKeys.getInt(1);
+			} catch (ClassNotFoundException | SQLException e) {
+				e.printStackTrace();
+			} finally {
+				JdbcUtils.closeQuietly(generatedKeys);
+				JdbcUtils.closeQuietly(stmt);
+			}
+		}
+		
+		@TearDown(Level.Trial)
+        public void doTearDown() {
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+        }
+	}
+	
+	@State(Scope.Thread)
+	public static class RetrievalSqlbuilderOrmState {
+		public Connection connection;
+		public int id;
+		public JdbcMapper jdbcMapper = new JdbcMapper();
+		
+		@Setup(Level.Trial)
+		public void doSetup() {
+			DataTypeHolder row = new DataTypeHolder();
+			row.setIntVal(Integer.MAX_VALUE);
+			row.setBooleanVal(true);
+			row.setBigintVal(Long.MAX_VALUE);
+			row.setDecimalVal(BigDecimal.TEN);
+			row.setDoubleVal(Double.MAX_VALUE);
+			row.setRealVal(Float.MAX_VALUE);
+			row.setDateVal(Date.valueOf(LocalDate.of(2017, 3, 5)));
+			row.setTimestampVal(Timestamp.valueOf(LocalDateTime.of(2017, 3, 5, 20, 45)));
+			row.setVarcharVal("Wing Street");
+			
+			try {
+				H2.createTables();
+				
+				connection = H2.getConnection();
+				
+				jdbcMapper.register(DataTypeHolder.class);
+				jdbcMapper.save(connection, row);
+				id = row.getId();
+			} catch (ClassNotFoundException | SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		@TearDown(Level.Trial)
+        public void doTearDown() {
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+        }
+	}
+	
 	public static void main(String[] args) throws RunnerException {
 		Options opt = new OptionsBuilder()
 				.include(SqlbuilderOrmBenchmark.class.getSimpleName())
@@ -143,14 +205,59 @@ public class SqlbuilderOrmBenchmark {
 	@OutputTimeUnit(TimeUnit.NANOSECONDS)
 	@BenchmarkMode(Mode.AverageTime)
     @Benchmark
-    public DataTypeHolder testRetrieval(RetrievalState state) throws SQLException {
-		return state.jdbcMapper.get(state.connection, DataTypeHolder.class, state.id);
+    public DataTypeHolderHibernate testRetrievalHibernateStatelessSession(RetrievalHibernateStatelessSessionState state) {
+		return (DataTypeHolderHibernate)state.session.get(DataTypeHolderHibernate.class, state.id);
     }
 	
 	@OutputTimeUnit(TimeUnit.NANOSECONDS)
 	@BenchmarkMode(Mode.AverageTime)
     @Benchmark
-    public DataTypeHolderHibernate testRetrievalHibernateStatelessSession(RetrievalHibernateStatelessSessionState state) {
-		return (DataTypeHolderHibernate)state.session.get(DataTypeHolderHibernate.class, state.id);
+    public DataTypeHolder testRetrievalJdbc(RetrievalJdbcState state) throws SQLException {
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		try {
+			stmt = state.connection.prepareStatement(
+					"SELECT"
+					+ " id,"
+					+ " int_val,"
+					+ " boolean_val,"
+					+ " bigint_val,"
+					+ " decimal_val,"
+					+ " double_val,"
+					+ " real_val,"
+					+ " date_val,"
+					+ " timestamp_val,"
+					+ " varchar_val"
+					+ " FROM DataTypeHolder"
+					+ " WHERE id = ?");
+			stmt.setInt(1, state.id);
+			rs = stmt.executeQuery();
+			rs.next();
+			
+			DataTypeHolder row = new DataTypeHolder();
+			row.setId(rs.getInt(1));
+			row.setIntVal(rs.getInt(2));
+			row.setBooleanVal(rs.getBoolean(3));
+			row.setBigintVal(rs.getLong(4));
+			row.setDecimalVal(rs.getBigDecimal(5));
+			row.setDoubleVal(rs.getDouble(6));
+			row.setRealVal(rs.getFloat(7));
+			row.setDateVal(rs.getDate(8));
+			row.setTimestampVal(rs.getTimestamp(9));
+			row.setVarcharVal(rs.getString(10));
+			return row;
+		} catch (SQLException e) {
+			throw e;
+		} finally {
+			JdbcUtils.closeQuietly(rs);
+			JdbcUtils.closeQuietly(stmt);
+		}
+    }
+	
+	@OutputTimeUnit(TimeUnit.NANOSECONDS)
+	@BenchmarkMode(Mode.AverageTime)
+    @Benchmark
+    public DataTypeHolder testRetrievalSqlbuilderOrm(RetrievalSqlbuilderOrmState state) throws SQLException {
+		return state.jdbcMapper.get(state.connection, DataTypeHolder.class, state.id);
     }
 }

@@ -13,29 +13,109 @@
 package com.github.javalbert.utils.reflection;
 
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.util.Date;
+
+import com.github.javalbert.reflection.ClassAccessFactory;
+import com.github.javalbert.reflection.FieldAccess;
 
 public class FieldMemberAccess implements MemberAccess {
-	private final Field field;
+	@SuppressWarnings("rawtypes")
+	private final FieldAccess fieldAccess;
+	private final int fieldIndex;
 	
-	public Field getField() { return field; }
-	
-	public FieldMemberAccess(Field field) {
-		this.field = field;
-	}
-	
-	@Override
-	public Object get(Object instance) {
-		try {
-			return field.get(instance);
-		} catch (IllegalArgumentException | IllegalAccessException e) {
-			return null;
-		}
+	public FieldMemberAccess(Class<?> clazz, Field field) {
+		fieldAccess = ClassAccessFactory.get(clazz);
+		fieldIndex = fieldAccess.fieldIndex(field.getName());
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public void set(Object instance, Object value) {
-		try {
-			field.set(instance, value);
-		} catch (IllegalArgumentException | IllegalAccessException e) {}
+	public Object get(Object instance) {
+		return fieldAccess.getField(instance, fieldIndex);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void set(Object instance, Object x) {
+		fieldAccess.setField(instance, fieldIndex, x);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void setBoolean(Object instance, boolean x) {
+		fieldAccess.setBooleanField(instance, fieldIndex, x);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void setDouble(Object instance, double x) {
+		fieldAccess.setDoubleField(instance, fieldIndex, x);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void setFloat(Object instance, float x) {
+		fieldAccess.setFloatField(instance, fieldIndex, x);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void setInt(Object instance, int x) {
+		fieldAccess.setIntField(instance, fieldIndex, x);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void setLong(Object instance, long x) {
+		fieldAccess.setLongField(instance, fieldIndex, x);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void setBoxedBoolean(Object instance, Boolean x) {
+		fieldAccess.setBoxedBooleanField(instance, fieldIndex, x);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void setBoxedDouble(Object instance, Double x) {
+		fieldAccess.setBoxedDoubleField(instance, fieldIndex, x);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void setBoxedFloat(Object instance, Float x) {
+		fieldAccess.setBoxedFloatField(instance, fieldIndex, x);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void setBoxedInt(Object instance, Integer x) {
+		fieldAccess.setBoxedIntField(instance, fieldIndex, x);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void setBoxedLong(Object instance, Long x) {
+		fieldAccess.setBoxedLongField(instance, fieldIndex, x);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void setBigDecimal(Object instance, BigDecimal x) {
+		fieldAccess.setBigDecimalField(instance, fieldIndex, x);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void setDate(Object instance, Date x) {
+		fieldAccess.setDateField(instance, fieldIndex, x);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void setString(Object instance, String x) {
+		fieldAccess.setStringField(instance, fieldIndex, x);
 	}
 }

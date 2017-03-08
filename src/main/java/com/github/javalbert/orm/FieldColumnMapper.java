@@ -12,14 +12,18 @@
  *******************************************************************************/
 package com.github.javalbert.orm;
 
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.github.javalbert.utils.reflection.FieldMemberAccess;
 import com.github.javalbert.utils.reflection.MemberAccess;
@@ -32,8 +36,15 @@ public class FieldColumnMapper {
 		return aliasAnnotation != null ? Strings.safeTrim(aliasAnnotation.value()) : null;
 	}
 	
-	public static String getAlias(Method method) {
-		Alias aliasAnnotation = method.getAnnotation(Alias.class);
+	public static String getAlias(PropertyDescriptor propertyDescriptor) {
+		Alias aliasAnnotation = Optional.ofNullable(propertyDescriptor.getReadMethod())
+				.map(m -> m.getAnnotation(Alias.class))
+				.orElse(null);
+		if (aliasAnnotation == null) {
+			aliasAnnotation = Optional.ofNullable(propertyDescriptor.getWriteMethod())
+					.map(m -> m.getAnnotation(Alias.class))
+					.orElse(null);
+		}
 		return aliasAnnotation != null ? Strings.safeTrim(aliasAnnotation.value()) : null;
 	}
 	
@@ -50,9 +61,24 @@ public class FieldColumnMapper {
 		return columnName;
 	}
 	
-	public static String getColumnName(Method method) {
-		Column column = method.getAnnotation(Column.class);
-		return column != null ? Strings.safeTrim(column.value()) : null;
+	public static String getColumnName(PropertyDescriptor propertyDescriptor) {
+		Column column = Optional.ofNullable(propertyDescriptor.getReadMethod())
+				.map(m -> m.getAnnotation(Column.class))
+				.orElse(null);
+		if (column == null) {
+			column = Optional.ofNullable(propertyDescriptor.getWriteMethod())
+					.map(m -> m.getAnnotation(Column.class))
+					.orElse(null);
+		}
+		if (column == null) {
+			return null;
+		}
+		
+		String columnName = Strings.safeTrim(column.value());
+		if (Strings.isNullOrEmpty(columnName)) {
+			columnName = propertyDescriptor.getName();
+		}
+		return columnName;
 	}
 	
 	public static int getJdbcType(Field field) {
@@ -60,56 +86,47 @@ public class FieldColumnMapper {
 		return timestamp ? FieldColumnMapping.JDBC_TYPE_TIMESTAMP : FieldColumnMapping.getJdbcType(field.getType());
 	}
 	
-	public static int getJdbcType(Method getterMethod) {
-		boolean timestamp = getterMethod.isAnnotationPresent(IsTimestamp.class);
-		return timestamp ? FieldColumnMapping.JDBC_TYPE_TIMESTAMP : FieldColumnMapping.getJdbcType(getterMethod.getReturnType());
+	public static int getJdbcType(PropertyDescriptor propertyDescriptor) {
+		boolean timestamp = Optional.ofNullable(propertyDescriptor.getReadMethod())
+				.map(m -> m.isAnnotationPresent(IsTimestamp.class))
+				.orElse(false) || Optional.ofNullable(propertyDescriptor.getWriteMethod())
+				.map(m -> m.isAnnotationPresent(IsTimestamp.class))
+				.orElse(false);
+		return timestamp ? FieldColumnMapping.JDBC_TYPE_TIMESTAMP : FieldColumnMapping.getJdbcType(propertyDescriptor.getPropertyType());
 	}
 	
 	public static boolean isPrimaryKeyColumn(Field field) {
 		return field.isAnnotationPresent(Id.class);
 	}
 	
-	public static boolean isPrimaryKeyColumn(Method method) {
-		return method.isAnnotationPresent(Id.class);
+	public static boolean isPrimaryKeyColumn(PropertyDescriptor propertyDescriptor) {
+		return Optional.ofNullable(propertyDescriptor.getReadMethod())
+				.map(m -> m.isAnnotationPresent(Id.class))
+				.orElse(false) || Optional.ofNullable(propertyDescriptor.getWriteMethod())
+				.map(m -> m.isAnnotationPresent(Id.class))
+				.orElse(false);
 	}
 	
 	public static boolean isVersionColumn(Field field) {
 		return field.isAnnotationPresent(Version.class);
 	}
 	
-	public static boolean isVersionColumn(Method method) {
-		return method.isAnnotationPresent(Version.class);
+	public static boolean isVersionColumn(PropertyDescriptor propertyDescriptor) {
+		return Optional.ofNullable(propertyDescriptor.getReadMethod())
+				.map(m -> m.isAnnotationPresent(Version.class))
+				.orElse(false) || Optional.ofNullable(propertyDescriptor.getWriteMethod())
+				.map(m -> m.isAnnotationPresent(Version.class))
+				.orElse(false);
 	}
 	
-	private static Method getPropertyMethod(Method method, boolean findGetter, Class<?> clazz) {
-		String methodName = method.getName();
-		String methodPrefixToFind = findGetter ? "get" : "set";
-		
-		boolean found = methodName.startsWith(methodPrefixToFind);
-		if (found) {
-			return method;
-		}
-		
-		try {
-			String prefixReplacement = findGetter ? "set" : "get";
-			methodName = methodPrefixToFind + methodName.replaceFirst(prefixReplacement, "");
-			
-			method = findGetter ? clazz.getDeclaredMethod(methodName) 
-					: clazz.getDeclaredMethod(methodName, method.getReturnType());
-			method.setAccessible(true);
-			return method;
-		} catch (NoSuchMethodException | SecurityException e) {
-			return null;
-		}
-	}
-	
+	private final Class<?> clazz;
 	private final Map<String, FieldColumnMapping> fieldAliasMappings = new HashMap<>();
 	private final List<FieldColumnMapping> fieldColumnMappingList = new ArrayList<>();
 	private final Map<String, FieldColumnMapping> fieldColumnMappings = new HashMap<>();
 	private final Map<String, Field> fieldMap = new HashMap<>();
 	private final List<Field> fields;
-	private final Map<String, Method> methodMap = new HashMap<>();
-	private final List<Method> methods;
+	private final Map<String, PropertyDescriptor> propertyDescriptorMap = new HashMap<>();
+	private final List<PropertyDescriptor> propertyDescriptors;
 	private final Map<String, MemberAccess> relatedMemberAccessMap = new HashMap<>();
 	
 	public Map<String, FieldColumnMapping> getFieldAliasMappings() {
@@ -129,10 +146,18 @@ public class FieldColumnMapper {
 	}
 	
 	public FieldColumnMapper(Class<?> clazz) {
+		this.clazz = clazz;
+		
 		fields = Collections.unmodifiableList(Arrays.asList(clazz.getDeclaredFields()));
 		fields.forEach(field -> fieldMap.put(field.getName(), field));
-		methods = Collections.unmodifiableList(Arrays.asList(clazz.getDeclaredMethods()));
-		methods.forEach(method -> methodMap.put(method.getName(), method));
+		
+		try {
+			BeanInfo beanInfo = Introspector.getBeanInfo(clazz);
+			propertyDescriptors = Collections.unmodifiableList(Arrays.asList(beanInfo.getPropertyDescriptors()));
+			propertyDescriptors.forEach(prop -> propertyDescriptorMap.put(prop.getName(), prop));
+		} catch (IntrospectionException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	public Field getField(String name) {
@@ -143,8 +168,8 @@ public class FieldColumnMapper {
 		return fieldColumnMappings.get(column);
 	}
 	
-	public Method getMethod(String name) {
-		return methodMap.get(name);
+	public PropertyDescriptor getProperty(String name) {
+		return propertyDescriptorMap.get(name);
 	}
 	
 	public void mapAll() {
@@ -180,59 +205,58 @@ public class FieldColumnMapper {
 		final int jdbcType = getJdbcType(field);
 		
 		return new FieldAccessMapping(
-				columnName, 
-				alias, 
-				field, 
-				jdbcType, 
-				primaryKey, 
-				field.getAnnotation(GeneratedValue.class), 
+				clazz,
+				columnName,
+				alias,
+				field,
+				jdbcType,
+				primaryKey,
+				field.getAnnotation(GeneratedValue.class),
 				version);
 	}
 	
-	public FieldColumnMapping mapPropertyToColumn(Method method) {
-		method.setAccessible(true);
+	public FieldColumnMapping mapPropertyToColumn(PropertyDescriptor propertyDescriptor) {
+		addRelatedPropertyMember(propertyDescriptor);
 		
-		final Class<?> clazz = method.getDeclaringClass();
+		final String columnName = getColumnName(propertyDescriptor);
+		final String alias = getAlias(propertyDescriptor);
 		
-		final Method getter = getPropertyMethod(method, true, clazz);
-		final Method setter = getPropertyMethod(method, false, clazz);
-		
-		addRelatedPropertyMember(method, getter, setter);
-		
-		final String columnName = getColumnName(method);
-		final String alias = getAlias(method);
-
-		if (method.isAnnotationPresent(Column.class) && Strings.isNullOrEmpty(columnName)) {
-			throw new IllegalArgumentException("property (" + method.getName() 
-					+ ")'s @Column annotation's name is null or empty");
-		}
 		if (Strings.isNullOrEmpty(columnName) && Strings.isNullOrEmpty(alias)) {
 			return null;
 		}
 		
-		boolean primaryKey = isPrimaryKeyColumn(method);
-		boolean version = isVersionColumn(method);
+		boolean primaryKey = isPrimaryKeyColumn(propertyDescriptor);
+		boolean version = isVersionColumn(propertyDescriptor);
 
 		if (primaryKey && primaryKey == version) {
-			throw new IllegalArgumentException("property (" + method.getName()
+			throw new IllegalArgumentException("property (" + propertyDescriptor.getName()
 					+ ") cannot have @Id and @Version annotations at the same time");
 		}
 
-		final int jdbcType = getJdbcType(getter);
+		final int jdbcType = getJdbcType(propertyDescriptor);
+		
+		GeneratedValue generatedValue = Optional.ofNullable(propertyDescriptor.getReadMethod())
+				.map(m -> m.getAnnotation(GeneratedValue.class))
+				.orElse(null);
+		if (generatedValue == null) {
+			generatedValue = Optional.ofNullable(propertyDescriptor.getWriteMethod())
+					.map(m -> m.getAnnotation(GeneratedValue.class))
+					.orElse(null);
+		}
 		
 		return new PropertyAccessMapping(
-				columnName, 
-				alias, 
-				getter, 
-				setter, 
-				jdbcType, 
-				primaryKey, 
-				method.getAnnotation(GeneratedValue.class), 
+				clazz,
+				columnName,
+				alias,
+				propertyDescriptor,
+				jdbcType,
+				primaryKey,
+				generatedValue,
 				version);
 	}
 	
 	public void mapPropertiesToColumns() {
-		methods.stream()
+		propertyDescriptors.stream()
 			.map(this::mapPropertyToColumn)
 			.forEach(this::addMapping);
 	}
@@ -262,20 +286,25 @@ public class FieldColumnMapper {
 			return;
 		}
 		
-		FieldMemberAccess fieldMember = new FieldMemberAccess(field);
+		FieldMemberAccess fieldMember = new FieldMemberAccess(clazz, field);
 		relatedMemberAccessMap.put(related.value(), fieldMember);
 	}
 	
-	private void addRelatedPropertyMember(
-			Method method, 
-			Method getter, 
-			Method setter) {
-		Related related = method.getAnnotation(Related.class);
+	private void addRelatedPropertyMember(PropertyDescriptor propertyDescriptor) {
+		Related related = Optional.ofNullable(propertyDescriptor.getReadMethod())
+				.map(m -> m.getAnnotation(Related.class))
+				.orElse(null);
+		
+		if (related == null) {
+			related = Optional.ofNullable(propertyDescriptor.getWriteMethod())
+					.map(m -> m.getAnnotation(Related.class))
+					.orElse(null);
+		}
 		if (related == null) {
 			return;
 		}
 		
-		PropertyMemberAccess propertyMember = new PropertyMemberAccess(getter, setter);
+		PropertyMemberAccess propertyMember = new PropertyMemberAccess(clazz, propertyDescriptor);
 		relatedMemberAccessMap.put(related.value(), propertyMember);
 	}
 }

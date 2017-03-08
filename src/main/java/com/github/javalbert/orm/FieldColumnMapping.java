@@ -121,18 +121,23 @@ public abstract class FieldColumnMapping implements MemberAccess {
 	}
 	
 	public void setFromResultSet(Object instance, ResultSetHelper rs, int column) throws SQLException {
-		Object value = getFromResultSet(rs, column);
-		set(instance, value);
+		switch (jdbcType) {
+			case JDBC_TYPE_BIG_DECIMAL: setBigDecimal(instance, rs.getBigDecimal(column)); break;
+			case JDBC_TYPE_BOOLEAN: setBoxedBoolean(instance, rs.getBoolean2(column)); break;
+			case JDBC_TYPE_DATE: setDate(instance, rs.getDate2(column)); break;
+			case JDBC_TYPE_DOUBLE: setBoxedDouble(instance, rs.getDouble2(column)); break;
+			case JDBC_TYPE_FLOAT: setBoxedFloat(instance, rs.getFloat2(column)); break;
+			case JDBC_TYPE_INTEGER: setBoxedInt(instance, rs.getInt2(column)); break;
+			case JDBC_TYPE_LONG: setBoxedLong(instance, rs.getLong2(column)); break;
+			case JDBC_TYPE_PRIMITIVE_BOOLEAN: setBoolean(instance, rs.getBoolean(column)); break;
+			case JDBC_TYPE_PRIMITIVE_DOUBLE: setDouble(instance, rs.getDouble(column)); break;
+			case JDBC_TYPE_PRIMITIVE_FLOAT: setFloat(instance, rs.getFloat(column)); break;
+			case JDBC_TYPE_PRIMITIVE_INT: setInt(instance, rs.getInt(column)); break;
+			case JDBC_TYPE_PRIMITIVE_LONG: setLong(instance, rs.getLong(column)); break;
+			case JDBC_TYPE_STRING: setString(instance, rs.getString(column)); break;
+			case JDBC_TYPE_TIMESTAMP: setDate(instance, rs.getTimestamp2(column)); break;
+		}
 	}
-	
-//	public void setFromResultSet(Object instance, ResultSetHelper rs) throws SQLException {
-//		setFromResultSet(instance, rs, Strings.isNullOrEmpty(column) ? alias : column);
-//	}
-
-//	public void setFromResultSet(Object instance, ResultSetHelper rs, String columnLabel) throws SQLException {
-//		Object value = getFromResultSet(rs, columnLabel);
-//		set(instance, value);
-//	}
 
 	@Override
 	public String toString() {

@@ -73,18 +73,14 @@ public class JdbcMapper {
 			ClassRowMapping classRowMapping) 
 			throws SQLException {
 		PreparedStatement stmt = null;
-		ResultSet rs = null;
+		ResultSetHelper rs = null;
 		try {
 			stmt = insertStatement.createPreparedStatement(connection, classRowMapping.isAutoIncrementId());
 			stmt.executeUpdate();
 			
 			if (classRowMapping.isAutoIncrementId()) {
-				rs = stmt.getGeneratedKeys();
-				
-				if (rs.next()) {
-					int id = rs.getInt(1);
-					classRowMapping.setAutoIncrementId(object, id);
-				}
+				rs = new ResultSetHelper(stmt.getGeneratedKeys());
+				classRowMapping.setAutoIncrementId(object, rs);
 			}
 		} catch (SQLException e) {
 			JdbcUtils.closeQuietly(rs);
