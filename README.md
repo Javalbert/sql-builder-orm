@@ -20,5 +20,4 @@
 - Implement nested JOINs
 - Implement new Java 8 features (Date and Time API, Streams API, lamda functions)
 - Publish project to The Central Repository
-- Replace usage of reflection API with ReflectASM library
 - Write Javadoc (thread-safety)
