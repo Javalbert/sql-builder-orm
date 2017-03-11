@@ -430,9 +430,9 @@ public class JdbcStatement {
 	 * @throws SQLException
 	 */
 	public <T> Collection<T> toJdbcDataTypeCollection(
-			Connection connection, 
-			Class<T> clazz, 
-			Collection<T> collection) 
+			Connection connection,
+			Class<T> clazz,
+			Collection<T> collection)
 			throws SQLException {
 		PreparedStatement stmt = null;
 		ResultSetHelper rs = null;
@@ -451,17 +451,17 @@ public class JdbcStatement {
 	}
 
 	public <T> Collection<T> toCollection(
-			Class<T> clazz, 
-			ResultSet rs, 
-			Collection<T> collection) 
+			Class<T> clazz,
+			ResultSet rs,
+			Collection<T> collection)
 			throws SQLException {
 		return jdbcMapper.toCollection(clazz, (Select)sqlStatement, rs, collection);
 	}
 	
 	public <T> Collection<T> toCollection(
-			Connection connection, 
-			Class<T> clazz, 
-			Collection<T> collection) 
+			Connection connection,
+			Class<T> clazz,
+			Collection<T> collection)
 			throws SQLException {
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
@@ -480,10 +480,10 @@ public class JdbcStatement {
 	}
 	
 	public <T> Collection<T> toCollection(
-			Connection connection, 
-			GraphEntity<T> graphEntity, 
-			Collection<T> collection, 
-			ObjectGraphResolver graphResolver) 
+			Connection connection,
+			GraphEntity<T> graphEntity,
+			Collection<T> collection,
+			ObjectGraphResolver graphResolver)
 			throws SQLException {
 		return graphResolver.toCollection(connection, this, graphEntity, collection);
 	}
@@ -543,6 +543,22 @@ public class JdbcStatement {
 			rs = stmt.executeQuery();
 			
 			return jdbcMapper.toMap(clazz, (Select)sqlStatement, rs, map, mapKeyName);
+		} catch (SQLException e) {
+			throw e;
+		} finally {
+			JdbcUtils.closeQuietly(rs);
+			close(stmt);
+		}
+	}
+	
+	public List<Object[]> toResultList(Connection connection) throws SQLException {
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			stmt = getPreparedStatement(connection);
+			rs = stmt.executeQuery();
+			return toResultList(rs);
 		} catch (SQLException e) {
 			throw e;
 		} finally {
@@ -1074,6 +1090,20 @@ public class JdbcStatement {
 			param.setValue(x);
 		}
 		return this;
+	}
+	
+	private List<Object[]> toResultList(ResultSet rs) throws SQLException {
+		final int columnCount = rs.getMetaData().getColumnCount();
+		
+		List<Object[]> resultList = new ArrayList<>();
+		while (rs.next()) {
+			Object[] row = new Object[columnCount];
+			for (int i = 0; i < columnCount; i++) {
+				row[i] = rs.getObject(i + 1);
+			}
+			resultList.add(row);
+		}
+		return resultList;
 	}
 	
 	/* END Private methods */

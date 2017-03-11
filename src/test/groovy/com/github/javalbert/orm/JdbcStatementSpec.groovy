@@ -9,6 +9,7 @@ import com.github.javalbert.orm.JdbcMapper
 import com.github.javalbert.orm.JdbcStatement
 import com.github.javalbert.sqlbuilder.ColumnList
 import com.github.javalbert.sqlbuilder.ColumnValues
+import com.github.javalbert.sqlbuilder.Condition
 import com.github.javalbert.sqlbuilder.From
 import com.github.javalbert.sqlbuilder.Insert
 import com.github.javalbert.sqlbuilder.Predicate
@@ -18,9 +19,13 @@ import com.github.javalbert.sqlbuilder.SetValue
 import com.github.javalbert.sqlbuilder.SetValues
 import com.github.javalbert.sqlbuilder.Update
 import com.github.javalbert.sqlbuilder.Where
+import com.github.javalbert.sqlbuilder.With
 import com.github.javalbert.utils.jdbc.JdbcUtils
-
+import com.github.javalbert.domain.Customer
 import com.github.javalbert.domain.DataTypeHolder
+import com.github.javalbert.domain.Order
+import com.github.javalbert.domain.Product
+import com.github.javalbert.domain.Store
 import com.github.javalbert.domain.User
 import com.github.javalbert.h2.H2
 import com.github.javalbert.utils.DateUtils
@@ -437,5 +442,104 @@ class JdbcStatementSpec extends Specification {
 		'date_val'	|	Date.class	||	[ DateUtils.newDate(2000, 8, 24), DateUtils.newDate(2013, 2, 23), DateUtils.newDate(1999, 8, 12), DateUtils.newDate(2008, 2, 1), DateUtils.newDate(2013, 8, 6) ]
 		'timestamp_val'	|	Timestamp.class	||	[ DateUtils.newDate(2002, 11, 28, 17, 0), DateUtils.newDate(2017, 8, 28, 11, 4), DateUtils.newDate(2016, 5, 19, 22, 31), DateUtils.newDate(1992, 1, 15, 8, 59), DateUtils.newDate(2000, 3, 15, 22, 53) ]
 		'varchar_val'	|	String.class	||	[ 'd', 'a', 'b', 'c', 'e' ]
+	}
+	
+	def 'Execute SELECT statement with multiple instances of the same IN parameter'() {
+		given: "SELECT statement which gets a customer's bought products joined by other products by product name and in similiar prices"
+		mapper.register(Customer.class)
+		mapper.register(Store.class)
+		mapper.register(Order.class)
+		mapper.register(Product.class)
+		Select select = new Select()
+		.list(new SelectList().tableAlias('bprod').column('order_id')
+			.tableAlias('bprod').column('product_id')
+			.tableAlias('bprod').column('product_name')
+			.tableAlias('bprod').column('price')
+			.tableAlias('other_prod').column('order_id')
+			.tableAlias('other_prod').column('product_id')
+			.tableAlias('other_prod').column('product_name')
+			.tableAlias('other_prod').column('price')
+		).from(new From().inlineView(
+			new Select().list(new SelectList()
+				.tableAlias('bprod').column('order_id')
+				.tableAlias('bprod').column('product_id')
+				.tableAlias('bprod').column('product_name')
+				.tableAlias('bprod').column('price')
+				).from(new From().tableName('Product').as('bprod')
+				).where(new Where().predicate(new Predicate().tableAlias('bprod').column('price').in().param('prices'))
+				.and().predicate(new Predicate().exists().subquery(
+					new Select().list(new SelectList().column('*')
+					).from(new From().tableName('Orders').as('ord')
+					).where(new Where().predicate(new Predicate().tableAlias('bprod').column('order_id').eq().tableAlias('ord').column('order_id')
+					).and().predicate(new Predicate().exists().subquery(
+						new Select().list(new SelectList().column('*')
+						).from(new From().tableName('Customer').as('subject')
+						).where(new Where().predicate(new Predicate().tableAlias('ord').column('customer_id').eq().tableAlias('subject').column('customer_id')
+						).and().predicate(new Predicate().tableAlias('subject').column('full_name').eq().param('customerName')
+							)
+						)
+						)
+						)
+					)
+					)
+				)
+				)
+			).as('bprod').innerJoin().tableName('Product').as('other_prod')
+			.on(new Condition().predicate(new Predicate().tableAlias('bprod').column('product_name').eq().tableAlias('other_prod').column('product_name'))
+			)
+		).where(new Where().predicate(new Predicate().tableAlias('other_prod').column('price').in().param('prices'))
+			.and().predicate(new Predicate().tableAlias('other_prod').column('product_id').noteq().tableAlias('bprod').column('product_id'))
+		)
+		
+		and: 'a Store, Customer records, their Orders, and Products'
+		H2.deleteRecords()
+		Connection conn = null
+		try {
+			conn = H2.getConnection()
+			
+			mapper.save(conn, new Store(''))
+			
+			mapper.save(conn, new Customer('Albert Chan'))
+			mapper.save(conn, new Order(1, 1))
+			mapper.save(conn, new Product(1, 'Skipping Rope', new BigDecimal('7.99')))
+			mapper.save(conn, new Product(1, 'Chinese Candy', new BigDecimal('13.99')))
+			
+			mapper.save(conn, new Customer('Patrick Pu'))
+			mapper.save(conn, new Order(2, 1))
+			mapper.save(conn, new Product(2, 'Skipping Rope', new BigDecimal('189.00')))
+			mapper.save(conn, new Product(2, 'Chinese Candy', new BigDecimal('7.99')))
+			mapper.save(conn, new Product(2, 'Shawarma', new BigDecimal('13.99')))
+			
+			mapper.save(conn, new Customer('Raymond Ren'))
+			mapper.save(conn, new Order(3, 1))
+			mapper.save(conn, new Product(3, 'Chinese Candy', new BigDecimal('13.99')))
+			
+			mapper.save(conn, new Customer('Sandor Balo'))
+			mapper.save(conn, new Order(4, 1))
+			mapper.save(conn, new Product(4, 'Skipping Rope', new BigDecimal('13.99')))
+			mapper.save(conn, new Product(4, 'GTX 1060', new BigDecimal('189.00')))
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		when: 'SQL statement is executed'
+		List<Object[]> resultList = null
+		try {
+			conn = H2.getConnection()
+			resultList = mapper.createQuery(select)
+					.setString('customerName', 'Albert Chan')
+					.setBigDecimals('prices', Arrays.asList(new BigDecimal('7.99'), new BigDecimal('13.99')))
+					.toResultList(conn)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		then: '"Chinese Candy" product matches with 2 other products from other orders'
+		int otherOrderId = 4
+		resultList[0][otherOrderId] == 2
+		resultList[1][otherOrderId] == 3
+		
+		and: '"Skipping Rope" product matches with 1 other product with different price'
+		resultList[2][otherOrderId] == 4
 	}
 }
