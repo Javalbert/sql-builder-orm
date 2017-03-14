@@ -22,5 +22,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface Related {
+	/**
+	 * 
+	 * @return a label for the field or property whose type is a related entity
+	 */
 	String value();
 }

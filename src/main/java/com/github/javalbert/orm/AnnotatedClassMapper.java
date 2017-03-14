@@ -143,18 +143,6 @@ public class AnnotatedClassMapper extends ClassRowMapper {
 		mapPropertiesToColumns();
 	}
 	
-	public Field getField(String name) {
-		return fieldMap.get(name);
-	}
-
-	public FieldColumnMapping getMapping(String column) {
-		return fieldColumnMappings.get(column);
-	}
-	
-	public PropertyDescriptor getProperty(String name) {
-		return propertyDescriptorMap.get(name);
-	}
-	
 	public void mapFieldsToColumns() {
 		fields.stream()
 			.map(this::mapFieldToColumn)
@@ -189,8 +177,14 @@ public class AnnotatedClassMapper extends ClassRowMapper {
 				field,
 				jdbcType,
 				primaryKey,
-				field.getAnnotation(GeneratedValue.class),
+				primaryKey && field.isAnnotationPresent(GeneratedValue.class),
 				version);
+	}
+	
+	public void mapPropertiesToColumns() {
+		propertyDescriptors.stream()
+			.map(this::mapPropertyToColumn)
+			.forEach(this::addMapping);
 	}
 	
 	public FieldColumnMapping mapPropertyToColumn(PropertyDescriptor propertyDescriptor) {
@@ -229,43 +223,16 @@ public class AnnotatedClassMapper extends ClassRowMapper {
 				propertyDescriptor,
 				jdbcType,
 				primaryKey,
-				generatedValue,
+				primaryKey && generatedValue != null,
 				version);
-	}
-	
-	public void mapPropertiesToColumns() {
-		propertyDescriptors.stream()
-			.map(this::mapPropertyToColumn)
-			.forEach(this::addMapping);
-	}
-	
-	private void addMapping(FieldColumnMapping mapping) {
-		if (mapping == null) {
-			return;
-		}
-		
-		if (!Strings.isNullOrEmpty(mapping.getColumn())) {
-			if (fieldColumnMappings.containsKey(mapping.getColumn())) {
-				throw new IllegalArgumentException("Cannot add mapping because column name (" 
-						+ mapping.getColumn() + ") is already defined");
-			}
-			
-			fieldColumnMappingList.add(mapping);
-			fieldColumnMappings.put(mapping.getColumn(), mapping);
-		}
-		if (!Strings.isNullOrEmpty(mapping.getAlias())) {
-			fieldAliasMappings.put(mapping.getAlias(), mapping);
-		}
 	}
 	
 	private void addRelatedMemberAccess(Field field) {
 		Related related = field.getAnnotation(Related.class);
-		if (related == null) {
-			return;
+		if (related != null) {
+			FieldMemberAccess fieldMember = new FieldMemberAccess(clazz, field);
+			relatedMemberAccessMap.put(related.value(), fieldMember);
 		}
-		
-		FieldMemberAccess fieldMember = new FieldMemberAccess(clazz, field);
-		relatedMemberAccessMap.put(related.value(), fieldMember);
 	}
 	
 	private void addRelatedPropertyMember(PropertyDescriptor propertyDescriptor) {

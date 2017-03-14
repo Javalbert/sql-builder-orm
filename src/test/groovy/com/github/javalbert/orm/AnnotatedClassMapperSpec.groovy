@@ -14,8 +14,8 @@ import com.github.javalbert.orm.FieldColumnMapping
 import spock.lang.Specification
 
 class AnnotatedClassMapperSpec extends Specification {
-	private AnnotatedClassMapper mapper
-	private AnnotatedClassMapper mapper2
+	private ClassRowMapper mapper
+	private ClassRowMapper mapper2
 	
 	def setup() {
 		mapper = new AnnotatedClassMapper(Person.class)

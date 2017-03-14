@@ -49,12 +49,12 @@ public class PropertyAccessMapping extends FieldColumnMapping {
 	
 	protected PropertyAccessMapping(
 			Class<?> clazz,
-			String column, 
-			String alias, 
+			String column,
+			String alias,
 			PropertyDescriptor propertyDescriptor,
-			int jdbcType, 
-			boolean primaryKey, 
-			GeneratedValue generatedValue, 
+			int jdbcType,
+			boolean primaryKey,
+			boolean autoIncrementId,
 			boolean version) {
 		super(
 				column,
@@ -62,7 +62,7 @@ public class PropertyAccessMapping extends FieldColumnMapping {
 				jdbcType,
 				initMapKeyName(column, alias, propertyDescriptor),
 				primaryKey,
-				generatedValue,
+				autoIncrementId,
 				version);
 		propertyAccess = ClassAccessFactory.get(clazz);
 		propertyIndex = propertyAccess.propertyIndex(propertyDescriptor.getName());

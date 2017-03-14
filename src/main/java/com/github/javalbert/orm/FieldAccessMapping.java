@@ -42,9 +42,9 @@ public class FieldAccessMapping extends FieldColumnMapping {
 			Field field, 
 			int jdbcType, 
 			boolean primaryKey, 
-			GeneratedValue generatedValue, 
+			boolean autoIncrementId, 
 			boolean version) {
-		super(column, alias, jdbcType, initMapKeyName(column, alias, field), primaryKey, generatedValue, version);
+		super(column, alias, jdbcType, initMapKeyName(column, alias, field), primaryKey, autoIncrementId, version);
 		fieldAccess = ClassAccessFactory.get(clazz);
 		fieldIndex = fieldAccess.fieldIndex(field.getName());
 	}

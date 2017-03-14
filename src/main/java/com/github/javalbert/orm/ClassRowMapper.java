@@ -26,6 +26,7 @@ import java.util.Map;
 
 import com.github.javalbert.sqlbuilder.vendor.Vendor;
 import com.github.javalbert.utils.reflection.MemberAccess;
+import com.github.javalbert.utils.string.Strings;
 
 public abstract class ClassRowMapper {
 	protected final Class<?> clazz;
@@ -110,5 +111,36 @@ public abstract class ClassRowMapper {
 		this.vendor = vendor;
 	}
 	
+	public Field getField(String name) {
+		return fieldMap.get(name);
+	}
+
+	public FieldColumnMapping getMapping(String column) {
+		return fieldColumnMappings.get(column);
+	}
+	
+	public PropertyDescriptor getProperty(String name) {
+		return propertyDescriptorMap.get(name);
+	}
+	
 	public abstract void map();
+
+	protected void addMapping(FieldColumnMapping mapping) {
+		if (mapping == null) {
+			return;
+		}
+		
+		if (!Strings.isNullOrEmpty(mapping.getColumn())) {
+			if (fieldColumnMappings.containsKey(mapping.getColumn())) {
+				throw new IllegalArgumentException("Cannot add mapping because column name (" 
+						+ mapping.getColumn() + ") is already defined");
+			}
+			
+			fieldColumnMappingList.add(mapping);
+			fieldColumnMappings.put(mapping.getColumn(), mapping);
+		}
+		if (!Strings.isNullOrEmpty(mapping.getAlias())) {
+			fieldAliasMappings.put(mapping.getAlias(), mapping);
+		}
+	}
 }
