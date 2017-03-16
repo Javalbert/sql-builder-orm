@@ -24,7 +24,7 @@ public class RegisterClassMapper extends ClassRowMapper {
 	
 	private static boolean memberIsType(ClassMember member, int type) {
 		return member != null
-				&& member.getMemberType() == ClassMember.MEMBER_TYPE_FIELD;
+				&& member.getMemberType() == type;
 	}
 	
 	private final ClassRowRegistration registration;
@@ -38,12 +38,6 @@ public class RegisterClassMapper extends ClassRowMapper {
 		this.registration = registration;
 	}
 
-	@Override
-	public void map() {
-		mapFieldsToColumns();
-		mapPropertiesToColumns();
-	}
-	
 	public String getAlias(Field field) {
 		ColumnClassMember columnMember = registration.getColumnMemberMap()
 				.get(field.getName());
@@ -124,12 +118,7 @@ public class RegisterClassMapper extends ClassRowMapper {
 				.isPresent();
 	}
 	
-	public void mapFieldsToColumns() {
-		fields.stream()
-			.map(this::mapFieldToColumn)
-			.forEach(this::addMapping);
-	}
-	
+	@Override
 	public FieldColumnMapping mapFieldToColumn(Field field) {
 		field.setAccessible(true);
 
@@ -162,12 +151,7 @@ public class RegisterClassMapper extends ClassRowMapper {
 				version);
 	}
 
-	public void mapPropertiesToColumns() {
-		propertyDescriptors.stream()
-			.map(this::mapPropertyToColumn)
-			.forEach(this::addMapping);
-	}
-	
+	@Override
 	public FieldColumnMapping mapPropertyToColumn(PropertyDescriptor propertyDescriptor) {
 		addRelatedPropertyMember(propertyDescriptor);
 		
@@ -187,15 +171,6 @@ public class RegisterClassMapper extends ClassRowMapper {
 		}
 
 		final int jdbcType = getJdbcType(propertyDescriptor);
-		
-//		GeneratedValue generatedValue = Optional.ofNullable(propertyDescriptor.getReadMethod())
-//				.map(m -> m.getAnnotation(GeneratedValue.class))
-//				.orElse(null);
-//		if (generatedValue == null) {
-//			generatedValue = Optional.ofNullable(propertyDescriptor.getWriteMethod())
-//					.map(m -> m.getAnnotation(GeneratedValue.class))
-//					.orElse(null);
-//		}
 		
 		return new PropertyAccessMapping(
 				clazz,

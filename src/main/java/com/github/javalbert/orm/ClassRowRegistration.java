@@ -15,8 +15,14 @@ package com.github.javalbert.orm;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class ClassRowRegistration {
+	public static final int FLAG_ID = 0x1;
+	public static final int FLAG_GENERATED_VALUE = 0x2;
+	public static final int FLAG_TIMESTAMP = 0x4;
+	public static final int FLAG_VERSION = 0x8;
+	
 	public static abstract class ClassMember {
 		public static final int MEMBER_TYPE_FIELD = 1;
 		public static final int MEMBER_TYPE_PROPERTY = 2;
@@ -46,11 +52,6 @@ public class ClassRowRegistration {
 	}
 	
 	public static class ColumnClassMember extends ClassMember {
-		public static final int FLAG_ID = 0x1;
-		public static final int FLAG_GENERATED_VALUE = 0x2;
-		public static final int FLAG_TIMESTAMP = 0x4;
-		public static final int FLAG_VERSION = 0x8;
-		
 		protected final String alias;
 		protected final String column;
 		protected final int flags;
@@ -154,7 +155,7 @@ public class ClassRowRegistration {
 	}
 	
 	public ClassRowRegistration(Class<?> registeringClass) {
-		this.registeringClass = registeringClass;
+		this.registeringClass = Objects.requireNonNull(registeringClass, "registeringClass cannot be null");
 	}
 	
 	/* START Fluent API */

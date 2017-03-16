@@ -55,8 +55,8 @@ class AnnotatedClassMapperSpec extends Specification {
 		mapper.addMapping(mapping)
 		
 		then: 'mapping is added'
-		!mapper.getFieldColumnMappingList().isEmpty()
-		!mapper.getFieldColumnMappings().isEmpty()
+		mapper.getFieldColumnMappingList().isEmpty() == false
+		mapper.getFieldColumnMappings().isEmpty() == false
 	}
 	
 	def 'Verify that field without Column or Alias annotation is not mapped'() {
@@ -103,7 +103,7 @@ class AnnotatedClassMapperSpec extends Specification {
 		mapper.addMapping(mapping)
 		
 		then: 'mapping of last name is added'
-		!mapper.getFieldColumnMappingList().isEmpty()
-		!mapper.getFieldColumnMappings().isEmpty()
+		mapper.getFieldColumnMappingList().isEmpty() == false
+		mapper.getFieldColumnMappings().isEmpty() == false
 	}
 }

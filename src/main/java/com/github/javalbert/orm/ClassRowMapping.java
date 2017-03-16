@@ -102,14 +102,24 @@ public class ClassRowMapping {
 	public Update getUpdateById() { return updateById; }
 	public Vendor getVendor() { return vendor; }
 	
+	// Annotation-based registration
+	//
 	public ClassRowMapping(@SuppressWarnings("rawtypes") Class clazz) {
 		this(clazz, ANSI.INSTANCE);
 	}
-	
 	public ClassRowMapping(@SuppressWarnings("rawtypes") Class clazz, Vendor vendor) {
 		this(clazz, vendor, new AnnotatedClassMapper(clazz, vendor));
 	}
 	
+	// Custom registration
+	public ClassRowMapping(ClassRowRegistration registration) {
+		this(registration, ANSI.INSTANCE);
+	}
+	public ClassRowMapping(ClassRowRegistration registration, Vendor vendor) {
+		this(registration.getRegisteringClass(), vendor, new RegisterClassMapper(registration));
+	}
+	
+	// The real constructor
 	private ClassRowMapping(
 			@SuppressWarnings("rawtypes") Class clazz,
 			Vendor vendor,

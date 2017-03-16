@@ -122,8 +122,27 @@ public abstract class ClassRowMapper {
 	public PropertyDescriptor getProperty(String name) {
 		return propertyDescriptorMap.get(name);
 	}
+
+	public void map() {
+		mapFieldsToColumns();
+		mapPropertiesToColumns();
+	}
 	
-	public abstract void map();
+	public void mapFieldsToColumns() {
+		fields.stream()
+			.map(this::mapFieldToColumn)
+			.forEach(this::addMapping);
+	}
+	
+	public void mapPropertiesToColumns() {
+		propertyDescriptors.stream()
+			.map(this::mapPropertyToColumn)
+			.forEach(this::addMapping);
+	}
+	
+	public abstract FieldColumnMapping mapFieldToColumn(Field field);
+	
+	public abstract FieldColumnMapping mapPropertyToColumn(PropertyDescriptor propertyDescriptor);
 
 	protected void addMapping(FieldColumnMapping mapping) {
 		if (mapping == null) {

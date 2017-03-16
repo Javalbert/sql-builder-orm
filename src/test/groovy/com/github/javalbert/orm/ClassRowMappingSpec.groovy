@@ -75,7 +75,7 @@ class ClassRowMappingSpec extends Specification {
 		
 		expect: 'class row mapping of BookPage to know that BookPage class uses a composite primary key, not scalar'
 		mapping.isCompositePrimaryKey()
-		!mapping.isScalarPrimaryKey()
+		mapping.isScalarPrimaryKey() == false
 		
 		when: 'getting the composite PK object BookPagePK'
 		BookPagePK pk = mapping.getOrCreateId(page)

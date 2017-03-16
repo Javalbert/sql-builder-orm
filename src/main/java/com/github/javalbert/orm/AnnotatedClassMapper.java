@@ -138,17 +138,6 @@ public class AnnotatedClassMapper extends ClassRowMapper {
 	}
 	
 	@Override
-	public void map() {
-		mapFieldsToColumns();
-		mapPropertiesToColumns();
-	}
-	
-	public void mapFieldsToColumns() {
-		fields.stream()
-			.map(this::mapFieldToColumn)
-			.forEach(this::addMapping);
-	}
-	
 	public FieldColumnMapping mapFieldToColumn(Field field) {
 		field.setAccessible(true);
 
@@ -181,12 +170,7 @@ public class AnnotatedClassMapper extends ClassRowMapper {
 				version);
 	}
 	
-	public void mapPropertiesToColumns() {
-		propertyDescriptors.stream()
-			.map(this::mapPropertyToColumn)
-			.forEach(this::addMapping);
-	}
-	
+	@Override
 	public FieldColumnMapping mapPropertyToColumn(PropertyDescriptor propertyDescriptor) {
 		addRelatedPropertyMember(propertyDescriptor);
 		
