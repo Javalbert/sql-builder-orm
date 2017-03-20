@@ -98,7 +98,10 @@ public abstract class ClassRowMapper {
 		this.clazz = clazz;
 		
 		fields = Collections.unmodifiableList(Arrays.asList(clazz.getDeclaredFields()));
-		fields.forEach(field -> fieldMap.put(field.getName(), field));
+		fields.forEach(field -> {
+			field.setAccessible(true);
+			fieldMap.put(field.getName(), field);
+		});
 		
 		try {
 			BeanInfo beanInfo = Introspector.getBeanInfo(clazz);

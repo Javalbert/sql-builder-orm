@@ -27,15 +27,9 @@ public class ClassRowRegistration {
 		public static final int MEMBER_TYPE_FIELD = 1;
 		public static final int MEMBER_TYPE_PROPERTY = 2;
 
-		public static final int REGISTER_TYPE_COLUMN = 1;
-		public static final int REGISTER_TYPE_COLUMN_ALIAS = 2;
-		public static final int REGISTER_TYPE_ID = 3;
-		public static final int REGISTER_TYPE_RELATED_ENTITY = 4;
-		public static final int REGISTER_TYPE_VERSION = 5;
 
 		protected final String memberName;
 		protected final int memberType;
-		protected final int registerType;
 		
 		public String getMemberName() {
 			return memberName;
@@ -44,10 +38,9 @@ public class ClassRowRegistration {
 			return memberType;
 		}
 		
-		protected ClassMember(String memberName, int memberType, int registerType) {
+		protected ClassMember(String memberName, int memberType) {
 			this.memberName = memberName;
 			this.memberType = memberType;
-			this.registerType = registerType;
 		}
 	}
 	
@@ -69,17 +62,7 @@ public class ClassRowRegistration {
 				String column,
 				String alias,
 				int flags) {
-			this(memberName, memberType, ClassMember.REGISTER_TYPE_COLUMN, column, alias, flags);
-		}
-		
-		protected ColumnClassMember(
-				String memberName,
-				int memberType,
-				int registerType,
-				String column,
-				String alias,
-				int flags) {
-			super(memberName, memberType, registerType);
+			super(memberName, memberType);
 			this.alias = alias;
 			this.column = column;
 			this.flags = flags;
@@ -99,6 +82,19 @@ public class ClassRowRegistration {
 		}
 	}
 	
+	public static class IdClassColumn extends ClassMember {
+		protected final String column;
+
+		public String getColumn() {
+			return column;
+		}
+		
+		protected IdClassColumn(String memberName, int memberType, String column) {
+			super(memberName, memberType);
+			this.column = column;
+		}
+	}
+	
 	public static class RelatedEntityClassMember extends ClassMember {
 		protected final String fieldName;
 		
@@ -110,7 +106,7 @@ public class ClassRowRegistration {
 				String memberName,
 				int memberType,
 				String fieldName) {
-			super(memberName, memberType, REGISTER_TYPE_RELATED_ENTITY);
+			super(memberName, memberType);
 			this.fieldName = fieldName;
 		}
 	}
@@ -122,6 +118,8 @@ public class ClassRowRegistration {
 	private String table;
 	
 	private final Map<String, ColumnClassMember> columnMemberMap = new HashMap<>();
+	private Class<?> idClass;
+	private final Map<String, IdClassColumn> idClassColumnMap = new HashMap<>();
 	private final Class<?> registeringClass;
 	private final Map<String, RelatedEntityClassMember> relatedEntityMemberMap = new HashMap<>();
 	
@@ -143,6 +141,15 @@ public class ClassRowRegistration {
 
 	public Map<String, ColumnClassMember> getColumnMemberMap() {
 		return Collections.unmodifiableMap(columnMemberMap);
+	}
+	
+	@SuppressWarnings("rawtypes")
+	public Class getIdClass() {
+		return idClass;
+	}
+	
+	public Map<String, IdClassColumn> getIdClassColumnMap() {
+		return Collections.unmodifiableMap(idClassColumnMap);
 	}
 	
 	@SuppressWarnings("rawtypes")
@@ -202,6 +209,21 @@ public class ClassRowRegistration {
 				column,
 				alias,
 				flags));
+		return this;
+	}
+	
+	public ClassRowRegistration idClass(Class<?> idClass) {
+		this.idClass = idClass;
+		return this;
+	}
+	
+	public ClassRowRegistration idClassColumnInField(String field, String column) {
+		idClassColumnMap.put(field, new IdClassColumn(field, ClassMember.MEMBER_TYPE_FIELD, column));
+		return this;
+	}
+	
+	public ClassRowRegistration idClassColumnInProperty(String property, String column) {
+		idClassColumnMap.put(property, new IdClassColumn(property, ClassMember.MEMBER_TYPE_PROPERTY, column));
 		return this;
 	}
 	

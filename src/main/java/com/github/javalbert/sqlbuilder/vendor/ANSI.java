@@ -71,16 +71,16 @@ public class ANSI implements Vendor {
 	/* BEGIN Vendor interface methods */
 	
 	@Override
-	public String createTableIdentifier(com.github.javalbert.orm.Table tableAnno) {
+	public String createTableIdentifier(String catalog, String schema, String table) {
 		StringBuilder identifier = new StringBuilder();
 		
-		if (!Strings.isNullOrEmpty(tableAnno.catalog())) {
-			identifier.append(tableAnno.catalog()).append(".");
+		if (!Strings.isNullOrEmpty(catalog)) {
+			identifier.append(catalog).append(".");
 		}
-		if (!Strings.isNullOrEmpty(tableAnno.schema())) {
-			identifier.append(tableAnno.schema()).append(".");
+		if (!Strings.isNullOrEmpty(schema)) {
+			identifier.append(schema).append(".");
 		}
-		identifier.append(tableAnno.name());
+		identifier.append(table);
 		
 		return identifier.toString();
 	}

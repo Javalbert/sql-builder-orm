@@ -1,11 +1,16 @@
 package com.github.javalbert.orm;
 
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.Optional;
 
 import com.github.javalbert.orm.ClassRowRegistration.ClassMember;
 import com.github.javalbert.orm.ClassRowRegistration.ColumnClassMember;
+import com.github.javalbert.orm.ClassRowRegistration.IdClassColumn;
 import com.github.javalbert.orm.ClassRowRegistration.RelatedEntityClassMember;
 import com.github.javalbert.sqlbuilder.vendor.ANSI;
 import com.github.javalbert.sqlbuilder.vendor.Vendor;
@@ -36,6 +41,13 @@ public class RegisterClassMapper extends ClassRowMapper {
 	public RegisterClassMapper(ClassRowRegistration registration, Vendor vendor) {
 		super(registration.getRegisteringClass(), vendor);
 		this.registration = registration;
+
+		catalog = registration.getCatalog();
+		schema = registration.getSchema();
+		table = registration.getTable();
+		tableIdentifier = vendor.createTableIdentifier(catalog, schema, table);
+		
+		mapIdClass();
 	}
 
 	public String getAlias(Field field) {
@@ -120,8 +132,6 @@ public class RegisterClassMapper extends ClassRowMapper {
 	
 	@Override
 	public FieldColumnMapping mapFieldToColumn(Field field) {
-		field.setAccessible(true);
-
 		addRelatedMemberAccess(field);
 		
 		final String columnName = getColumnName(field);
@@ -138,19 +148,17 @@ public class RegisterClassMapper extends ClassRowMapper {
 					+ ") cannot be a primary key and a row versioning field at the same time");
 		}
 		
-		final int jdbcType = getJdbcType(field);
-		
 		return new FieldAccessMapping(
 				clazz,
 				columnName,
 				alias,
 				field,
-				jdbcType,
+				getJdbcType(field),
 				primaryKey,
 				primaryKey && isAutoIncrement(field),
 				version);
 	}
-
+	
 	@Override
 	public FieldColumnMapping mapPropertyToColumn(PropertyDescriptor propertyDescriptor) {
 		addRelatedPropertyMember(propertyDescriptor);
@@ -170,19 +178,17 @@ public class RegisterClassMapper extends ClassRowMapper {
 					+ ") cannot be a primary key and a row versioning field at the same time");
 		}
 
-		final int jdbcType = getJdbcType(propertyDescriptor);
-		
 		return new PropertyAccessMapping(
 				clazz,
 				columnName,
 				alias,
 				propertyDescriptor,
-				jdbcType,
+				getJdbcType(propertyDescriptor),
 				primaryKey,
 				primaryKey && isAutoIncrement(propertyDescriptor),
 				version);
 	}
-	
+
 	private void addRelatedMemberAccess(Field field) {
 		RelatedEntityClassMember relatedMember = registration.getRelatedEntityMemberMap()
 				.get(field.getName());
@@ -199,5 +205,75 @@ public class RegisterClassMapper extends ClassRowMapper {
 			PropertyMemberAccess propertyMember = new PropertyMemberAccess(clazz, propertyDescriptor);
 			relatedMemberAccessMap.put(relatedMember.getFieldName(), propertyMember);
 		}
+	}
+	
+	private FieldColumnMapping mapFieldToIdColumn(Field field) {
+		final String columnName = Optional.ofNullable(
+				registration.getIdClassColumnMap()
+				.get(field.getName()))
+				.map(IdClassColumn::getColumn)
+				.orElse(null);
+		
+		if (Strings.isNullOrEmpty(columnName)) {
+			return null;
+		}
+		
+		return new FieldAccessMapping(
+				clazz,
+				columnName,
+				null,
+				field,
+				getJdbcType(field),
+				true,
+				false,
+				false);
+	}
+	
+	private void mapIdClass() {
+		idClass = registration.getIdClass();
+		
+		if (idClass == null) {
+			return;
+		}
+		
+		Arrays.stream(idClass.getDeclaredFields())
+				.filter(field -> memberIsField(registration.getIdClassColumnMap()
+						.get(field.getName())))
+				.map(this::mapFieldToIdColumn)
+				.forEach(this.idClassMappings::add);
+		
+		BeanInfo idClassInfo = null;
+		try {
+			idClassInfo = Introspector.getBeanInfo(idClass);
+		} catch (IntrospectionException e) {
+			throw new RuntimeException(e);
+		}
+		Arrays.stream(idClassInfo.getPropertyDescriptors())
+				.filter(property -> memberIsProperty(registration.getIdClassColumnMap()
+						.get(property.getName())))
+				.map(this::mapPropertyToIdColumn)
+				.forEach(this.idClassMappings::add);
+	}
+	
+	private FieldColumnMapping mapPropertyToIdColumn(PropertyDescriptor propertyDescriptor) {
+		final String columnName = Optional.ofNullable(
+				registration.getIdClassColumnMap()
+				.get(propertyDescriptor.getName()))
+				.map(IdClassColumn::getColumn)
+				.orElse(null);
+		
+		if (Strings.isNullOrEmpty(columnName)) {
+			return null;
+		}
+		
+		return new PropertyAccessMapping(
+				clazz,
+				columnName,
+				null,
+				propertyDescriptor,
+				getJdbcType(propertyDescriptor),
+				true,
+				false,
+				false);
 	}
 }

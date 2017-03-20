@@ -123,8 +123,10 @@ public class AnnotatedClassMapper extends ClassRowMapper {
 			catalog = tableAnno.catalog();
 			schema = tableAnno.schema();
 			table = tableAnno.name();
-			tableIdentifier = vendor.createTableIdentifier(tableAnno);
+			tableIdentifier = vendor.createTableIdentifier(catalog, schema, table);
 		}
+		
+		/* ID class */
 		
 		IdClass idClassAnno = (IdClass)clazz.getAnnotation(IdClass.class);
 		if (idClassAnno != null) {
@@ -139,8 +141,6 @@ public class AnnotatedClassMapper extends ClassRowMapper {
 	
 	@Override
 	public FieldColumnMapping mapFieldToColumn(Field field) {
-		field.setAccessible(true);
-
 		addRelatedMemberAccess(field);
 		
 		final String columnName = getColumnName(field);
