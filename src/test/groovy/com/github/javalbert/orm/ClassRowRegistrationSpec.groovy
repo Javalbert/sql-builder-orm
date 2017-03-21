@@ -5,6 +5,8 @@ import javax.xml.validation.Schema
 import com.github.javalbert.domain.BookPage
 import com.github.javalbert.domain.BookPagePK
 import com.github.javalbert.domain.Customer
+import com.github.javalbert.domain.DataTypeHolder
+import com.github.javalbert.domain.Person
 import com.github.javalbert.orm.ClassRowRegistration
 import com.github.javalbert.orm.ClassRowRegistration.ClassMember
 import com.github.javalbert.orm.JdbcMapper
@@ -18,7 +20,7 @@ class ClassRowRegistrationSpec extends Specification {
 		mapper = new JdbcMapper()
 	}
 	
-	def 'Register a single column'() {
+	def 'Map a single field that is an auto-increment primary key column'() {
 		given: 'ClassRowRegistration object that registers "customer_id" column of Customer object'
 		ClassRowRegistration registration = new ClassRowRegistration(Customer.class)
 				.table('Customer')
@@ -30,6 +32,10 @@ class ClassRowRegistrationSpec extends Specification {
 		
 		then: 'column "customer_id" is registered'
 		mapping.getFieldColumnMappings().containsKey('customer_id')
+		
+		and: 'is an auto-increment primary key'
+		mapping.isScalarPrimaryKey()
+		mapping.isAutoIncrementId()
 		
 		and: 'but column "full_name" is not registered'
 		mapping.getFieldColumnMappings().containsKey('full_name') == false
@@ -62,5 +68,37 @@ class ClassRowRegistrationSpec extends Specification {
 		and: '"isbn" and "page_number" columns in BookPagePK are mapped'
 		mapping.idClassMappings[0].column == 'isbn'
 		mapping.idClassMappings[1].column == 'page_number'
+	}
+	
+	def 'Map timestamp field'() {
+		given: 'registration object for DataTypeHolder'
+		ClassRowRegistration reg = new ClassRowRegistration(DataTypeHolder.class)
+				.table('DataTypeHolder')
+				.columnInField('timestampVal', 'timestamp_val', null, ClassRowRegistration.FLAG_TIMESTAMP)
+		
+		when: 'registered and timestamp_val FieldColumnMapping is retrieved'
+		mapper.register(reg)
+		ClassRowMapping classRowMapping = mapper.getMappings().get(DataTypeHolder.class)
+		FieldColumnMapping timestampValMapping = classRowMapping.getFieldColumnMappings().get('timestamp_val')
+		
+		then: 'timestamp_val is mapped as a timestamp data type'
+		timestampValMapping.jdbcType == FieldColumnMapping.JDBC_TYPE_TIMESTAMP
+	}
+	
+	def 'Map version field'() {
+		given: 'registration object for Person'
+		ClassRowRegistration reg = new ClassRowRegistration(Person.class)
+				.catalog('Albert')
+				.schema('dbo')
+				.table('Person')
+				.columnInField('version', 'version', null, ClassRowRegistration.FLAG_VERSION)
+		
+		when: 'registered and "version" field FieldColumnMapping is retrieved'
+		mapper.register(reg)
+		ClassRowMapping classRowMapping = mapper.getMappings().get(Person.class)
+		FieldColumnMapping versionMapping = classRowMapping.getFieldColumnMappings().get('version')
+		
+		then: '"version" field is mapped as a row versioning column'
+		versionMapping.isVersion()
 	}
 }
