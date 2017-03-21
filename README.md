@@ -1,7 +1,7 @@
 # SqlbuilderORM
 
 ## Summary
-- Influenced by Hibernate and jOOQ
+- Influenced by Hibernate, jOOQ, and MyBatis
 - No configuration files required
 - No lengthy strings or custom query language
 - SQL builder API conforming to ANSI SQL

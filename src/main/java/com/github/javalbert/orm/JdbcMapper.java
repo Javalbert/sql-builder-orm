@@ -346,8 +346,11 @@ public class JdbcMapper {
 			return;
 		}
 		
-		ClassRowMapping mapping = new ClassRowMapping(clazz, vendor);
-		mappings.put(clazz, mapping);
+		mappings.put(clazz, new ClassRowMapping(clazz, vendor));
+	}
+	
+	public void register(ClassRowRegistration registration) {
+		mappings.put(registration.getRegisteringClass(), new ClassRowMapping(registration, vendor));
 	}
 	
 	public void register(String packageName) {

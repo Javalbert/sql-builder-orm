@@ -96,15 +96,15 @@ public abstract class FieldColumnMapping implements MemberAccess {
 	public boolean isVersion() { return version; }
 	
 	protected FieldColumnMapping(
-			String column, 
-			String alias, 
-			int jdbcType, 
-			String mapKeyName, 
-			boolean primaryKey, 
-			GeneratedValue generatedValue, 
+			String column,
+			String alias,
+			int jdbcType,
+			String mapKeyName,
+			boolean primaryKey,
+			boolean autoIncrementId,
 			boolean version) {
 		this.alias = alias;
-		this.autoIncrementId = generatedValue != null;
+		this.autoIncrementId = autoIncrementId;
 		this.column = column;
 		this.jdbcType = jdbcType;
 		this.mapKeyName = mapKeyName;

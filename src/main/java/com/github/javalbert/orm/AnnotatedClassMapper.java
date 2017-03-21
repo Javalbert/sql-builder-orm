@@ -12,25 +12,17 @@
  *******************************************************************************/
 package com.github.javalbert.orm;
 
-import java.beans.BeanInfo;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
+import com.github.javalbert.sqlbuilder.vendor.ANSI;
+import com.github.javalbert.sqlbuilder.vendor.Vendor;
 import com.github.javalbert.utils.reflection.FieldMemberAccess;
-import com.github.javalbert.utils.reflection.MemberAccess;
 import com.github.javalbert.utils.reflection.PropertyMemberAccess;
 import com.github.javalbert.utils.string.Strings;
 
-public class FieldColumnMapper {
+public class AnnotatedClassMapper extends ClassRowMapper {
 	public static String getAlias(Field field) {
 		Alias aliasAnnotation = field.getAnnotation(Alias.class);
 		return aliasAnnotation != null ? Strings.safeTrim(aliasAnnotation.value()) : null;
@@ -119,73 +111,36 @@ public class FieldColumnMapper {
 				.orElse(false);
 	}
 	
-	private final Class<?> clazz;
-	private final Map<String, FieldColumnMapping> fieldAliasMappings = new HashMap<>();
-	private final List<FieldColumnMapping> fieldColumnMappingList = new ArrayList<>();
-	private final Map<String, FieldColumnMapping> fieldColumnMappings = new HashMap<>();
-	private final Map<String, Field> fieldMap = new HashMap<>();
-	private final List<Field> fields;
-	private final Map<String, PropertyDescriptor> propertyDescriptorMap = new HashMap<>();
-	private final List<PropertyDescriptor> propertyDescriptors;
-	private final Map<String, MemberAccess> relatedMemberAccessMap = new HashMap<>();
-	
-	public Map<String, FieldColumnMapping> getFieldAliasMappings() {
-		return Collections.unmodifiableMap(fieldAliasMappings);
-	}
-
-	public List<FieldColumnMapping> getFieldColumnMappingList() {
-		return Collections.unmodifiableList(fieldColumnMappingList);
-	}
-
-	public Map<String, FieldColumnMapping> getFieldColumnMappings() {
-		return Collections.unmodifiableMap(fieldColumnMappings);
+	public AnnotatedClassMapper(Class<?> clazz) {
+		this(clazz, ANSI.INSTANCE);
 	}
 	
-	public Map<String, MemberAccess> getRelatedMemberAccessMap() {
-		return Collections.unmodifiableMap(relatedMemberAccessMap);
-	}
-	
-	public FieldColumnMapper(Class<?> clazz) {
-		this.clazz = clazz;
+	public AnnotatedClassMapper(Class<?> clazz, Vendor vendor) {
+		super(clazz, vendor);
 		
-		fields = Collections.unmodifiableList(Arrays.asList(clazz.getDeclaredFields()));
-		fields.forEach(field -> fieldMap.put(field.getName(), field));
+		Table tableAnno = (Table)clazz.getAnnotation(Table.class);
+		if (tableAnno != null) {
+			catalog = tableAnno.catalog();
+			schema = tableAnno.schema();
+			table = tableAnno.name();
+			tableIdentifier = vendor.createTableIdentifier(catalog, schema, table);
+		}
 		
-		try {
-			BeanInfo beanInfo = Introspector.getBeanInfo(clazz);
-			propertyDescriptors = Collections.unmodifiableList(Arrays.asList(beanInfo.getPropertyDescriptors()));
-			propertyDescriptors.forEach(prop -> propertyDescriptorMap.put(prop.getName(), prop));
-		} catch (IntrospectionException e) {
-			throw new RuntimeException(e);
+		/* ID class */
+		
+		IdClass idClassAnno = (IdClass)clazz.getAnnotation(IdClass.class);
+		if (idClassAnno != null) {
+			Class<?> idClass = idClassAnno.value();
+			this.idClass = idClass;
+			
+			ClassRowMapper fieldColumnMapper = new AnnotatedClassMapper(idClass);
+			fieldColumnMapper.map();
+			idClassMappings.addAll(fieldColumnMapper.getFieldColumnMappingList());
 		}
 	}
 	
-	public Field getField(String name) {
-		return fieldMap.get(name);
-	}
-
-	public FieldColumnMapping getMapping(String column) {
-		return fieldColumnMappings.get(column);
-	}
-	
-	public PropertyDescriptor getProperty(String name) {
-		return propertyDescriptorMap.get(name);
-	}
-	
-	public void mapAll() {
-		mapFieldsToColumns();
-		mapPropertiesToColumns();
-	}
-	
-	public void mapFieldsToColumns() {
-		fields.stream()
-			.map(this::mapFieldToColumn)
-			.forEach(this::addMapping);
-	}
-	
+	@Override
 	public FieldColumnMapping mapFieldToColumn(Field field) {
-		field.setAccessible(true);
-
 		addRelatedMemberAccess(field);
 		
 		final String columnName = getColumnName(field);
@@ -211,10 +166,11 @@ public class FieldColumnMapper {
 				field,
 				jdbcType,
 				primaryKey,
-				field.getAnnotation(GeneratedValue.class),
+				primaryKey && field.isAnnotationPresent(GeneratedValue.class),
 				version);
 	}
 	
+	@Override
 	public FieldColumnMapping mapPropertyToColumn(PropertyDescriptor propertyDescriptor) {
 		addRelatedPropertyMember(propertyDescriptor);
 		
@@ -251,43 +207,16 @@ public class FieldColumnMapper {
 				propertyDescriptor,
 				jdbcType,
 				primaryKey,
-				generatedValue,
+				primaryKey && generatedValue != null,
 				version);
-	}
-	
-	public void mapPropertiesToColumns() {
-		propertyDescriptors.stream()
-			.map(this::mapPropertyToColumn)
-			.forEach(this::addMapping);
-	}
-	
-	private void addMapping(FieldColumnMapping mapping) {
-		if (mapping == null) {
-			return;
-		}
-		
-		if (!Strings.isNullOrEmpty(mapping.getColumn())) {
-			if (fieldColumnMappings.containsKey(mapping.getColumn())) {
-				throw new IllegalArgumentException("Cannot add mapping because column name (" 
-						+ mapping.getColumn() + ") is already defined");
-			}
-			
-			fieldColumnMappingList.add(mapping);
-			fieldColumnMappings.put(mapping.getColumn(), mapping);
-		}
-		if (!Strings.isNullOrEmpty(mapping.getAlias())) {
-			fieldAliasMappings.put(mapping.getAlias(), mapping);
-		}
 	}
 	
 	private void addRelatedMemberAccess(Field field) {
 		Related related = field.getAnnotation(Related.class);
-		if (related == null) {
-			return;
+		if (related != null) {
+			FieldMemberAccess fieldMember = new FieldMemberAccess(clazz, field);
+			relatedMemberAccessMap.put(related.value(), fieldMember);
 		}
-		
-		FieldMemberAccess fieldMember = new FieldMemberAccess(clazz, field);
-		relatedMemberAccessMap.put(related.value(), fieldMember);
 	}
 	
 	private void addRelatedPropertyMember(PropertyDescriptor propertyDescriptor) {

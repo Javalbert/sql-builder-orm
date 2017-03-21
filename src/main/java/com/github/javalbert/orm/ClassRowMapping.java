@@ -102,30 +102,44 @@ public class ClassRowMapping {
 	public Update getUpdateById() { return updateById; }
 	public Vendor getVendor() { return vendor; }
 	
+	// Annotation-based registration
+	//
 	public ClassRowMapping(@SuppressWarnings("rawtypes") Class clazz) {
 		this(clazz, ANSI.INSTANCE);
 	}
-	
 	public ClassRowMapping(@SuppressWarnings("rawtypes") Class clazz, Vendor vendor) {
+		this(clazz, vendor, new AnnotatedClassMapper(clazz, vendor));
+	}
+	
+	// Custom registration
+	public ClassRowMapping(ClassRowRegistration registration) {
+		this(registration, ANSI.INSTANCE);
+	}
+	public ClassRowMapping(ClassRowRegistration registration, Vendor vendor) {
+		this(registration.getRegisteringClass(), vendor, new RegisterClassMapper(registration));
+	}
+	
+	// The real constructor
+	private ClassRowMapping(
+			@SuppressWarnings("rawtypes") Class clazz,
+			Vendor vendor,
+			ClassRowMapper classRowMapper) {
 		this.clazz = clazz;
 		this.vendor = vendor;
 
-		FieldColumnMapper fieldColumnMapper = new FieldColumnMapper(clazz);
-		fieldColumnMapper.mapAll();
+		classRowMapper.map();
 		
-		this.fieldAliasMappings = fieldColumnMapper.getFieldAliasMappings();
-		this.fieldColumnMappingList = fieldColumnMapper.getFieldColumnMappingList();
-		this.fieldColumnMappings = fieldColumnMapper.getFieldColumnMappings();
-		this.relatedMemberAccessMap = fieldColumnMapper.getRelatedMemberAccessMap();
+		this.fieldAliasMappings = classRowMapper.getFieldAliasMappings();
+		this.fieldColumnMappingList = classRowMapper.getFieldColumnMappingList();
+		this.fieldColumnMappings = classRowMapper.getFieldColumnMappings();
+		this.idClass = classRowMapper.getIdClass();
+		this.idClassMappings = classRowMapper.getIdClassMappings();
+		this.relatedMemberAccessMap = classRowMapper.getRelatedMemberAccessMap();
 		
-		@SuppressWarnings("unchecked")
-		Table tableAnno = (Table)clazz.getAnnotation(Table.class);
-		if (tableAnno != null) {
-			catalog = tableAnno.catalog();
-			schema = tableAnno.schema();
-			table = tableAnno.name();
-			tableIdentifier = vendor.createTableIdentifier(tableAnno);
-		}
+		this.catalog = classRowMapper.getCatalog();
+		this.schema = classRowMapper.getSchema();
+		this.table = classRowMapper.getTable();
+		this.tableIdentifier = classRowMapper.getTableIdentifier();
 		
 		initPrimaryKeyData();
 		initMapKeys();
@@ -263,7 +277,7 @@ public class ClassRowMapping {
 	
 	private RuntimeException createInvalidPrimaryKeyStateException() {
 		return new IllegalStateException("There is 0 PK columns, or there are at least 2 or more PK columns and class ("
-				+ clazz + ") is missing @IdClass annotation");
+				+ clazz + ") is missing ID class data");
 	}
 
 	private Where createWhereById() {
@@ -331,21 +345,6 @@ public class ClassRowMapping {
 		.immutable();
 	}
 	
-	private void initIdClassData() {
-		@SuppressWarnings("unchecked")
-		IdClass idClassAnno = (IdClass)clazz.getAnnotation(IdClass.class);
-		
-		if (idClassAnno == null) {
-			return;
-		}
-		Class<?> idClass = idClassAnno.value();
-		this.idClass = idClass;
-		
-		FieldColumnMapper fieldColumnMapper = new FieldColumnMapper(idClass);
-		fieldColumnMapper.mapAll();
-		idClassMappings = fieldColumnMapper.getFieldColumnMappingList();
-	}
-	
 	private void initInsert() {
 		if (Strings.isNullOrEmpty(tableIdentifier)) {
 			return;
@@ -379,8 +378,6 @@ public class ClassRowMapping {
 			initPrimaryKeyData(fieldColumnMapping);
 			initVersionColumn(fieldColumnMapping);
 		}
-		
-		initIdClassData();
 	}
 
 	private void initPrimaryKeyData(FieldColumnMapping fieldColumnMapping) {
@@ -432,7 +429,7 @@ public class ClassRowMapping {
 		}
 		
 		if (versionColumnMapping != null) {
-			throw new IllegalStateException("class (" + clazz + ") should only have one @Version column");
+			throw new IllegalStateException("class (" + clazz + ") should only have one row versioning column");
 		}
 		
 		versionColumnMapping = fieldColumnMapping;

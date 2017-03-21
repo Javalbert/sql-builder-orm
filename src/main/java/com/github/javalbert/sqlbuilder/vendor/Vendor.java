@@ -44,7 +44,7 @@ import com.github.javalbert.sqlbuilder.With;
 
 @SuppressWarnings("rawtypes")
 public interface Vendor {
-	String createTableIdentifier(com.github.javalbert.orm.Table tableAnno);
+	String createTableIdentifier(String catalog, String schema, String table);
 	
 	String print(Case sqlCase);
 	String print(Column column);

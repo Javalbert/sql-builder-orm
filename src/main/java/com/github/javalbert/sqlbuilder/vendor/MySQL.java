@@ -28,6 +28,7 @@ import com.github.javalbert.sqlbuilder.OrderBy;
 import com.github.javalbert.sqlbuilder.Param;
 import com.github.javalbert.sqlbuilder.Select;
 import com.github.javalbert.sqlbuilder.Token;
+import com.github.javalbert.utils.string.Strings;
 
 @SuppressWarnings("rawtypes")
 public class MySQL extends ANSI {
@@ -94,15 +95,15 @@ public class MySQL extends ANSI {
 	}
 	
 	@Override
-	public String createTableIdentifier(com.github.javalbert.orm.Table tableAnno) {
+	public String createTableIdentifier(String catalog, String schema, String table) {
 		StringBuilder identifier = new StringBuilder();
 		
-		if (tableAnno.catalog() != null) {
-			identifier.append(tableAnno.catalog()).append(".");
-		} else if (tableAnno.schema() != null) {
-			identifier.append(tableAnno.schema()).append(".");
+		if (!Strings.isNullOrEmpty(catalog)) {
+			identifier.append(catalog).append(".");
+		} else if (!Strings.isNullOrEmpty(schema)) {
+			identifier.append(schema).append(".");
 		}
-		identifier.append(tableAnno.name());
+		identifier.append(table);
 		
 		return identifier.toString();
 	}

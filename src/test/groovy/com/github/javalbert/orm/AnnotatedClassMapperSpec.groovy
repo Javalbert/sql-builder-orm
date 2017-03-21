@@ -8,18 +8,18 @@ import java.lang.reflect.Method
 
 import com.github.javalbert.orm.Alias
 import com.github.javalbert.orm.Column
-import com.github.javalbert.orm.FieldColumnMapper
+import com.github.javalbert.orm.ClassRowMapper
 import com.github.javalbert.orm.FieldColumnMapping
 
 import spock.lang.Specification
 
-class FieldColumnMapperSpec extends Specification {
-	private FieldColumnMapper mapper
-	private FieldColumnMapper mapper2
+class AnnotatedClassMapperSpec extends Specification {
+	private ClassRowMapper mapper
+	private ClassRowMapper mapper2
 	
 	def setup() {
-		mapper = new FieldColumnMapper(Person.class)
-		mapper2 = new FieldColumnMapper(Person2.class)
+		mapper = new AnnotatedClassMapper(Person.class)
+		mapper2 = new AnnotatedClassMapper(Person2.class)
 	}
 	
 	def 'Return column name of Person first name field'() {
@@ -55,8 +55,8 @@ class FieldColumnMapperSpec extends Specification {
 		mapper.addMapping(mapping)
 		
 		then: 'mapping is added'
-		!mapper.getFieldColumnMappingList().isEmpty()
-		!mapper.getFieldColumnMappings().isEmpty()
+		mapper.getFieldColumnMappingList().isEmpty() == false
+		mapper.getFieldColumnMappings().isEmpty() == false
 	}
 	
 	def 'Verify that field without Column or Alias annotation is not mapped'() {
@@ -103,7 +103,7 @@ class FieldColumnMapperSpec extends Specification {
 		mapper.addMapping(mapping)
 		
 		then: 'mapping of last name is added'
-		!mapper.getFieldColumnMappingList().isEmpty()
-		!mapper.getFieldColumnMappings().isEmpty()
+		mapper.getFieldColumnMappingList().isEmpty() == false
+		mapper.getFieldColumnMappings().isEmpty() == false
 	}
 }

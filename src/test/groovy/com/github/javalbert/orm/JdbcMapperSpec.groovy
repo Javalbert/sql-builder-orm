@@ -144,7 +144,7 @@ class JdbcMapperSpec extends Specification {
 		} finally {
 			JdbcUtils.closeQuietly(conn)
 		}
-		!exists
+		exists == false
 	}
 	
 	def 'Delete an entity by passing an ID instead of instance of entity'() {
@@ -180,7 +180,7 @@ class JdbcMapperSpec extends Specification {
 		} finally {
 			JdbcUtils.closeQuietly(conn)
 		}
-		!exists
+		exists == false
 	}
 	
 	def 'Refresh object from database after modifying a field'() {
