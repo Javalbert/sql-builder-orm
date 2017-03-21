@@ -34,6 +34,8 @@ public final class ClassUtils {
 	public static final String NAME_JAVA_LANG_STRING = "java.lang.String";
 	public static final String NAME_JAVA_MATH_BIG_DECIMAL = "java.math.BigDecimal";
 	public static final String NAME_JAVA_SQL_TIMESTAMP = "java.sql.Timestamp";
+	public static final String NAME_JAVA_TIME_LOCAL_DATE = "java.time.LocalDate";
+	public static final String NAME_JAVA_TIME_LOCAL_DATE_TIME = "java.time.LocalDateTime";
 	public static final String NAME_JAVA_UTIL_DATE = "java.util.Date";
 	public static final String NAME_LONG = "long";
 	

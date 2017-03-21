@@ -27,14 +27,16 @@ public abstract class FieldColumnMapping implements MemberAccess {
 	public static final int JDBC_TYPE_DOUBLE = 4;
 	public static final int JDBC_TYPE_FLOAT = 5;
 	public static final int JDBC_TYPE_INTEGER = 6;
-	public static final int JDBC_TYPE_LONG = 7;
-	public static final int JDBC_TYPE_PRIMITIVE_BOOLEAN = 8;
-	public static final int JDBC_TYPE_PRIMITIVE_DOUBLE = 9;
-	public static final int JDBC_TYPE_PRIMITIVE_FLOAT = 10;
-	public static final int JDBC_TYPE_PRIMITIVE_INT = 11;
-	public static final int JDBC_TYPE_PRIMITIVE_LONG = 12;
-	public static final int JDBC_TYPE_STRING = 13;
-	public static final int JDBC_TYPE_TIMESTAMP = 14;
+	public static final int JDBC_TYPE_LOCAL_DATE = 7;
+	public static final int JDBC_TYPE_LOCAL_DATE_TIME = 8;
+	public static final int JDBC_TYPE_LONG = 9;
+	public static final int JDBC_TYPE_PRIMITIVE_BOOLEAN = 10;
+	public static final int JDBC_TYPE_PRIMITIVE_DOUBLE = 11;
+	public static final int JDBC_TYPE_PRIMITIVE_FLOAT = 12;
+	public static final int JDBC_TYPE_PRIMITIVE_INT = 13;
+	public static final int JDBC_TYPE_PRIMITIVE_LONG = 14;
+	public static final int JDBC_TYPE_STRING = 15;
+	public static final int JDBC_TYPE_TIMESTAMP = 16;
 	
 	public static Object getFromResultSet(
 			int jdbcType, 
@@ -48,6 +50,8 @@ public abstract class FieldColumnMapping implements MemberAccess {
 			case JDBC_TYPE_DOUBLE: return rs.getDouble2(column);
 			case JDBC_TYPE_FLOAT: return rs.getFloat2(column);
 			case JDBC_TYPE_INTEGER: return rs.getInt2(column);
+			case JDBC_TYPE_LOCAL_DATE: return rs.getLocalDate(column);
+			case JDBC_TYPE_LOCAL_DATE_TIME: return rs.getLocalDateTime(column);
 			case JDBC_TYPE_LONG: return rs.getLong2(column);
 			case JDBC_TYPE_PRIMITIVE_BOOLEAN: return rs.getBoolean(column);
 			case JDBC_TYPE_PRIMITIVE_DOUBLE: return rs.getDouble(column);
@@ -73,6 +77,8 @@ public abstract class FieldColumnMapping implements MemberAccess {
 			case ClassUtils.NAME_JAVA_LANG_LONG: return JDBC_TYPE_LONG;
 			case ClassUtils.NAME_JAVA_LANG_STRING: return JDBC_TYPE_STRING;
 			case ClassUtils.NAME_JAVA_MATH_BIG_DECIMAL: return JDBC_TYPE_BIG_DECIMAL;
+			case ClassUtils.NAME_JAVA_TIME_LOCAL_DATE: return JDBC_TYPE_LOCAL_DATE;
+			case ClassUtils.NAME_JAVA_TIME_LOCAL_DATE_TIME: return JDBC_TYPE_LOCAL_DATE_TIME;
 			case ClassUtils.NAME_JAVA_UTIL_DATE: return JDBC_TYPE_DATE;
 			case ClassUtils.NAME_LONG: return JDBC_TYPE_PRIMITIVE_LONG;
 		}
