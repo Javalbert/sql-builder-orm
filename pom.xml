@@ -111,7 +111,7 @@
 				Comment out test scope while developing in Eclipse because
 				JUnit will not recognize updates unless mvn is run
 			-->
-<!-- 			<scope>test</scope> -->
+			<scope>test</scope>
 		</dependency>
 		
 		<dependency>
@@ -163,7 +163,7 @@
 					<useFile>false</useFile>
 					<includes>
 						<include>**/*Spec.java</include>
-						<!-- <include>**/*Test.java</include> -->
+						<include>**/*Test.java</include>
 					</includes>
 				</configuration>
 			</plugin>

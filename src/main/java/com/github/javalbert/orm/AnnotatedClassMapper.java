@@ -74,8 +74,7 @@ public class AnnotatedClassMapper extends ClassRowMapper {
 	}
 	
 	public static int getJdbcType(Field field) {
-		boolean timestamp = field.isAnnotationPresent(IsTimestamp.class);
-		return timestamp ? FieldColumnMapping.JDBC_TYPE_TIMESTAMP : FieldColumnMapping.getJdbcType(field.getType());
+		return getJdbcType(field.getType(), field.isAnnotationPresent(IsTimestamp.class));
 	}
 	
 	public static int getJdbcType(PropertyDescriptor propertyDescriptor) {
@@ -84,7 +83,7 @@ public class AnnotatedClassMapper extends ClassRowMapper {
 				.orElse(false) || Optional.ofNullable(propertyDescriptor.getWriteMethod())
 				.map(m -> m.isAnnotationPresent(IsTimestamp.class))
 				.orElse(false);
-		return timestamp ? FieldColumnMapping.JDBC_TYPE_TIMESTAMP : FieldColumnMapping.getJdbcType(propertyDescriptor.getPropertyType());
+		return getJdbcType(propertyDescriptor.getPropertyType(), timestamp);
 	}
 	
 	public static boolean isPrimaryKeyColumn(Field field) {

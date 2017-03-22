@@ -20,6 +20,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,11 @@ import com.github.javalbert.utils.reflection.MemberAccess;
 import com.github.javalbert.utils.string.Strings;
 
 public abstract class ClassRowMapper {
+	public static int getJdbcType(Class<?> clazz, boolean timestamp) {
+		return timestamp && Date.class.isAssignableFrom(clazz)
+				? FieldColumnMapping.JDBC_TYPE_TIMESTAMP : FieldColumnMapping.getJdbcType(clazz);
+	}
+	
 	protected final Class<?> clazz;
 	protected final Map<String, FieldColumnMapping> fieldAliasMappings = new HashMap<>();
 	protected final List<FieldColumnMapping> fieldColumnMappingList = new ArrayList<>();

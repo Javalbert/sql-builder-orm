@@ -89,15 +89,13 @@ public class RegisterClassMapper extends ClassRowMapper {
 	public int getJdbcType(Field field) {
 		ColumnClassMember columnMember = registration.getColumnMemberMap()
 				.get(field.getName());
-		return columnMember.isTimestamp()
-				? FieldColumnMapping.JDBC_TYPE_TIMESTAMP : FieldColumnMapping.getJdbcType(field.getType());
+		return getJdbcType(field.getType(), columnMember.isTimestamp());
 	}
 	
 	public int getJdbcType(PropertyDescriptor propertyDescriptor) {
 		ColumnClassMember columnMember = registration.getColumnMemberMap()
 				.get(propertyDescriptor.getName());
-		return columnMember.isTimestamp()
-				? FieldColumnMapping.JDBC_TYPE_TIMESTAMP : FieldColumnMapping.getJdbcType(propertyDescriptor.getPropertyType());
+		return getJdbcType(propertyDescriptor.getPropertyType(), columnMember.isTimestamp());
 	}
 	
 	public boolean isAutoIncrement(Field field) {
@@ -109,7 +107,7 @@ public class RegisterClassMapper extends ClassRowMapper {
 	
 	public boolean isAutoIncrement(PropertyDescriptor propertyDescriptor) {
 		return Optional.ofNullable(registration.getColumnMemberMap().get(propertyDescriptor.getName()))
-				.filter(RegisterClassMapper::memberIsField)
+				.filter(RegisterClassMapper::memberIsProperty)
 				.filter(ColumnClassMember::isAutoIncrement)
 				.isPresent();
 	}

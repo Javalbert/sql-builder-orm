@@ -134,6 +134,8 @@ public abstract class FieldColumnMapping implements MemberAccess {
 			case JDBC_TYPE_DOUBLE: setBoxedDouble(instance, rs.getDouble2(column)); break;
 			case JDBC_TYPE_FLOAT: setBoxedFloat(instance, rs.getFloat2(column)); break;
 			case JDBC_TYPE_INTEGER: setBoxedInt(instance, rs.getInt2(column)); break;
+			case JDBC_TYPE_LOCAL_DATE: setLocalDate(instance, rs.getLocalDate(column)); break;
+			case JDBC_TYPE_LOCAL_DATE_TIME: setLocalDateTime(instance, rs.getLocalDateTime(column)); break;
 			case JDBC_TYPE_LONG: setBoxedLong(instance, rs.getLong2(column)); break;
 			case JDBC_TYPE_PRIMITIVE_BOOLEAN: setBoolean(instance, rs.getBoolean(column)); break;
 			case JDBC_TYPE_PRIMITIVE_DOUBLE: setDouble(instance, rs.getDouble(column)); break;

@@ -36,6 +36,11 @@ public final class H2 {
 				+ "timestamp_val TIMESTAMP,"
 				+ "varchar_val VARCHAR(255)"
 				+ ")",
+				"CREATE TABLE IF NOT EXISTS Java8DateHolder ("
+				+ "id IDENTITY,"
+				+ "local_date DATE,"
+				+ "local_date_time TIMESTAMP"
+				+ ")",
 				"CREATE TABLE IF NOT EXISTS User ("
 				+ "user_id INT PRIMARY KEY,"
 				+ "name VARCHAR(20),"
@@ -78,6 +83,7 @@ public final class H2 {
 		try {
 			executeStatements(
 					"DELETE FROM DataTypeHolder",
+					"ALTER TABLE Java8DateHolder ALTER COLUMN id RESTART WITH 1",
 					"DELETE FROM User",
 					"DELETE FROM User2",
 					"ALTER TABLE User2 ALTER COLUMN user_id RESTART WITH 1",
@@ -120,6 +126,7 @@ public final class H2 {
 	public static void dropTables() throws ClassNotFoundException, SQLException {
 		executeStatements(
 				"DROP TABLE IF EXISTS DataTypeHolder",
+				"DROP TABLE IF EXISTS Java8DateHolder",
 				"DROP TABLE IF EXISTS User",
 				"DROP TABLE IF EXISTS User2",
 				"DROP TABLE IF EXISTS Product",

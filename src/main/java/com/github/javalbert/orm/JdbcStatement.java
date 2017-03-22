@@ -890,6 +890,8 @@ public class JdbcStatement {
 			case FieldColumnMapping.JDBC_TYPE_DOUBLE: setDouble(name, (Double)x); break;
 			case FieldColumnMapping.JDBC_TYPE_FLOAT: setFloat(name, (Float)x); break;
 			case FieldColumnMapping.JDBC_TYPE_INTEGER: setInteger(name, (Integer)x); break;
+			case FieldColumnMapping.JDBC_TYPE_LOCAL_DATE: setLocalDate(name, (LocalDate)x); break;
+			case FieldColumnMapping.JDBC_TYPE_LOCAL_DATE_TIME: setLocalDateTime(name, (LocalDateTime)x); break;
 			case FieldColumnMapping.JDBC_TYPE_LONG: setLong(name, (Long)x); break;
 			case FieldColumnMapping.JDBC_TYPE_PRIMITIVE_BOOLEAN: setBoolean(name, (boolean)x); break;
 			case FieldColumnMapping.JDBC_TYPE_PRIMITIVE_DOUBLE: setDouble(name, (double)x); break;
@@ -934,6 +936,8 @@ public class JdbcStatement {
 			case FieldColumnMapping.JDBC_TYPE_PRIMITIVE_FLOAT: paramType = PARAM_TYPE_LIST_FLOAT; break;
 			case FieldColumnMapping.JDBC_TYPE_INTEGER:
 			case FieldColumnMapping.JDBC_TYPE_PRIMITIVE_INT: paramType = PARAM_TYPE_LIST_INTEGER; break;
+			case FieldColumnMapping.JDBC_TYPE_LOCAL_DATE: paramType = PARAM_TYPE_LIST_LOCAL_DATE; break;
+			case FieldColumnMapping.JDBC_TYPE_LOCAL_DATE_TIME: paramType = PARAM_TYPE_LIST_LOCAL_DATE_TIME; break;
 			case FieldColumnMapping.JDBC_TYPE_LONG:
 			case FieldColumnMapping.JDBC_TYPE_PRIMITIVE_LONG: paramType = PARAM_TYPE_LIST_LONG; break;
 			case FieldColumnMapping.JDBC_TYPE_STRING: paramType = PARAM_TYPE_LIST_STRING; break;
