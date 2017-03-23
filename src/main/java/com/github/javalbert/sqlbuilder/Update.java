@@ -14,6 +14,7 @@ package com.github.javalbert.sqlbuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @SuppressWarnings("rawtypes")
 public class Update implements DMLStatement<Update>, 
@@ -57,10 +58,7 @@ public class Update implements DMLStatement<Update>,
 	/* BEGIN Fluent API */
 	
 	public Update set(SetValues values) {
-		if (values == null) {
-			throw new NullPointerException("values cannot be null");
-		}
-		nodes.add(values);
+		nodes.add(Objects.requireNonNull(values, "values cannot be null"));
 		return this;
 	}
 	
@@ -72,18 +70,12 @@ public class Update implements DMLStatement<Update>,
 	}
 	
 	public Update where(Where where) {
-		if (where == null) {
-			throw new NullPointerException("where cannot be null");
-		}
-		nodes.add(where);
+		nodes.add(Objects.requireNonNull(where, "where cannot be null"));
 		return this;
 	}
 	
 	public Update with(With with) {
-		if (with == null) {
-			throw new NullPointerException("with cannot be null");
-		}
-		nodes.add(with);
+		nodes.add(Objects.requireNonNull(with, "with cannot be null"));
 		return this;
 	}
 	

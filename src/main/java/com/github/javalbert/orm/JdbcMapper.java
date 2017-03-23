@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -174,10 +175,7 @@ public class JdbcMapper {
 	}
 	
 	public JdbcMapper(Vendor vendor) {
-		if (vendor == null) {
-			throw new NullPointerException("vendor cannot be null");
-		}
-		this.vendor = vendor;
+		this.vendor = Objects.requireNonNull(vendor, "vendor cannot be null");
 	}
 
 	/* BEGIN Public methods */

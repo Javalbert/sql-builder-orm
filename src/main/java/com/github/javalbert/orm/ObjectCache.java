@@ -15,6 +15,7 @@ package com.github.javalbert.orm;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class ObjectCache {
 	@SuppressWarnings("rawtypes")
@@ -60,10 +61,7 @@ public class ObjectCache {
 	}
 	
 	private void assertObjectNotNull(Object object) {
-		if (object != null) {
-			return;
-		}
-		throw new NullPointerException("object cannot be null");
+		Objects.requireNonNull(object, "object cannot be null");
 	}
 	
 	private Map<Serializable, Object> getClassObjects(Class<?> clazz) {

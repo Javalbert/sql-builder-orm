@@ -12,6 +12,8 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder;
 
+import java.util.Objects;
+
 public class Predicate extends ExpressionBuilder<Predicate> implements Node<Predicate> {
 	@Override
 	public int getType() { return TYPE_PREDICATE; }
@@ -127,10 +129,7 @@ public class Predicate extends ExpressionBuilder<Predicate> implements Node<Pred
 	}
 	
 	public Predicate values(InValues values) {
-		if (values == null) {
-			throw new NullPointerException("values cannot be null");
-		}
-		nodes.add(values);
+		nodes.add(Objects.requireNonNull(values, "values cannot be null"));
 		return this;
 	}
 	

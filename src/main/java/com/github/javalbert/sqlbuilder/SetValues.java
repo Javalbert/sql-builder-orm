@@ -14,6 +14,7 @@ package com.github.javalbert.sqlbuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @SuppressWarnings("rawtypes")
 public class SetValues implements Node<SetValues>, NodeHolder {
@@ -50,10 +51,7 @@ public class SetValues implements Node<SetValues>, NodeHolder {
 	/* BEGIN Fluent API */
 	
 	public SetValues add(SetValue value) {
-		if (value == null) {
-			throw new NullPointerException("");
-		}
-		nodes.add(value);
+		nodes.add(Objects.requireNonNull(value, "value cannot be null"));
 		return this;
 	}
 	

@@ -14,6 +14,7 @@ package com.github.javalbert.sqlbuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public abstract class ConditionBuilder<T> implements ConditionBuilding<T>, NodeHolder {
@@ -32,19 +33,13 @@ public abstract class ConditionBuilder<T> implements ConditionBuilding<T>, NodeH
 	
 	@Override
 	public T group(Condition condition) {
-		if (condition == null) {
-			throw new NullPointerException("condition cannot be null");
-		}
-		nodes.add(condition);
+		nodes.add(Objects.requireNonNull(condition, "condition cannot be null"));
 		return (T)this;
 	}
 
 	@Override
 	public T predicate(Predicate predicate) {
-		if (predicate == null) {
-			throw new NullPointerException("predicate cannot be null");
-		}
-		nodes.add(predicate);
+		nodes.add(Objects.requireNonNull(predicate, "predicate cannot be null"));
 		return (T)this;
 	}
 

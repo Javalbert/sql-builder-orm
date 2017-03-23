@@ -14,6 +14,7 @@ package com.github.javalbert.orm;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import com.github.javalbert.orm.Relationship.Builder;
@@ -29,9 +30,8 @@ public class GraphEntity<T> {
 	public String getTableAlias() { return tableAlias; }
 
 	public GraphEntity(Class<T> entityClass, String tableAlias) {
-		if (entityClass == null) {
-			throw new NullPointerException("entityClass cannot be null");
-		} else if (Strings.isNullOrEmpty(tableAlias)) {
+		Objects.requireNonNull(entityClass, "entityClass cannot be null");
+		if (Strings.isNullOrEmpty(tableAlias)) {
 			throw new IllegalArgumentException("tableAlias cannot be null or empty");
 		}
 		

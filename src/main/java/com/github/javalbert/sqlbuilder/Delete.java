@@ -14,6 +14,7 @@ package com.github.javalbert.sqlbuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @SuppressWarnings("rawtypes")
 public class Delete implements DMLStatement<Delete>, NodeHolder, TableNameSpecifier<Delete> {
@@ -51,10 +52,7 @@ public class Delete implements DMLStatement<Delete>, NodeHolder, TableNameSpecif
 	
 	// DELETE FROM JOIN syntax not ANSI standard
 //	public Delete from(From from) {
-//		if (from == null) {
-//			throw new NullPointerException("from cannot be null");
-//		}
-//		nodes.add(from);
+//		nodes.add(Objects.requireNonNull(from, "from cannot be null"));
 //		return this;
 //	}
 
@@ -66,18 +64,12 @@ public class Delete implements DMLStatement<Delete>, NodeHolder, TableNameSpecif
 	}
 	
 	public Delete where(Where where) {
-		if (where == null) {
-			throw new NullPointerException("where cannot be null");
-		}
-		nodes.add(where);
+		nodes.add(Objects.requireNonNull(where, "where cannot be null"));
 		return this;
 	}
 	
 	public Delete with(With with) {
-		if (with == null) {
-			throw new NullPointerException("with cannot be null");
-		}
-		nodes.add(with);
+		nodes.add(Objects.requireNonNull(with, "with cannot be null"));
 		return this;
 	}
 	

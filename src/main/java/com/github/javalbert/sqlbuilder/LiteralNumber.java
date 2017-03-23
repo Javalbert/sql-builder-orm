@@ -12,6 +12,8 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder;
 
+import java.util.Objects;
+
 public class LiteralNumber extends Literal<Number> {
 	@Override
 	public int getType() {
@@ -19,10 +21,7 @@ public class LiteralNumber extends Literal<Number> {
 	}
 	@Override
 	public void setValue(Number value) {
-		if (value == null) {
-			throw new NullPointerException("value cannot be null");
-		}
-		super.setValue(value);
+		super.setValue(Objects.requireNonNull(value, "value cannot be null"));
 	}
 	
 	public LiteralNumber(LiteralNumber literal) {
@@ -31,10 +30,7 @@ public class LiteralNumber extends Literal<Number> {
 	}
 	
 	public LiteralNumber(Number value) {
-		if (value == null) {
-			throw new NullPointerException("value cannot be null");
-		}
-		this.value = value;
+		this.value = Objects.requireNonNull(value, "value cannot be null");
 	}
 	
 	@Override
