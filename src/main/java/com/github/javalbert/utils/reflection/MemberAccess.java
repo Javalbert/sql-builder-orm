@@ -13,6 +13,8 @@
 package com.github.javalbert.utils.reflection;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 public interface MemberAccess {
@@ -33,5 +35,7 @@ public interface MemberAccess {
 	
 	void setBigDecimal(Object instance, BigDecimal x);
 	void setDate(Object instance, Date x);
+	void setLocalDate(Object instance, LocalDate x);
+	void setLocalDateTime(Object instance, LocalDateTime x);
 	void setString(Object instance, String x);
 }

@@ -31,6 +31,8 @@ import java.sql.SQLXML;
 import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.Map;
 
@@ -111,6 +113,26 @@ public class ResultSetHelper implements ResultSet {
 	public Integer getInt2(String columnLabel) throws SQLException {
 		int x = getInt(columnLabel);
 		return x == 0 && rs.wasNull() ? null : x;
+	}
+	
+	public LocalDate getLocalDate(int columnIndex) throws SQLException {
+		Date x = getDate(columnIndex);
+		return x != null ? x.toLocalDate() : null;
+	}
+	
+	public LocalDate getLocalDate(String columnLabel) throws SQLException {
+		Date x = getDate(columnLabel);
+		return x != null ? x.toLocalDate() : null;
+	}
+	
+	public LocalDateTime getLocalDateTime(int columnIndex) throws SQLException {
+		Timestamp x = getTimestamp(columnIndex);
+		return x != null ? x.toLocalDateTime() : null;
+	}
+	
+	public LocalDateTime getLocalDateTime(String columnLabel) throws SQLException {
+		Timestamp x = getTimestamp(columnLabel);
+		return x != null ? x.toLocalDateTime() : null;
 	}
 	
 	public Long getLong2(int columnIndex) throws SQLException {

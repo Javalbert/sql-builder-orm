@@ -14,6 +14,8 @@ package com.github.javalbert.utils.reflection;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import com.github.javalbert.reflection.ClassAccessFactory;
@@ -111,6 +113,18 @@ public class FieldMemberAccess implements MemberAccess {
 	@Override
 	public void setDate(Object instance, Date x) {
 		fieldAccess.setDateField(instance, fieldIndex, x);
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public void setLocalDate(Object instance, LocalDate x) {
+		fieldAccess.setLocalDateField(instance, fieldIndex, x);
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public void setLocalDateTime(Object instance, LocalDateTime x) {
+		fieldAccess.setLocalDateTimeField(instance, fieldIndex, x);
 	}
 
 	@SuppressWarnings("unchecked")

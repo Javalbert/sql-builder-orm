@@ -14,6 +14,8 @@ package com.github.javalbert.utils.reflection;
 
 import java.beans.PropertyDescriptor;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import com.github.javalbert.reflection.ClassAccessFactory;
@@ -111,6 +113,18 @@ public class PropertyMemberAccess implements MemberAccess {
 	@Override
 	public void setDate(Object instance, Date x) {
 		propertyAccess.setDateProperty(instance, propertyIndex, x);
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public void setLocalDate(Object instance, LocalDate x) {
+		propertyAccess.setLocalDateProperty(instance, propertyIndex, x);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void setLocalDateTime(Object instance, LocalDateTime x) {
+		propertyAccess.setLocalDateTimeProperty(instance, propertyIndex, x);
 	}
 
 	@SuppressWarnings("unchecked")

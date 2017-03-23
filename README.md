@@ -18,6 +18,6 @@
 - Conform to ANSI SQL
 - Implement MERGE statement
 - Implement nested JOINs
-- Implement new Java 8 features (Date and Time API, Streams API, lamda functions)
+- Implement new Java 8 features (Streams API, lamda functions)
 - Publish project to The Central Repository
 - Write Javadoc (thread-safety)

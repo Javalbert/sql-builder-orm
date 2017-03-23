@@ -20,6 +20,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -62,17 +64,21 @@ public class JdbcStatement {
 	private static final int PARAM_TYPE_LIST_DOUBLE = 9;
 	private static final int PARAM_TYPE_LIST_FLOAT = 10;
 	private static final int PARAM_TYPE_LIST_INTEGER = 11;
-	private static final int PARAM_TYPE_LIST_LONG = 12;
-	private static final int PARAM_TYPE_LIST_STRING = 13;
-	private static final int PARAM_TYPE_LIST_TIMESTAMP = 14;
-	private static final int PARAM_TYPE_LONG = 15;
-	private static final int PARAM_TYPE_PRIMITIVE_BOOLEAN = 16;
-	private static final int PARAM_TYPE_PRIMITIVE_DOUBLE = 17;
-	private static final int PARAM_TYPE_PRIMITIVE_FLOAT = 18;
-	private static final int PARAM_TYPE_PRIMITIVE_INT = 19;
-	private static final int PARAM_TYPE_PRIMITIVE_LONG = 20;
-	private static final int PARAM_TYPE_STRING = 21;
-	private static final int PARAM_TYPE_TIMESTAMP = 22;
+	private static final int PARAM_TYPE_LIST_LOCAL_DATE = 12;
+	private static final int PARAM_TYPE_LIST_LOCAL_DATE_TIME = 13;
+	private static final int PARAM_TYPE_LIST_LONG = 14;
+	private static final int PARAM_TYPE_LIST_STRING = 15;
+	private static final int PARAM_TYPE_LIST_TIMESTAMP = 16;
+	private static final int PARAM_TYPE_LOCAL_DATE = 17;
+	private static final int PARAM_TYPE_LOCAL_DATE_TIME = 18;
+	private static final int PARAM_TYPE_LONG = 19;
+	private static final int PARAM_TYPE_PRIMITIVE_BOOLEAN = 20;
+	private static final int PARAM_TYPE_PRIMITIVE_DOUBLE = 21;
+	private static final int PARAM_TYPE_PRIMITIVE_FLOAT = 22;
+	private static final int PARAM_TYPE_PRIMITIVE_INT = 23;
+	private static final int PARAM_TYPE_PRIMITIVE_LONG = 24;
+	private static final int PARAM_TYPE_STRING = 25;
+	private static final int PARAM_TYPE_TIMESTAMP = 26;
 	
 	private static final Pattern PARAM_PATTERN = Pattern.compile(":\\w+");
 	
@@ -118,6 +124,16 @@ public class JdbcStatement {
 			case ClassUtils.NAME_JAVA_MATH_BIG_DECIMAL:
 				while (rs.next()) {
 					collection.add(clazz.cast(rs.getBigDecimal(1)));
+				}
+				break;
+			case ClassUtils.NAME_JAVA_TIME_LOCAL_DATE:
+				while (rs.next()) {
+					collection.add(clazz.cast(rs.getLocalDate(1)));
+				}
+				break;
+			case ClassUtils.NAME_JAVA_TIME_LOCAL_DATE_TIME:
+				while (rs.next()) {
+					collection.add(clazz.cast(rs.getLocalDateTime(1)));
 				}
 				break;
 			case ClassUtils.NAME_JAVA_SQL_TIMESTAMP:
@@ -283,6 +299,7 @@ public class JdbcStatement {
 					}
 					break;
 				case PARAM_TYPE_DATE:
+				case PARAM_TYPE_LOCAL_DATE:
 					stmt.setDate(parameterIndex, (java.sql.Date)param.getValue());
 					break;
 				case PARAM_TYPE_DOUBLE:
@@ -317,6 +334,7 @@ public class JdbcStatement {
 					}
 					break;
 				case PARAM_TYPE_LIST_DATE:
+				case PARAM_TYPE_LIST_LOCAL_DATE:
 					CollectionParam datesParam = (CollectionParam)param;
 					
 					for (java.sql.Date date : datesParam.<java.sql.Date>getCollection()) {
@@ -356,6 +374,14 @@ public class JdbcStatement {
 						}
 					}
 					break;
+				case PARAM_TYPE_LIST_LOCAL_DATE_TIME:
+				case PARAM_TYPE_LIST_TIMESTAMP:
+					CollectionParam timestampsParam = (CollectionParam)param;
+					
+					for (java.sql.Timestamp timestamp : timestampsParam.<java.sql.Timestamp>getCollection()) {
+						stmt.setTimestamp(parameterIndex++, timestamp);
+					}
+					break;
 				case PARAM_TYPE_LIST_LONG:
 					CollectionParam longsParam = (CollectionParam)param;
 					
@@ -374,12 +400,9 @@ public class JdbcStatement {
 						stmt.setString(parameterIndex++, str);
 					}
 					break;
-				case PARAM_TYPE_LIST_TIMESTAMP:
-					CollectionParam timestampsParam = (CollectionParam)param;
-					
-					for (java.sql.Timestamp timestamp : timestampsParam.<java.sql.Timestamp>getCollection()) {
-						stmt.setTimestamp(parameterIndex++, timestamp);
-					}
+				case PARAM_TYPE_LOCAL_DATE_TIME:
+				case PARAM_TYPE_TIMESTAMP:
+					stmt.setTimestamp(parameterIndex, (java.sql.Timestamp)param.getValue());
 					break;
 				case PARAM_TYPE_LONG:
 					Long longObj = (Long)param.getValue();
@@ -411,9 +434,6 @@ public class JdbcStatement {
 					break;
 				case PARAM_TYPE_STRING:
 					stmt.setString(parameterIndex, (String)param.getValue());
-					break;
-				case PARAM_TYPE_TIMESTAMP:
-					stmt.setTimestamp(parameterIndex, (java.sql.Timestamp)param.getValue());
 					break;
 			}
 		}
@@ -814,6 +834,32 @@ public class JdbcStatement {
 		return setCollection(name, PARAM_TYPE_LIST_INTEGER, x);
 	}
 	
+	public JdbcStatement setLocalDate(String name, LocalDate x) {
+		return setObject(name, PARAM_TYPE_LOCAL_DATE, x != null ? java.sql.Date.valueOf(x) : null);
+	}
+	
+	public JdbcStatement setLocalDates(String name, Collection<LocalDate> x) {
+		List<java.sql.Date> dates = new ArrayList<>();
+		
+		for (LocalDate localDate : x) {
+			dates.add(localDate != null ? java.sql.Date.valueOf(localDate) : null);
+		}
+		return setCollection(name, PARAM_TYPE_LIST_LOCAL_DATE, dates);
+	}
+	
+	public JdbcStatement setLocalDateTime(String name, LocalDateTime x) {
+		return setObject(name, PARAM_TYPE_LOCAL_DATE_TIME, x != null ? java.sql.Timestamp.valueOf(x) : null);
+	}
+	
+	public JdbcStatement setLocalDateTimes(String name, Collection<LocalDateTime> x) {
+		List<java.sql.Timestamp> timestamps = new ArrayList<>();
+		
+		for (LocalDateTime localDateTime : x) {
+			timestamps.add(localDateTime != null ? java.sql.Timestamp.valueOf(localDateTime) : null);
+		}
+		return setCollection(name, PARAM_TYPE_LIST_LOCAL_DATE_TIME, timestamps);
+	}
+	
 	public JdbcStatement setLong(String name, Long x) {
 		return setObject(name, PARAM_TYPE_LONG, x);
 	}
@@ -844,6 +890,8 @@ public class JdbcStatement {
 			case FieldColumnMapping.JDBC_TYPE_DOUBLE: setDouble(name, (Double)x); break;
 			case FieldColumnMapping.JDBC_TYPE_FLOAT: setFloat(name, (Float)x); break;
 			case FieldColumnMapping.JDBC_TYPE_INTEGER: setInteger(name, (Integer)x); break;
+			case FieldColumnMapping.JDBC_TYPE_LOCAL_DATE: setLocalDate(name, (LocalDate)x); break;
+			case FieldColumnMapping.JDBC_TYPE_LOCAL_DATE_TIME: setLocalDateTime(name, (LocalDateTime)x); break;
 			case FieldColumnMapping.JDBC_TYPE_LONG: setLong(name, (Long)x); break;
 			case FieldColumnMapping.JDBC_TYPE_PRIMITIVE_BOOLEAN: setBoolean(name, (boolean)x); break;
 			case FieldColumnMapping.JDBC_TYPE_PRIMITIVE_DOUBLE: setDouble(name, (double)x); break;
@@ -888,6 +936,8 @@ public class JdbcStatement {
 			case FieldColumnMapping.JDBC_TYPE_PRIMITIVE_FLOAT: paramType = PARAM_TYPE_LIST_FLOAT; break;
 			case FieldColumnMapping.JDBC_TYPE_INTEGER:
 			case FieldColumnMapping.JDBC_TYPE_PRIMITIVE_INT: paramType = PARAM_TYPE_LIST_INTEGER; break;
+			case FieldColumnMapping.JDBC_TYPE_LOCAL_DATE: paramType = PARAM_TYPE_LIST_LOCAL_DATE; break;
+			case FieldColumnMapping.JDBC_TYPE_LOCAL_DATE_TIME: paramType = PARAM_TYPE_LIST_LOCAL_DATE_TIME; break;
 			case FieldColumnMapping.JDBC_TYPE_LONG:
 			case FieldColumnMapping.JDBC_TYPE_PRIMITIVE_LONG: paramType = PARAM_TYPE_LIST_LONG; break;
 			case FieldColumnMapping.JDBC_TYPE_STRING: paramType = PARAM_TYPE_LIST_STRING; break;
@@ -969,31 +1019,21 @@ public class JdbcStatement {
 	}
 	
 	private void appendPlaceholders(StringBuilder builder, JdbcParam param) {
-		switch (param.getParamType()) {
-			case PARAM_TYPE_LIST_BIG_DECIMAL:
-			case PARAM_TYPE_LIST_DATE:
-			case PARAM_TYPE_LIST_DOUBLE:
-			case PARAM_TYPE_LIST_FLOAT:
-			case PARAM_TYPE_LIST_INTEGER:
-			case PARAM_TYPE_LIST_LONG:
-			case PARAM_TYPE_LIST_STRING:
-			case PARAM_TYPE_LIST_TIMESTAMP:
-				builder.append("(");
-				
-				CollectionParam collectionParam = (CollectionParam)param;
-				int placeholders = collectionParam.getCollection().size();
-				
-				for (int i = 0; i < placeholders; i++) {
-					if (i > 0) {
-						builder.append(", ");
-					}
-					builder.append("?");
+		if (param.isCollection()) {
+			builder.append("(");
+			
+			CollectionParam collectionParam = (CollectionParam)param;
+			int placeholders = collectionParam.getCollection().size();
+			
+			for (int i = 0; i < placeholders; i++) {
+				if (i > 0) {
+					builder.append(", ");
 				}
-				builder.append(")");
-				break;
-			default:
 				builder.append("?");
-				break;
+			}
+			builder.append(")");
+		} else {
+			builder.append("?");
 		}
 	}
 	
@@ -1132,6 +1172,7 @@ public class JdbcStatement {
 		
 		public CollectionParam(int paramType, Collection<?> collection) {
 			super(paramType);
+			super.isCollection = true;
 			this.collection = collection;
 		}
 	}
@@ -1173,9 +1214,11 @@ public class JdbcStatement {
 	}
 
 	private class JdbcParam {
+		protected boolean isCollection;
 		private final int paramType;
 		private Object value;
 		
+		public boolean isCollection() { return isCollection; }
 		public int getParamType() { return paramType; }
 		public Object getValue() { return value; }
 		public void setValue(Object value) { this.value = value; }
@@ -1220,7 +1263,6 @@ public class JdbcStatement {
 	}
 	
 	private class ParamIndex {
-		private final boolean collection;
 		private final JdbcParam param;
 		private final int index;
 		
@@ -1228,28 +1270,12 @@ public class JdbcStatement {
 		public int getIndex() { return index; }
 		
 		public ParamIndex(JdbcParam param, int index) {
-			switch (param.getParamType()) {
-				case PARAM_TYPE_LIST_BIG_DECIMAL:
-				case PARAM_TYPE_LIST_DATE:
-				case PARAM_TYPE_LIST_DOUBLE:
-				case PARAM_TYPE_LIST_FLOAT:
-				case PARAM_TYPE_LIST_INTEGER:
-				case PARAM_TYPE_LIST_LONG:
-				case PARAM_TYPE_LIST_STRING:
-				case PARAM_TYPE_LIST_TIMESTAMP:
-					collection = true;
-					break;
-				default:
-					collection = false;
-					break;
-			}
-			
 			this.index = index;
 			this.param = param;
 		}
 		
 		public int getNextIndex() {
-			if (collection) {
+			if (param.isCollection()) {
 				CollectionParam collectionParam = (CollectionParam)param;
 				return index + collectionParam.getCollection().size();
 			}
