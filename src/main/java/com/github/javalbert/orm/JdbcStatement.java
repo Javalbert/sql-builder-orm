@@ -1019,31 +1019,21 @@ public class JdbcStatement {
 	}
 	
 	private void appendPlaceholders(StringBuilder builder, JdbcParam param) {
-		switch (param.getParamType()) {
-			case PARAM_TYPE_LIST_BIG_DECIMAL:
-			case PARAM_TYPE_LIST_DATE:
-			case PARAM_TYPE_LIST_DOUBLE:
-			case PARAM_TYPE_LIST_FLOAT:
-			case PARAM_TYPE_LIST_INTEGER:
-			case PARAM_TYPE_LIST_LONG:
-			case PARAM_TYPE_LIST_STRING:
-			case PARAM_TYPE_LIST_TIMESTAMP:
-				builder.append("(");
-				
-				CollectionParam collectionParam = (CollectionParam)param;
-				int placeholders = collectionParam.getCollection().size();
-				
-				for (int i = 0; i < placeholders; i++) {
-					if (i > 0) {
-						builder.append(", ");
-					}
-					builder.append("?");
+		if (param.isCollection()) {
+			builder.append("(");
+			
+			CollectionParam collectionParam = (CollectionParam)param;
+			int placeholders = collectionParam.getCollection().size();
+			
+			for (int i = 0; i < placeholders; i++) {
+				if (i > 0) {
+					builder.append(", ");
 				}
-				builder.append(")");
-				break;
-			default:
 				builder.append("?");
-				break;
+			}
+			builder.append(")");
+		} else {
+			builder.append("?");
 		}
 	}
 	
@@ -1182,6 +1172,7 @@ public class JdbcStatement {
 		
 		public CollectionParam(int paramType, Collection<?> collection) {
 			super(paramType);
+			super.isCollection = true;
 			this.collection = collection;
 		}
 	}
@@ -1223,9 +1214,11 @@ public class JdbcStatement {
 	}
 
 	private class JdbcParam {
+		protected boolean isCollection;
 		private final int paramType;
 		private Object value;
 		
+		public boolean isCollection() { return isCollection; }
 		public int getParamType() { return paramType; }
 		public Object getValue() { return value; }
 		public void setValue(Object value) { this.value = value; }
@@ -1270,7 +1263,6 @@ public class JdbcStatement {
 	}
 	
 	private class ParamIndex {
-		private final boolean collection;
 		private final JdbcParam param;
 		private final int index;
 		
@@ -1278,28 +1270,12 @@ public class JdbcStatement {
 		public int getIndex() { return index; }
 		
 		public ParamIndex(JdbcParam param, int index) {
-			switch (param.getParamType()) {
-				case PARAM_TYPE_LIST_BIG_DECIMAL:
-				case PARAM_TYPE_LIST_DATE:
-				case PARAM_TYPE_LIST_DOUBLE:
-				case PARAM_TYPE_LIST_FLOAT:
-				case PARAM_TYPE_LIST_INTEGER:
-				case PARAM_TYPE_LIST_LONG:
-				case PARAM_TYPE_LIST_STRING:
-				case PARAM_TYPE_LIST_TIMESTAMP:
-					collection = true;
-					break;
-				default:
-					collection = false;
-					break;
-			}
-			
 			this.index = index;
 			this.param = param;
 		}
 		
 		public int getNextIndex() {
-			if (collection) {
+			if (param.isCollection()) {
 				CollectionParam collectionParam = (CollectionParam)param;
 				return index + collectionParam.getCollection().size();
 			}

@@ -83,6 +83,7 @@ public final class H2 {
 		try {
 			executeStatements(
 					"DELETE FROM DataTypeHolder",
+					"DELETE FROM Java8DateHolder",
 					"ALTER TABLE Java8DateHolder ALTER COLUMN id RESTART WITH 1",
 					"DELETE FROM User",
 					"DELETE FROM User2",

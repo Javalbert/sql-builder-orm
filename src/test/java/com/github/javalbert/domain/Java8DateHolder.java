@@ -38,4 +38,11 @@ public class Java8DateHolder {
 	public void setLocalDateTime(LocalDateTime localDateTime) {
 		this.localDateTime = localDateTime;
 	}
+	
+	public Java8DateHolder() {}
+	
+	public Java8DateHolder(LocalDate localDate, LocalDateTime localDateTime) {
+		this.localDate = localDate;
+		this.localDateTime = localDateTime;
+	}
 }
