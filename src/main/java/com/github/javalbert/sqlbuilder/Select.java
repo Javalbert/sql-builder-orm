@@ -14,6 +14,7 @@ package com.github.javalbert.sqlbuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @SuppressWarnings("rawtypes")
 public class Select implements Aliasable, DMLStatement<Select>, NodeHolder {
@@ -65,26 +66,17 @@ public class Select implements Aliasable, DMLStatement<Select>, NodeHolder {
 	}
 	
 	public Select from(From from) {
-		if (from == null) {
-			throw new NullPointerException("from cannot be null");
-		}
-		nodes.add(from);
+		nodes.add(Objects.requireNonNull(from, "from cannot be null"));
 		return this;
 	}
 	
 	public Select groupBy(GroupBy groupBy) {
-		if (groupBy == null) {
-			throw new NullPointerException("groupBy cannot be null");
-		}
-		nodes.add(groupBy);
+		nodes.add(Objects.requireNonNull(groupBy, "groupBy cannot be null"));
 		return this;
 	}
 	
 	public Select having(Having having) {
-		if (having == null) {
-			throw new NullPointerException("having cannot be null");
-		}
-		nodes.add(having);
+		nodes.add(Objects.requireNonNull(having, "having cannot be null"));
 		return this;
 	}
 	
@@ -98,26 +90,17 @@ public class Select implements Aliasable, DMLStatement<Select>, NodeHolder {
 	}
 	
 	public Select list(SelectList list) {
-		if (list == null) {
-			throw new NullPointerException("list cannot be null");
-		}
-		nodes.add(list);
+		nodes.add(Objects.requireNonNull(list, "list cannot be null"));
 		return this;
 	}
 	
 	public Select orderBy(OrderBy orderBy) {
-		if (orderBy == null) {
-			throw new NullPointerException("orderBy cannot be null");
-		}
-		nodes.add(orderBy);
+		nodes.add(Objects.requireNonNull(orderBy, "orderBy cannot be null"));
 		return this;
 	}
 	
 	public Select query(Select select) {
-		if (select == null) {
-			throw new NullPointerException("select cannot be null");
-		}
-		nodes.add(select);
+		nodes.add(Objects.requireNonNull(select, "select cannot be null"));
 		return this;
 	}
 	
@@ -140,18 +123,12 @@ public class Select implements Aliasable, DMLStatement<Select>, NodeHolder {
 	}
 	
 	public Select where(Where where) {
-		if (where == null) {
-			throw new NullPointerException("where cannot be null");
-		}
-		nodes.add(where);
+		nodes.add(Objects.requireNonNull(where, "where cannot be null"));
 		return this;
 	}
 	
 	public Select with(With with) {
-		if (with == null) {
-			throw new NullPointerException("with cannot be null");
-		}
-		nodes.add(with);
+		nodes.add(Objects.requireNonNull(with, "with cannot be null"));
 		return this;
 	}
 	

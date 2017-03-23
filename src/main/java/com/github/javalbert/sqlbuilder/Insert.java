@@ -14,6 +14,7 @@ package com.github.javalbert.sqlbuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @SuppressWarnings("rawtypes")
 public class Insert implements DMLStatement<Insert>, Node<Insert>, NodeHolder {
@@ -54,10 +55,7 @@ public class Insert implements DMLStatement<Insert>, Node<Insert>, NodeHolder {
 	/* BEGIN Fluent API */
 	
 	public Insert columns(ColumnList columns) {
-		if (columns == null) {
-			throw new NullPointerException("columns cannot be null");
-		}
-		nodes.add(columns);
+		nodes.add(Objects.requireNonNull(columns, "columns cannot be null"));
 		return this;
 	}
 	
@@ -68,26 +66,17 @@ public class Insert implements DMLStatement<Insert>, Node<Insert>, NodeHolder {
 	}
 	
 	public Insert values(ColumnValues values) {
-		if (values == null) {
-			throw new NullPointerException("values cannot be null");
-		}
-		nodes.add(values);
+		nodes.add(Objects.requireNonNull(values, "values cannot be null"));
 		return this;
 	}
 	
 	public Insert subselect(Select select) {
-		if (select == null) {
-			throw new NullPointerException("select cannot be null");
-		}
-		nodes.add(select);
+		nodes.add(Objects.requireNonNull(select, "select cannot be null"));
 		return this;
 	}
 
 	public Insert with(With with) {
-		if (with == null) {
-			throw new NullPointerException("with cannot be null");
-		}
-		nodes.add(with);
+		nodes.add(Objects.requireNonNull(with, "with cannot be null"));
 		return this;
 	}
 	

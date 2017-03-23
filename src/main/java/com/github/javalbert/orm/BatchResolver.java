@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -121,9 +122,7 @@ public class BatchResolver extends ObjectGraphResolver {
 		}
 		
 		public EntityColumns(GraphEntity<?> graphEntity, ObjectCache objectCache, JdbcStatement statement) {
-			if (graphEntity == null) {
-				throw new NullPointerException("graphEntity cannot be null");
-			}
+			Objects.requireNonNull(graphEntity, "graphEntity cannot be null");
 			
 			classRowMapping = jdbcMapper.getMappings()
 					.get(graphEntity.getEntityClass());

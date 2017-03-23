@@ -14,6 +14,7 @@ package com.github.javalbert.sqlbuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.github.javalbert.utils.string.Strings;
 
@@ -65,10 +66,7 @@ public class With implements Node<With>, NodeHolder {
 	}
 
 	public With as(Select select) {
-		if (select == null) {
-			throw new NullPointerException("select cannot be null");
-		}
-		getLast().setSelect(select);
+		getLast().setSelect(Objects.requireNonNull(select, "select cannot be null"));
 		return this;
 	}
 

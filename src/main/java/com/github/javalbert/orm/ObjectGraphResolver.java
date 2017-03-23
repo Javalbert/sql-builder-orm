@@ -15,16 +15,13 @@ package com.github.javalbert.orm;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Objects;
 
 public abstract class ObjectGraphResolver {
 	protected final JdbcMapper jdbcMapper;
 	
 	protected ObjectGraphResolver(JdbcMapper jdbcMapper) {
-		if (jdbcMapper == null) {
-			throw new NullPointerException("jdbcMapper cannot be null");
-		}
-		
-		this.jdbcMapper = jdbcMapper;
+		this.jdbcMapper = Objects.requireNonNull(jdbcMapper, "jdbcMapper cannot be null");
 	}
 
 	public abstract <T> void resolveRelatedObjects(

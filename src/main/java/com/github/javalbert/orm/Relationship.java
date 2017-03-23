@@ -15,6 +15,7 @@ package com.github.javalbert.orm;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import com.github.javalbert.sqlbuilder.SortType;
 
@@ -143,10 +144,7 @@ public class Relationship {
 		private int type;
 		
 		protected Builder(GraphEntity<?> ownerEntity) {
-			if (ownerEntity == null) {
-				throw new NullPointerException("ownerEntity cannot be null");
-			}
-			this.ownerEntity = ownerEntity;
+			this.ownerEntity = Objects.requireNonNull(ownerEntity, "ownerEntity cannot be null");
 		}
 		
 		/* BEGIN Builder */

@@ -14,6 +14,7 @@ package com.github.javalbert.sqlbuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @SuppressWarnings("rawtypes")
 public class From implements Node<From>, NodeHolder, TableNameSpecifier<From> {
@@ -75,10 +76,7 @@ public class From implements Node<From>, NodeHolder, TableNameSpecifier<From> {
 	}
 	
 	public From on(Condition condition) {
-		if (condition == null) {
-			throw new NullPointerException("condition cannot be null");
-		}
-		nodes.add(condition);
+		nodes.add(Objects.requireNonNull(condition, "condition cannot be null"));
 		return this;
 	}
 	
@@ -101,10 +99,7 @@ public class From implements Node<From>, NodeHolder, TableNameSpecifier<From> {
 	}
 	
 	public From inlineView(Select select) {
-		if (select == null) {
-			throw new NullPointerException("select cannot be null");
-		}
-		nodes.add(select);
+		nodes.add(Objects.requireNonNull(select, "select cannot be null"));
 		return this;
 	}
 	

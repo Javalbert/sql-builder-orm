@@ -14,6 +14,7 @@ package com.github.javalbert.sqlbuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public abstract class ExpressionBuilder<T> implements ExpressionBuilding<T>, NodeHolder {
@@ -45,19 +46,13 @@ public abstract class ExpressionBuilder<T> implements ExpressionBuilding<T>, Nod
 
 	@Override
 	public T expression(Expression expression) {
-		if (expression == null) {
-			throw new NullPointerException("expression cannot be null");
-		}
-		nodes.add(expression);
+		nodes.add(Objects.requireNonNull(expression, "expression cannot be null"));
 		return (T)this;
 	}
 	
 	@Override
 	public T function(Function function) {
-		if (function == null) {
-			throw new NullPointerException("function cannot be null");
-		}
-		nodes.add(function);
+		nodes.add(Objects.requireNonNull(function, "function cannot be null"));
 		return (T)this;
 	}
 	
@@ -93,19 +88,13 @@ public abstract class ExpressionBuilder<T> implements ExpressionBuilding<T>, Nod
 	
 	@Override
 	public T sqlCase(Case sqlCase) {
-		if (sqlCase == null) {
-			throw new NullPointerException("sqlCase cannot be null");
-		}
-		nodes.add(sqlCase);
+		nodes.add(Objects.requireNonNull(sqlCase, "sqlCase cannot be null"));
 		return (T)this;
 	}
 	
 	@Override
 	public T subquery(Select select) {
-		if (select == null) {
-			throw new NullPointerException("select cannot be null");
-		}
-		nodes.add(select);
+		nodes.add(Objects.requireNonNull(select, "select cannot be null"));
 		return (T)this;
 	}
 	

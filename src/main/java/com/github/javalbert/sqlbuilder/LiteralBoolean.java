@@ -12,6 +12,8 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder;
 
+import java.util.Objects;
+
 public class LiteralBoolean extends Literal<Boolean> {
 	@Override
 	public int getType() {
@@ -19,10 +21,7 @@ public class LiteralBoolean extends Literal<Boolean> {
 	}
 	@Override
 	public void setValue(Boolean value) {
-		if (value == null) {
-			throw new NullPointerException("value cannot be null");
-		}
-		super.setValue(value);
+		super.setValue(Objects.requireNonNull(value, "value cannot be null"));
 	}
 	
 	public LiteralBoolean(LiteralBoolean literal) {
@@ -31,10 +30,7 @@ public class LiteralBoolean extends Literal<Boolean> {
 	}
 	
 	protected LiteralBoolean(Boolean value) {
-		if (value == null) {
-			throw new NullPointerException("value cannot be null");
-		}
-		this.value = value;
+		this.value = Objects.requireNonNull(value, "value cannot be null");
 	}
 	
 	@Override

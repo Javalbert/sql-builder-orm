@@ -14,6 +14,7 @@ package com.github.javalbert.sqlbuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.github.javalbert.utils.string.Strings;
 
@@ -95,10 +96,7 @@ public class Case implements Aliasable, ConditionBuilding<Case>, ExpressionBuild
 	}
 	
 	public Case condition(Condition condition) {
-		if (condition == null) {
-			throw new NullPointerException("condition cannot be null");
-		}
-		nodes.add(condition);
+		nodes.add(Objects.requireNonNull(condition, "condition cannot be null"));
 		return this;
 	}
 
@@ -109,28 +107,19 @@ public class Case implements Aliasable, ConditionBuilding<Case>, ExpressionBuild
 
 	@Override
 	public Case expression(Expression expression) {
-		if (expression == null) {
-			throw new NullPointerException("expression cannot be null");
-		}
-		nodes.add(expression);
+		nodes.add(Objects.requireNonNull(expression, "expression cannot be null"));
 		return this;
 	}
 	
 	@Override
 	public Case function(Function function) {
-		if (function == null) {
-			throw new NullPointerException("function cannot be null");
-		}
-		nodes.add(function);
+		nodes.add(Objects.requireNonNull(function, "function cannot be null"));
 		return this;
 	}
 
 	@Override
 	public Case group(Condition condition) {
-		if (condition == null) {
-			throw new NullPointerException("condition cannot be null");
-		}
-		nodes.add(condition);
+		nodes.add(Objects.requireNonNull(condition, "condition cannot be null"));
 		return this;
 	}
 	
@@ -175,10 +164,7 @@ public class Case implements Aliasable, ConditionBuilding<Case>, ExpressionBuild
 	
 	@Override
 	public Case predicate(Predicate predicate) {
-		if (predicate == null) {
-			throw new NullPointerException("predicate cannot be null");
-		}
-		nodes.add(predicate);
+		nodes.add(Objects.requireNonNull(predicate, "predicate cannot be null"));
 		return this;
 	}
 
@@ -196,10 +182,7 @@ public class Case implements Aliasable, ConditionBuilding<Case>, ExpressionBuild
 	
 	@Override
 	public Case subquery(Select select) {
-		if (select == null) {
-			throw new NullPointerException("select cannot be null");
-		}
-		nodes.add(select);
+		nodes.add(Objects.requireNonNull(select, "select cannot be null"));
 		return this;
 	}
 	
