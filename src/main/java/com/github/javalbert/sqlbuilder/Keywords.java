@@ -50,6 +50,7 @@ public final class Keywords {
 	public static final String JOIN = "JOIN";
 	public static final String LEFT = "LEFT";
 	public static final String LIKE = "LIKE";
+	public static final String NEXT = "NEXT";
 	public static final String NOT = "NOT";
 	public static final String NULL = "NULL";
 	public static final String OFFSET = "OFFSET";
@@ -139,6 +140,7 @@ public final class Keywords {
 		JOIN,
 		LEFT,
 		LIKE,
+		NEXT,
 		NOT,
 		NULL,
 		OFFSET,

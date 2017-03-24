@@ -43,6 +43,7 @@ import com.github.javalbert.sqlbuilder.parser.ParseTree
 import com.github.javalbert.sqlbuilder.parser.SqlParser
 import com.github.javalbert.sqlbuilder.parser.SqlParser.ExpressionCaseHelper
 import com.github.javalbert.sqlbuilder.parser.SqlParser.FromHelper
+import com.github.javalbert.sqlbuilder.parser.SqlParser.SelectTreeHelper
 import com.github.javalbert.sqlbuilder.parser.SqlParser.WithHelper
 
 import spock.lang.Specification
@@ -191,7 +192,7 @@ WHERE (a.c2 = 'a' OR a.c2 <> ''' a b ''')
 		String sql = "INSERT INTO Albert.dbo.Person (name, age) VALUES ('/\\|_83|27', 25)"
 		
 		when: 'parsing the SQL and retrieving the parse token representing columns (name, age)'
-		List<ParseToken> insertNodes = new ParseTree(parser.tokenize(sql)).parseTokens().nodes
+		List<ParseToken> insertNodes = getParseTokens(sql)
 		ParseToken columnListToken = insertNodes[7]
 		
 		and: 'then parsing the parse token as a column list'
@@ -210,7 +211,7 @@ WHERE (a.c2 = 'a' OR a.c2 <> ''' a b ''')
 		String sql = "INSERT INTO Albert.dbo.Person (name, version) VALUES ('/\\|_83|27', DEFAULT)"
 		
 		and: 'parentheses group token after VALUES'
-		List<ParseToken> insertNodes = new ParseTree(parser.tokenize(sql)).parseTokens().nodes
+		List<ParseToken> insertNodes = getParseTokens(sql)
 		ParseToken parenthesesToken = insertNodes[9]
 		ColumnValues columnValues = new ColumnValues()
 		int i = 0
@@ -281,7 +282,7 @@ FROM phone_book"""
 		String sql = "SELECT t.col1 AS Col1, t.col2 AS 'Second Column' FROM tbl t"
 		
 		and: 'select list parse token and SelectList object'
-		List<ParseToken> selectNodes = new ParseTree(parser.tokenize(sql)).parseTokens().nodes
+		List<ParseToken> selectNodes = getParseTokens(sql)
 		ParseToken selectListNode = selectNodes[0]
 		SelectList selectList = new SelectList()
 		int i = 0
@@ -327,7 +328,7 @@ FROM phone_book"""
 		String sql = "SELECT * FROM Pets AS p INNER JOIN PetTypes t ON p.PetTypeID = t.PetTypeID"
 		
 		and: 'FROM object'
-		List<ParseToken> selectNodes = new ParseTree(parser.tokenize(sql)).parseTokens().nodes
+		List<ParseToken> selectNodes = getParseTokens(sql)
 		ParseToken fromNode = selectNodes[1]
 		From from = new From()
 		int i = 0
@@ -397,7 +398,7 @@ FROM phone_book"""
 		String sql = "SELECT d.android_version_number, COUNT(*) AS 'Device Count' FROM MobileDevice d GROUP BY d.android_version_number ORDER BY d.android_version_number, 'Device Count' DESC"
 		
 		and: 'parse token of ORDER BY clause and OrderBy object'
-		List<ParseToken> selectNodes = new ParseTree(parser.tokenize(sql)).parseTokens().nodes
+		List<ParseToken> selectNodes = getParseTokens(sql)
 		ParseToken orderByNode = selectNodes[3]
 		OrderBy orderBy = new OrderBy()
 		int i = 0
@@ -433,33 +434,74 @@ FROM phone_book"""
 		descToken == SortType.DESC
 	}
 	
-	def 'Parse ORDER BY with OFFSET FETCH'() {
-		given: "SQL string \"SELECT * FROM tbl ORDER BY col1 OFFSET 60 ROWS FETCH FIRST 20 ROWS ONLY\""
-		String sql = "SELECT * FROM tbl ORDER BY col1 OFFSET 60 ROWS FETCH FIRST 20 ROWS ONLY"
+	// Appears that in ANSI SQL, OFFSET FETCH does not require ORDER BY to precede it
+	// http://stackoverflow.com/a/24046664
+	// http://dba.stackexchange.com/a/30455
+//	def 'Parse ORDER BY with OFFSET FETCH'() {
+//		given: "SQL string \"SELECT * FROM tbl ORDER BY col1 OFFSET 60 ROWS FETCH FIRST 20 ROWS ONLY\""
+//		String sql = "SELECT * FROM tbl ORDER BY col1 OFFSET 60 ROWS FETCH FIRST 20 ROWS ONLY"
+//		
+//		and: 'parse token of ORDER BY clause and OrderBy object'
+//		List<ParseToken> selectNodes = getParseTokens(sql)
+//		ParseToken orderByNode = selectNodes[2]
+//		OrderBy orderBy = new OrderBy()
+//		int i = 0
+//		StringBuilder columnBuilder = new StringBuilder()
+//		
+//		when: 'parsing "OFFSET"'
+//		i = SqlParser.parseOrderByNode(orderBy, orderByNode.nodes, i, columnBuilder) + 1 // col1
+//		i = SqlParser.parseOrderByNode(orderBy, orderByNode.nodes, i, columnBuilder) + 1 // OFFSET
+//		Node offsetNode = orderBy.nodes[1]
+//		
+//		and: 'then parsing "FETCH FIRST 20 ROWS ONLY"'
+//		i = SqlParser.parseOrderByNode(orderBy, orderByNode.nodes, i, columnBuilder) + 1
+//		Node fetchNode = orderBy.nodes[2]
+//		
+//		then: 'Offset object with skip count of 60 is added'
+//		offsetNode instanceof Offset
+//		offsetNode.skipCount == 60
+//		
+//		and: 'then Fetch object with fetch count of 20 is added'
+//		fetchNode instanceof Fetch
+//		fetchNode.fetchCount == 20
+//	}
+	
+	def 'Parse SELECT with OFFSET FETCH'() {
+		given: "SQL string \"SELECT * FROM tbl OFFSET 60 ROWS FETCH FIRST 20 ROWS ONLY\""
+		String sql = "SELECT * FROM tbl OFFSET 60 ROWS FETCH FIRST 20 ROWS ONLY"
+		List<ParseToken> selectNodes = getParseTokens(sql)
+		Select select = new Select()
+		SelectTreeHelper helper = new SelectTreeHelper(select, selectNodes, 0, selectNodes.size())
 		
-		and: 'parse token of ORDER BY clause and OrderBy object'
-		List<ParseToken> selectNodes = new ParseTree(parser.tokenize(sql)).parseTokens().nodes
-		ParseToken orderByNode = selectNodes[2]
-		OrderBy orderBy = new OrderBy()
-		int i = 0
-		StringBuilder columnBuilder = new StringBuilder()
+		when: 'parsing "SELECT * FROM tbl"'
+		helper.parseCurrentToken() // SelectList
+		helper.incrementTokenIndex()
+		helper.parseCurrentToken() // From
+		helper.incrementTokenIndex()
+		Node selectList = select.nodes[0]
+		Node from = select.nodes[1]
 		
-		when: 'parsing "OFFSET"'
-		i = SqlParser.parseOrderByNode(orderBy, orderByNode.nodes, i, columnBuilder) + 1 // col1
-		i = SqlParser.parseOrderByNode(orderBy, orderByNode.nodes, i, columnBuilder) + 1 // OFFSET
-		Node offsetNode = orderBy.nodes[1]
+		and: 'then parsing "OFFSET 60 ROWS"'
+		helper.parseCurrentToken()
+		helper.incrementTokenIndex()
+		Node offset = select.nodes[2]
 		
 		and: 'then parsing "FETCH FIRST 20 ROWS ONLY"'
-		i = SqlParser.parseOrderByNode(orderBy, orderByNode.nodes, i, columnBuilder) + 1
-		Node fetchNode = orderBy.nodes[2]
+		helper.parseCurrentToken()
+		helper.incrementTokenIndex()
+		Node fetch = select.nodes[3]
 		
-		then: 'Offset object with skip count of 60 is added'
-		offsetNode instanceof Offset
-		offsetNode.skipCount == 60
+		then: 'SelectList and FROM clause was parsed'
+		selectList instanceof SelectList
+		from instanceof From
 		
-		and: 'then Fetch object with fetch count of 20 is added'
-		fetchNode instanceof Fetch
-		fetchNode.fetchCount == 20
+		and: 'then OFFSET clause with skip count of 60 was parsed'
+		offset instanceof Offset
+		offset.skipCount == 60
+		
+		and: 'then FETCH clause with fetch count of 20 was parsed'
+		fetch instanceof Fetch
+		fetch.fetchCount == 20
 	}
 	
 	def 'Parse GROUP BY and verify nodes'() {
@@ -467,7 +509,7 @@ FROM phone_book"""
 		String sql = "SELECT * FROM tbl GROUP BY col1, col2"
 		
 		and: 'GROUP BY parse token and GroupBy object'
-		List<ParseToken> selectNodes = new ParseTree(parser.tokenize(sql)).parseTokens().nodes
+		List<ParseToken> selectNodes = getParseTokens(sql)
 		ParseToken groupByNode = selectNodes[2]
 		GroupBy groupBy = new GroupBy()
 		int i = 0
@@ -503,7 +545,7 @@ FROM phone_book"""
 		String sql = "WITH tbl1 AS (SELECT 1 col1, 2 col2), tbl2 (first_name, last_name) AS (SELECT 'albert' FirstName, 'chan') SELECT * FROM tbl1, tbl2"
 		
 		and: 'With object'
-		List<ParseToken> selectNodes = new ParseTree(parser.tokenize(sql)).parseTokens().nodes
+		List<ParseToken> selectNodes = getParseTokens(sql)
 		With with = new With()
 		WithHelper helper = new WithHelper(with, selectNodes, 0)
 		
@@ -618,7 +660,7 @@ FROM phone_book"""
 		String sql = "SELECT * FROM tbl WHERE num1 >= 2 AND some_date > :someDate AND (col1 IS NULL OR col1 LIKE 'abc%')"
 		
 		and: 'Condition object and WHERE parse token'
-		List<ParseToken> selectNodes = new ParseTree(parser.tokenize(sql)).parseTokens().nodes
+		List<ParseToken> selectNodes = getParseTokens(sql)
 		ParseToken whereNode = selectNodes[2]
 		Condition condition = new Condition()
 		int i = 0
@@ -664,7 +706,7 @@ FROM phone_book"""
 		String sql = "SELECT * FROM tbl WHERE col1 IN (1, 2) AND col2 IN (SELECT * FROM tbl2) AND col3 IN (:someCollection)"
 		
 		and: 'Condition object and WHERE parse token'
-		List<ParseToken> selectNodes = new ParseTree(parser.tokenize(sql)).parseTokens().nodes
+		List<ParseToken> selectNodes = getParseTokens(sql)
 		ParseToken whereNode = selectNodes[2]
 		Condition condition = new Condition()
 		int i = 0
@@ -704,7 +746,7 @@ FROM phone_book"""
 		String sql = "SELECT CASE num1 WHEN 1 THEN 'One' ELSE 'Zero' END AS 'Number Word' FROM tbl"
 		
 		and: 'Case object, SelectList object, and CASE parse token'
-		List<ParseToken> selectNodes = new ParseTree(parser.tokenize(sql)).parseTokens().nodes
+		List<ParseToken> selectNodes = getParseTokens(sql)
 		ParseToken caseNode = selectNodes[0].nodes[0] // SELECT > CASE
 		Case sqlCase = new Case()
 		SelectList selectList = new SelectList()
@@ -756,5 +798,9 @@ FROM phone_book"""
 		
 		and: "then Case object's alias is \"Number Word\""
 		sqlCase.alias == 'Number Word'
+	}
+	
+	private List<ParseToken> getParseTokens(String sql) {
+		return new ParseTree(parser.tokenize(sql)).parseTokens().nodes;
 	}
 }

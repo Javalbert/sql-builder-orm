@@ -797,7 +797,8 @@ public class SqlParser {
 		}
 	}
 
-	private static int parseOffsetOrFetch(OrderBy orderBy, 
+	private static int parseOffsetOrFetch(
+			Select select, 
 			List<ParseToken> nodes, 
 			int i, 
 			String keyword) {
@@ -806,8 +807,8 @@ public class SqlParser {
 			int count = Integer.parseInt(intNode != null ? intNode.getToken() : null);
 			
 			switch (keyword) {
-				case Keywords.FETCH: orderBy.fetch(count); break;
-				case Keywords.OFFSET: orderBy.offset(count); break;
+				case Keywords.FETCH: select.fetch(count); break;
+				case Keywords.OFFSET: select.offset(count); break;
 			}
 		} catch (NumberFormatException e) {
 			throw new IllegalArgumentException("must be an integer after " + keyword + " keyword", e);
@@ -855,26 +856,6 @@ public class SqlParser {
 			case Keywords.DESC:
 				parsePendingColumn(column, orderBy);
 				orderBy.desc();
-				break;
-			case Keywords.FETCH:
-				ParseToken firstNode = getNextNode(nodes, i);
-				if (firstNode == null || !firstNode.getToken().toUpperCase().equals(Keywords.FIRST)) {
-					throw new IllegalArgumentException("expected " + Keywords.FIRST + " after " + Keywords.FETCH);
-				}
-				i++;
-
-				i = parseOffsetOrFetch(orderBy, nodes, i, Keywords.FETCH);
-				
-				ParseToken onlyNode = getNextNode(nodes, i);
-				if (onlyNode == null || !onlyNode.getToken().toUpperCase().equals(Keywords.ONLY)) {
-					throw new IllegalArgumentException("expected " + Keywords.ONLY 
-							+ " after {" + Keywords.ROWS + " | " + Keywords.ROW + "}");
-				}
-				i++;
-				break;
-			case Keywords.OFFSET:
-				parsePendingColumn(column, orderBy);
-				i = parseOffsetOrFetch(orderBy, nodes, i, Keywords.OFFSET);
 				break;
 			default:
 				if (node instanceof StringLiteralParseToken) {
@@ -1137,100 +1118,9 @@ public class SqlParser {
 	}
 
 	private static int parseSelectTree(Select select, List<ParseToken> nodes, int start, int end) {
-		int i = start;
-		boolean setOperation = false;
-		
-		if (end < 0) {
-			end = nodes.size();
-		}
-		
-		for (; i < end; i++) {
-			ParseToken node = nodes.get(i);
-			
-			final String token = node.getToken();
-			final String tokenUpperCase = token.toUpperCase();
-			
-			switch (tokenUpperCase) {
-				case Keywords.FROM:
-					From from = new From();
-					select.from(from);
-					parseFrom(from, node.getNodes());
-					break;
-				case Keywords.GROUP_BY:
-					GroupBy groupBy = new GroupBy();
-					select.groupBy(groupBy);
-					parseGroupBy(groupBy, node.getNodes());
-					break;
-				case Keywords.ORDER_BY:
-					OrderBy orderBy = new OrderBy();
-					select.orderBy(orderBy);
-					parseOrderBy(orderBy, node.getNodes());
-					break;
-				case Keywords.SELECT:
-					if (setOperation) {
-						Select query = new Select();
-						select.query(query);
-						i = parseSelectTree(query, nodes, i, getSetOperationEndIndex(nodes, i));
-					} else if (!node.getNodes().isEmpty()) {
-						SelectList list = new SelectList();
-						select.list(list);
-						parseSelectList(list, node.getNodes());
-					}
-					break;
-				case Keywords.EXCEPT:
-				case Keywords.INTERSECT:
-				case Keywords.UNION:
-				case Keywords.UNION_ALL:
-					ParseToken nextNode = getNextNode(nodes, i);
-					boolean parenthesizedQuery = nextNode != null && nextNode.getToken().equals(ParseTree.TOKEN_PARENTHESES_GROUP);
-					if (nextNode == null 
-							|| !nextNode.getToken().toUpperCase().equals(Keywords.SELECT) 
-							&& !parenthesizedQuery) {
-						throw new IllegalArgumentException("Expected " + Keywords.SELECT + " statement after " + tokenUpperCase);
-					}
-					
-					setOperation = true;
-					
-					if (parenthesizedQuery) {
-						Select query = new Select();
-						parseSelectTree(query, nextNode.getNodes(), 0);
-						
-						switch (tokenUpperCase) {
-							case Keywords.EXCEPT: select.except(query); break;
-							case Keywords.INTERSECT: select.intersect(query); break;
-							case Keywords.UNION: select.union(query); break;
-							case Keywords.UNION_ALL: select.unionAll(query); break;
-						}
-						
-						i++;
-					} else {
-						switch (tokenUpperCase) {
-							case Keywords.EXCEPT: select.except(); break;
-							case Keywords.INTERSECT: select.intersect(); break;
-							case Keywords.UNION: select.union(); break;
-							case Keywords.UNION_ALL: select.unionAll(); break;
-						}
-					}
-					break;
-				case Keywords.HAVING:
-				case Keywords.WHERE:
-					Condition condition = null;
-					
-					switch (tokenUpperCase) {
-						case Keywords.HAVING:
-							condition = new Having();
-							select.having((Having)condition);
-							break;
-						case Keywords.WHERE:
-							condition = new Where();
-							select.where((Where)condition);
-							break;
-					}
-					parseCondition(condition, node.getNodes(), 0, node.getNodes().size());
-					break;
-			}
-		}
-		return i - 1;
+		SelectTreeHelper helper = new SelectTreeHelper(select, nodes, start, end);
+		helper.parseTokens();
+		return helper.i - 1;
 	}
 
 	private static int parseSetValue(SetValue value, List<ParseToken> nodes, int start) {
@@ -1487,6 +1377,141 @@ public class SqlParser {
 		}
 	}
 
+	private static class SelectTreeHelper {
+		private final int end;
+		private int i;
+		private final List<ParseToken> nodes;
+		private final Select select;
+		private boolean setOperation;
+		
+		public SelectTreeHelper(Select select, List<ParseToken> nodes, int start, int end) {
+			this.end = end < 0 ? nodes.size() : end;
+			i = start;
+			this.nodes = nodes;
+			this.select = select;
+		}
+		
+		public void incrementTokenIndex() {
+			i++;
+		}
+		
+		public void parseCurrentToken() {
+			ParseToken node = nodes.get(i);
+			
+			final String token = node.getToken();
+			final String tokenUpperCase = token.toUpperCase();
+			
+			switch (tokenUpperCase) {
+				case Keywords.FETCH:
+					ParseToken firstNode = getNextNode(nodes, i);
+					if (firstNode == null
+							|| !firstNode.getToken().toUpperCase().equals(Keywords.FIRST)
+							&& !firstNode.getToken().toUpperCase().equals(Keywords.NEXT)) {
+						throw new IllegalArgumentException("expected {" + Keywords.FIRST + " | " 
+							+ Keywords.NEXT + "} after " + Keywords.FETCH);
+					}
+					i++;
+	
+					i = parseOffsetOrFetch(select, nodes, i, Keywords.FETCH);
+					
+					ParseToken onlyNode = getNextNode(nodes, i);
+					if (onlyNode == null || !onlyNode.getToken().toUpperCase().equals(Keywords.ONLY)) {
+						throw new IllegalArgumentException("expected " + Keywords.ONLY 
+								+ " after {" + Keywords.ROWS + " | " + Keywords.ROW + "}");
+					}
+					i++;
+					break;
+				case Keywords.FROM:
+					From from = new From();
+					select.from(from);
+					parseFrom(from, node.getNodes());
+					break;
+				case Keywords.GROUP_BY:
+					GroupBy groupBy = new GroupBy();
+					select.groupBy(groupBy);
+					parseGroupBy(groupBy, node.getNodes());
+					break;
+				case Keywords.OFFSET:
+					i = parseOffsetOrFetch(select, nodes, i, Keywords.OFFSET);
+					break;
+				case Keywords.ORDER_BY:
+					OrderBy orderBy = new OrderBy();
+					select.orderBy(orderBy);
+					parseOrderBy(orderBy, node.getNodes());
+					break;
+				case Keywords.SELECT:
+					if (setOperation) {
+						Select query = new Select();
+						select.query(query);
+						i = parseSelectTree(query, nodes, i, getSetOperationEndIndex(nodes, i));
+					} else if (!node.getNodes().isEmpty()) {
+						SelectList list = new SelectList();
+						select.list(list);
+						parseSelectList(list, node.getNodes());
+					}
+					break;
+				case Keywords.EXCEPT:
+				case Keywords.INTERSECT:
+				case Keywords.UNION:
+				case Keywords.UNION_ALL:
+					ParseToken nextNode = getNextNode(nodes, i);
+					boolean parenthesizedQuery = nextNode != null && nextNode.getToken().equals(ParseTree.TOKEN_PARENTHESES_GROUP);
+					if (nextNode == null 
+							|| !nextNode.getToken().toUpperCase().equals(Keywords.SELECT) 
+							&& !parenthesizedQuery) {
+						throw new IllegalArgumentException("Expected " + Keywords.SELECT + " statement after " + tokenUpperCase);
+					}
+					
+					setOperation = true;
+					
+					if (parenthesizedQuery) {
+						Select query = new Select();
+						parseSelectTree(query, nextNode.getNodes(), 0);
+						
+						switch (tokenUpperCase) {
+							case Keywords.EXCEPT: select.except(query); break;
+							case Keywords.INTERSECT: select.intersect(query); break;
+							case Keywords.UNION: select.union(query); break;
+							case Keywords.UNION_ALL: select.unionAll(query); break;
+						}
+						
+						i++;
+					} else {
+						switch (tokenUpperCase) {
+							case Keywords.EXCEPT: select.except(); break;
+							case Keywords.INTERSECT: select.intersect(); break;
+							case Keywords.UNION: select.union(); break;
+							case Keywords.UNION_ALL: select.unionAll(); break;
+						}
+					}
+					break;
+				case Keywords.HAVING:
+				case Keywords.WHERE:
+					Condition condition = null;
+					
+					switch (tokenUpperCase) {
+						case Keywords.HAVING:
+							condition = new Having();
+							select.having((Having)condition);
+							break;
+						case Keywords.WHERE:
+							condition = new Where();
+							select.where((Where)condition);
+							break;
+					}
+					parseCondition(condition, node.getNodes(), 0, node.getNodes().size());
+					break;
+			}
+		}
+		
+		public void parseTokens() {
+			while (i < end) {
+				parseCurrentToken();
+				incrementTokenIndex();
+			}
+		}
+	}
+	
 	/**
 	 * Encapsulates the parsing of WITH clause, 
 	 * makes it more testable
