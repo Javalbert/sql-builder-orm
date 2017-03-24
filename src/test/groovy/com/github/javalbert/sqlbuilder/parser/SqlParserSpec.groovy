@@ -433,34 +433,39 @@ FROM phone_book"""
 		descToken == SortType.DESC
 	}
 	
-	def 'Parse ORDER BY with OFFSET FETCH'() {
-		given: "SQL string \"SELECT * FROM tbl ORDER BY col1 OFFSET 60 ROWS FETCH FIRST 20 ROWS ONLY\""
-		String sql = "SELECT * FROM tbl ORDER BY col1 OFFSET 60 ROWS FETCH FIRST 20 ROWS ONLY"
-		
-		and: 'parse token of ORDER BY clause and OrderBy object'
-		List<ParseToken> selectNodes = new ParseTree(parser.tokenize(sql)).parseTokens().nodes
-		ParseToken orderByNode = selectNodes[2]
-		OrderBy orderBy = new OrderBy()
-		int i = 0
-		StringBuilder columnBuilder = new StringBuilder()
-		
-		when: 'parsing "OFFSET"'
-		i = SqlParser.parseOrderByNode(orderBy, orderByNode.nodes, i, columnBuilder) + 1 // col1
-		i = SqlParser.parseOrderByNode(orderBy, orderByNode.nodes, i, columnBuilder) + 1 // OFFSET
-		Node offsetNode = orderBy.nodes[1]
-		
-		and: 'then parsing "FETCH FIRST 20 ROWS ONLY"'
-		i = SqlParser.parseOrderByNode(orderBy, orderByNode.nodes, i, columnBuilder) + 1
-		Node fetchNode = orderBy.nodes[2]
-		
-		then: 'Offset object with skip count of 60 is added'
-		offsetNode instanceof Offset
-		offsetNode.skipCount == 60
-		
-		and: 'then Fetch object with fetch count of 20 is added'
-		fetchNode instanceof Fetch
-		fetchNode.fetchCount == 20
-	}
+	// Appears that in ANSI SQL, OFFSET FETCH does not require ORDER BY to precede it
+	// http://stackoverflow.com/a/24046664
+	// http://dba.stackexchange.com/a/30455
+//	def 'Parse ORDER BY with OFFSET FETCH'() {
+//		given: "SQL string \"SELECT * FROM tbl ORDER BY col1 OFFSET 60 ROWS FETCH FIRST 20 ROWS ONLY\""
+//		String sql = "SELECT * FROM tbl ORDER BY col1 OFFSET 60 ROWS FETCH FIRST 20 ROWS ONLY"
+//		
+//		and: 'parse token of ORDER BY clause and OrderBy object'
+//		List<ParseToken> selectNodes = new ParseTree(parser.tokenize(sql)).parseTokens().nodes
+//		ParseToken orderByNode = selectNodes[2]
+//		OrderBy orderBy = new OrderBy()
+//		int i = 0
+//		StringBuilder columnBuilder = new StringBuilder()
+//		
+//		when: 'parsing "OFFSET"'
+//		i = SqlParser.parseOrderByNode(orderBy, orderByNode.nodes, i, columnBuilder) + 1 // col1
+//		i = SqlParser.parseOrderByNode(orderBy, orderByNode.nodes, i, columnBuilder) + 1 // OFFSET
+//		Node offsetNode = orderBy.nodes[1]
+//		
+//		and: 'then parsing "FETCH FIRST 20 ROWS ONLY"'
+//		i = SqlParser.parseOrderByNode(orderBy, orderByNode.nodes, i, columnBuilder) + 1
+//		Node fetchNode = orderBy.nodes[2]
+//		
+//		then: 'Offset object with skip count of 60 is added'
+//		offsetNode instanceof Offset
+//		offsetNode.skipCount == 60
+//		
+//		and: 'then Fetch object with fetch count of 20 is added'
+//		fetchNode instanceof Fetch
+//		fetchNode.fetchCount == 20
+//	}
+	
+	// TODO Create a new test to test OFFSET FETCH without ORDER BY (which is not necessary in ANSI SQL)
 	
 	def 'Parse GROUP BY and verify nodes'() {
 		given: "SQL string \"SELECT * FROM tbl GROUP BY col1, col2\""

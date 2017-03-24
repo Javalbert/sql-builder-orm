@@ -73,16 +73,6 @@ public class OrderBy implements ColumnBuilder<OrderBy>, Node<OrderBy>, NodeHolde
 		return this;
 	}
 	
-	public OrderBy fetch(int n) {
-		nodes.add(new Fetch(n));
-		return this;
-	}
-
-	public OrderBy offset(int skip) {
-		nodes.add(new Offset(skip));
-		return this;
-	}
-	
 	@Override
 	public OrderBy tableAlias(String alias) {
 		workColumn = Column.byAlias(alias);

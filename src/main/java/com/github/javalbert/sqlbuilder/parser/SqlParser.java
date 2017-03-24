@@ -797,7 +797,8 @@ public class SqlParser {
 		}
 	}
 
-	private static int parseOffsetOrFetch(OrderBy orderBy, 
+	private static int parseOffsetOrFetch(
+			Select select, 
 			List<ParseToken> nodes, 
 			int i, 
 			String keyword) {
@@ -806,8 +807,8 @@ public class SqlParser {
 			int count = Integer.parseInt(intNode != null ? intNode.getToken() : null);
 			
 			switch (keyword) {
-				case Keywords.FETCH: orderBy.fetch(count); break;
-				case Keywords.OFFSET: orderBy.offset(count); break;
+				case Keywords.FETCH: select.fetch(count); break;
+				case Keywords.OFFSET: select.offset(count); break;
 			}
 		} catch (NumberFormatException e) {
 			throw new IllegalArgumentException("must be an integer after " + keyword + " keyword", e);
@@ -855,26 +856,6 @@ public class SqlParser {
 			case Keywords.DESC:
 				parsePendingColumn(column, orderBy);
 				orderBy.desc();
-				break;
-			case Keywords.FETCH:
-				ParseToken firstNode = getNextNode(nodes, i);
-				if (firstNode == null || !firstNode.getToken().toUpperCase().equals(Keywords.FIRST)) {
-					throw new IllegalArgumentException("expected " + Keywords.FIRST + " after " + Keywords.FETCH);
-				}
-				i++;
-
-				i = parseOffsetOrFetch(orderBy, nodes, i, Keywords.FETCH);
-				
-				ParseToken onlyNode = getNextNode(nodes, i);
-				if (onlyNode == null || !onlyNode.getToken().toUpperCase().equals(Keywords.ONLY)) {
-					throw new IllegalArgumentException("expected " + Keywords.ONLY 
-							+ " after {" + Keywords.ROWS + " | " + Keywords.ROW + "}");
-				}
-				i++;
-				break;
-			case Keywords.OFFSET:
-				parsePendingColumn(column, orderBy);
-				i = parseOffsetOrFetch(orderBy, nodes, i, Keywords.OFFSET);
 				break;
 			default:
 				if (node instanceof StringLiteralParseToken) {
@@ -1151,6 +1132,25 @@ public class SqlParser {
 			final String tokenUpperCase = token.toUpperCase();
 			
 			switch (tokenUpperCase) {
+				case Keywords.FETCH:
+					ParseToken firstNode = getNextNode(nodes, i);
+					if (firstNode == null
+							|| !firstNode.getToken().toUpperCase().equals(Keywords.FIRST)
+							&& !firstNode.getToken().toUpperCase().equals(Keywords.NEXT)) {
+						throw new IllegalArgumentException("expected {" + Keywords.FIRST + " | " 
+							+ Keywords.NEXT + "} after " + Keywords.FETCH);
+					}
+					i++;
+	
+					i = parseOffsetOrFetch(select, nodes, i, Keywords.FETCH);
+					
+					ParseToken onlyNode = getNextNode(nodes, i);
+					if (onlyNode == null || !onlyNode.getToken().toUpperCase().equals(Keywords.ONLY)) {
+						throw new IllegalArgumentException("expected " + Keywords.ONLY 
+								+ " after {" + Keywords.ROWS + " | " + Keywords.ROW + "}");
+					}
+					i++;
+					break;
 				case Keywords.FROM:
 					From from = new From();
 					select.from(from);
@@ -1160,6 +1160,9 @@ public class SqlParser {
 					GroupBy groupBy = new GroupBy();
 					select.groupBy(groupBy);
 					parseGroupBy(groupBy, node.getNodes());
+					break;
+				case Keywords.OFFSET:
+					i = parseOffsetOrFetch(select, nodes, i, Keywords.OFFSET);
 					break;
 				case Keywords.ORDER_BY:
 					OrderBy orderBy = new OrderBy();

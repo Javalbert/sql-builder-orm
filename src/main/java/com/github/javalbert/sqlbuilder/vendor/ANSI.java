@@ -621,14 +621,6 @@ public class ANSI implements Vendor {
 				case Node.TYPE_COLUMN:
 					str = print((Column)node);
 					break;
-				case Node.TYPE_FETCH:
-					appendComma = false;
-					str = print((Fetch)node);
-					break;
-				case Node.TYPE_OFFSET:
-					appendComma = false;
-					str = print((Offset)node);
-					break;
 				case Node.TYPE_ORDER_BY_SORT:
 					appendComma = false;
 					// Fall through to TYPE_TOKEN
@@ -729,11 +721,17 @@ public class ANSI implements Vendor {
 				case Node.TYPE_CONDITION:
 					builder.append(" ").append(print((Condition)node));
 					break;
+				case Node.TYPE_FETCH:
+					builder.append(" ").append(print((Fetch)node));
+					break;
 				case Node.TYPE_FROM:
 					builder.append(" ").append(print((From)node));
 					break;
 				case Node.TYPE_GROUP_BY:
 					builder.append(" ").append(print((GroupBy)node));
+					break;
+				case Node.TYPE_OFFSET:
+					builder.append(" ").append(print((Offset)node));
 					break;
 				case Node.TYPE_ORDER_BY:
 					builder.append(" ").append(print((OrderBy)node));

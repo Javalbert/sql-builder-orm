@@ -28,6 +28,14 @@ public class ParseTree {
 	public static final String TOKEN_PARENTHESES_GROUP = "SQL PARENTHESES GROUP";
 	public static final String TOKEN_ROOT = "SQL ROOT";
 
+	private static final Set<String> BEFORE_FETCH = CollectionUtils.immutableHashSet(
+			Keywords.GROUP_BY,
+			Keywords.FROM,
+			Keywords.HAVING,
+			Keywords.ORDER_BY,
+			Keywords.SELECT,
+			Keywords.WHERE
+			);
 	private static final Set<String> BEFORE_FROM = CollectionUtils.immutableHashSet(
 			Keywords.SELECT
 			);
@@ -42,9 +50,10 @@ public class ParseTree {
 			Keywords.SELECT,
 			Keywords.WHERE
 			);
+	private static final Set<String> BEFORE_OFFSET = BEFORE_FETCH;
 	private static final Set<String> BEFORE_ORDER_BY = CollectionUtils.immutableHashSet(
-			Keywords.GROUP_BY,
 			Keywords.FROM,
+			Keywords.GROUP_BY,
 			Keywords.HAVING,
 			Keywords.SELECT,
 			Keywords.WHERE
@@ -195,6 +204,11 @@ public class ParseTree {
 				currentParseToken.addNode(parseToken);
 				popStack();
 				break;
+			case Keywords.FETCH:
+				popBackToBefore(BEFORE_FETCH);
+				parseToken = new ParseToken(Keywords.FETCH, true);
+				currentParseToken.addNode(parseToken);
+				break;
 			case Keywords.GROUP:
 				assertAhead(tokens, currentTokenIndex, Keywords.BY);
 				currentTokenIndex++;
@@ -248,6 +262,11 @@ public class ParseTree {
 							+ " } after " + tokenUpperCase);
 				}
 				currentTokenIndex++;
+				currentParseToken.addNode(parseToken);
+				break;
+			case Keywords.OFFSET:
+				popBackToBefore(BEFORE_OFFSET);
+				parseToken = new ParseToken(Keywords.OFFSET, true);
 				currentParseToken.addNode(parseToken);
 				break;
 			case Keywords.ORDER:

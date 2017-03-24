@@ -65,6 +65,11 @@ public class Select implements Aliasable, DMLStatement<Select>, NodeHolder {
 		return this;
 	}
 	
+	public Select fetch(int n) {
+		nodes.add(new Fetch(n));
+		return this;
+	}
+	
 	public Select from(From from) {
 		nodes.add(Objects.requireNonNull(from, "from cannot be null"));
 		return this;
@@ -91,6 +96,11 @@ public class Select implements Aliasable, DMLStatement<Select>, NodeHolder {
 	
 	public Select list(SelectList list) {
 		nodes.add(Objects.requireNonNull(list, "list cannot be null"));
+		return this;
+	}
+
+	public Select offset(int skip) {
+		nodes.add(new Offset(skip));
 		return this;
 	}
 	

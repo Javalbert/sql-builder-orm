@@ -24,7 +24,6 @@ import com.github.javalbert.sqlbuilder.Keywords;
 import com.github.javalbert.sqlbuilder.Literal;
 import com.github.javalbert.sqlbuilder.Node;
 import com.github.javalbert.sqlbuilder.Offset;
-import com.github.javalbert.sqlbuilder.OrderBy;
 import com.github.javalbert.sqlbuilder.Param;
 import com.github.javalbert.sqlbuilder.Select;
 import com.github.javalbert.sqlbuilder.Token;
@@ -123,59 +122,6 @@ public class MySQL extends ANSI {
 				.append(Keywords.OFFSET)
 				.append(" ")
 				.append(offset.getSkipCount());
-		return builder.toString();
-	}
-	
-	/**
-	 * Can print LIMIT n OFFSET skip
-	 */
-	@Override
-	public String print(OrderBy orderBy) {
-		StringBuilder builder = new StringBuilder(Keywords.ORDER_BY);
-		
-		String offset = null;
-		
-		List<Node> nodes = orderBy.getNodes();
-		for (int i = 0; i < nodes.size(); i++) {
-			Node node = nodes.get(i);
-
-			boolean appendComma = true;
-			boolean foundLimit = false;
-			String str = "";
-			
-			switch (node.getType()) {
-				case Node.TYPE_COLUMN:
-					str = print((Column)node);
-					break;
-				case Node.TYPE_FETCH:
-					appendComma = false;
-					foundLimit = true;
-					str = print((Fetch)node);
-					break;
-				case Node.TYPE_OFFSET:
-					appendComma = false;
-					offset = print((Offset)node);
-					continue;
-				case Node.TYPE_ORDER_BY_SORT:
-					appendComma = false;
-					// Fall through to TYPE_TOKEN
-				case Node.TYPE_TOKEN:
-					str = print((Token)node);
-					break;
-			}
-			
-			if (i > 0 && appendComma) {
-				builder.append(",");
-			}
-			builder.append(" ");
-			
-			if (foundLimit && offset != null) {
-				builder.append(str).append(" ").append(offset);
-			} else {
-				builder.append(str);
-			}
-		}
-		
 		return builder.toString();
 	}
 
