@@ -12,7 +12,6 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder;
 
-@SuppressWarnings("rawtypes")
 public class SelectNodeFinder implements NodeVisitor {
 	private SelectList selectList;
 	private From from;
@@ -29,7 +28,7 @@ public class SelectNodeFinder implements NodeVisitor {
 	public OrderBy getOrderBy() { return orderBy; }
 
 	@Override
-	public boolean visit(Node node) {
+	public boolean visit(@SuppressWarnings("rawtypes") Node node) {
 		if (node.getType() == Node.TYPE_SELECT) {
 			Select select = (Select)node;
 			getNodes(select);
@@ -38,7 +37,7 @@ public class SelectNodeFinder implements NodeVisitor {
 	}
 	
 	private void getNodes(Select select) {
-		for (Node node : select.getNodes()) {
+		for (Node<?> node : select.getNodes()) {
 			switch (node.getType()) {
 				case Node.TYPE_SELECT_LIST: selectList = (SelectList)node; break;
 				case Node.TYPE_FROM: from = (From)node; break;

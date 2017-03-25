@@ -58,13 +58,11 @@ public class Function extends ExpressionBuilder<Function> implements Aliasable, 
 	
 	@Override
 	public Function immutable() {
-		Function function = new ImmutableFunction(this);
-		return function;
+		return new ImmutableFunction(this);
 	}
 	
 	@Override
 	public Function mutable() {
-		Function function = new Function(this);
-		return function;
+		return new Function(this);
 	}
 }

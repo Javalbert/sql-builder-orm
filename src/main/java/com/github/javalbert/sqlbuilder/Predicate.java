@@ -31,14 +31,12 @@ public class Predicate extends ExpressionBuilder<Predicate> implements Node<Pred
 	
 	@Override
 	public Predicate immutable() {
-		Predicate predicate = new ImmutablePredicate(this);
-		return predicate;
+		return new ImmutablePredicate(this);
 	}
 	
 	@Override
 	public Predicate mutable() {
-		Predicate predicate = new Predicate(this);
-		return predicate;
+		return new Predicate(this);
 	}
 	
 	/* BEGIN Fluent API */

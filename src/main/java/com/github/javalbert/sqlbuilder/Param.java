@@ -47,13 +47,11 @@ public class Param implements Aliasable, Node<Param> {
 	
 	@Override
 	public Param immutable() {
-		Param param = new ImmutableParam(this);
-		return param;
+		return new ImmutableParam(this);
 	}
 	
 	@Override
 	public Param mutable() {
-		Param param = new Param(this);
-		return param;
+		return new Param(this);
 	}
 }

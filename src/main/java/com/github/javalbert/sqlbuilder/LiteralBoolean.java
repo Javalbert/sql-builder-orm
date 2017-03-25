@@ -35,13 +35,11 @@ public class LiteralBoolean extends Literal<Boolean> {
 	
 	@Override
 	public LiteralBoolean immutable() {
-		LiteralBoolean literal = new ImmutableLiteralBoolean(this);
-		return literal;
+		return new ImmutableLiteralBoolean(this);
 	}
 	
 	@Override
 	public LiteralBoolean mutable() {
-		LiteralBoolean literal = new LiteralBoolean(this);
-		return literal;
+		return new LiteralBoolean(this);
 	}
 }

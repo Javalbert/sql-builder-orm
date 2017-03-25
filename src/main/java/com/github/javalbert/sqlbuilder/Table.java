@@ -55,13 +55,11 @@ public class Table implements Aliasable, Node<Table> {
 	
 	@Override
 	public Table immutable() {
-		Table table = new ImmutableTable(this);
-		return table;
+		return new ImmutableTable(this);
 	}
 	
 	@Override
 	public Table mutable() {
-		Table table = new Table(this);
-		return table;
+		return new Table(this);
 	}
 }

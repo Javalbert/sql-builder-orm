@@ -16,10 +16,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@SuppressWarnings("rawtypes")
 public class From implements Node<From>, NodeHolder, TableNameSpecifier<From> {
+	@SuppressWarnings("rawtypes")
 	protected List<Node> nodes = new ArrayList<>();
 	
+	@SuppressWarnings("rawtypes")
 	@Override
 	public List<Node> getNodes() { return nodes; }
 	@Override
@@ -38,14 +39,12 @@ public class From implements Node<From>, NodeHolder, TableNameSpecifier<From> {
 	
 	@Override
 	public From immutable() {
-		From from = new ImmutableFrom(this);
-		return from;
+		return new ImmutableFrom(this);
 	}
 	
 	@Override
 	public From mutable() {
-		From from = new From(this);
-		return from;
+		return new From(this);
 	}
 	
 	/* BEGIN Fluent API */

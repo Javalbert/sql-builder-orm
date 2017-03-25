@@ -46,13 +46,11 @@ public class Token implements Node<Token> {
 	
 	@Override
 	public Token immutable() {
-		Token token = new ImmutableToken(this);
-		return token;
+		return new ImmutableToken(this);
 	}
 	
 	@Override
 	public Token mutable() {
-		Token token = new Token(this);
-		return token;
+		return new Token(this);
 	}
 }

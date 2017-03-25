@@ -16,13 +16,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@SuppressWarnings("rawtypes")
-public class Update implements DMLStatement<Update>, 
-		Node<Update>, 
-		NodeHolder, 
+public class Update implements
+		DMLStatement<Update>, 
+		Node<Update>,
+		NodeHolder,
 		TableNameSpecifier<Update> {
+	@SuppressWarnings("rawtypes")
 	protected List<Node> nodes = new ArrayList<>();
 	
+	@SuppressWarnings("rawtypes")
 	@Override
 	public List<Node> getNodes() { return nodes; }
 	@Override
@@ -45,14 +47,12 @@ public class Update implements DMLStatement<Update>,
 
 	@Override
 	public Update immutable() {
-		Update update = new ImmutableUpdate(this);
-		return update;
+		return new ImmutableUpdate(this);
 	}
 
 	@Override
 	public Update mutable() {
-		Update update = new Update(this);
-		return update;
+		return new Update(this);
 	}
 	
 	/* BEGIN Fluent API */

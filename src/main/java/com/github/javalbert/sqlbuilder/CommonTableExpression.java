@@ -54,13 +54,11 @@ public class CommonTableExpression implements Node<CommonTableExpression> {
 
 	@Override
 	public CommonTableExpression immutable() {
-		CommonTableExpression cte = new ImmutableCommonTableExpression(this);
-		return cte;
+		return new ImmutableCommonTableExpression(this);
 	}
 	
 	@Override
 	public CommonTableExpression mutable() {
-		CommonTableExpression cte = new CommonTableExpression(this);
-		return cte;
+		return new CommonTableExpression(this);
 	}
 }

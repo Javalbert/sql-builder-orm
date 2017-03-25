@@ -78,13 +78,11 @@ public class SetOperator implements Node<SetOperator> {
 	
 	@Override
 	public SetOperator immutable() {
-		SetOperator operator = new ImmutableSetOperator(this);
-		return operator;
+		return new ImmutableSetOperator(this);
 	}
 	
 	@Override
 	public SetOperator mutable() {
-		SetOperator operator = new SetOperator(this);
-		return operator;
+		return new SetOperator(this);
 	}
 }

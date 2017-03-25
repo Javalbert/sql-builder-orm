@@ -14,7 +14,7 @@ package com.github.javalbert.sqlbuilder;
 
 import java.util.List;
 
-@SuppressWarnings("rawtypes")
 public interface NodeHolder {
+	@SuppressWarnings("rawtypes")
 	List<Node> getNodes();
 }

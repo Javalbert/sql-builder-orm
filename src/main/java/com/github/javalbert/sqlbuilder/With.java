@@ -18,10 +18,11 @@ import java.util.Objects;
 
 import com.github.javalbert.utils.string.Strings;
 
-@SuppressWarnings("rawtypes")
 public class With implements Node<With>, NodeHolder {
+	@SuppressWarnings("rawtypes")
 	protected List<Node> nodes = new ArrayList<>();
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public List<Node> getNodes() { return nodes; }
 	@Override
@@ -40,14 +41,12 @@ public class With implements Node<With>, NodeHolder {
 	
 	@Override
 	public With immutable() {
-		With with = new ImmutableWith(this);
-		return with;
+		return new ImmutableWith(this);
 	}
 	
 	@Override
 	public With mutable() {
-		With with = new With(this);
-		return with;
+		return new With(this);
 	}
 	
 	/* BEGIN Fluent API */

@@ -12,7 +12,6 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder;
 
-@SuppressWarnings("rawtypes")
 public interface NodeVisitor {
-	boolean visit(Node node);
+	boolean visit(@SuppressWarnings("rawtypes") Node node);
 }

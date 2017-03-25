@@ -31,13 +31,11 @@ public class LiteralNull extends Literal<Object> {
 	
 	@Override
 	public LiteralNull immutable() {
-		LiteralNull literal = new ImmutableLiteralNull(this);
-		return literal;
+		return new ImmutableLiteralNull(this);
 	}
 	
 	@Override
 	public LiteralNull mutable() {
-		LiteralNull literal = new LiteralNull(this);
-		return literal;
+		return new LiteralNull(this);
 	}
 }

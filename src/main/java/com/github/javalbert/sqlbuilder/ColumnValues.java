@@ -36,14 +36,12 @@ public class ColumnValues extends ExpressionBuilder<ColumnValues> implements Nod
 
 	@Override
 	public ColumnValues immutable() {
-		ColumnValues values = new ImmutableColumnValues(this);
-		return values;
+		return new ImmutableColumnValues(this);
 	}
 
 	@Override
 	public ColumnValues mutable() {
-		ColumnValues values = new ColumnValues(this);
-		return values;
+		return new ColumnValues(this);
 	}
 	
 	/* BEGIN Fluent API */

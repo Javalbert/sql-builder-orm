@@ -12,7 +12,6 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder;
 
-@SuppressWarnings("rawtypes")
 public class CastFunction extends Function {
 	public CastFunction() {
 		super(Keywords.CAST, 1);
@@ -33,7 +32,7 @@ public class CastFunction extends Function {
 	}
 	
 	public CastFunction as(String dataType) {
-		Node node = !nodes.isEmpty() ? nodes.get(nodes.size() - 1) : null;
+		Node<?> node = !nodes.isEmpty() ? nodes.get(nodes.size() - 1) : null;
 		
 		if (node == null) {
 			throw new IllegalStateException("No nodes");

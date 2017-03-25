@@ -16,10 +16,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@SuppressWarnings("rawtypes")
 public class SetValues implements Node<SetValues>, NodeHolder {
+	@SuppressWarnings("rawtypes")
 	protected List<Node> nodes = new ArrayList<>();
 	
+	@SuppressWarnings("rawtypes")
 	@Override
 	public List<Node> getNodes() { return nodes; }
 	@Override
@@ -38,14 +39,12 @@ public class SetValues implements Node<SetValues>, NodeHolder {
 
 	@Override
 	public SetValues immutable() {
-		SetValues values = new ImmutableSetValues(this);
-		return values;
+		return new ImmutableSetValues(this);
 	}
 
 	@Override
 	public SetValues mutable() {
-		SetValues values = new SetValues(this);
-		return values;
+		return new SetValues(this);
 	}
 	
 	/* BEGIN Fluent API */

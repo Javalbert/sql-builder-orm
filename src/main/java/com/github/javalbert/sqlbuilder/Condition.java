@@ -29,13 +29,11 @@ public class Condition extends ConditionBuilder<Condition> implements Node<Condi
 	
 	@Override
 	public Condition immutable() {
-		Condition condition = new ImmutableCondition(this);
-		return condition;
+		return new ImmutableCondition(this);
 	}
 	
 	@Override
 	public Condition mutable() {
-		Condition condition = new Condition(this);
-		return condition;
+		return new Condition(this);
 	}
 }
