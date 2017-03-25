@@ -45,6 +45,14 @@ public final class NodeUtils {
 		return nodes;
 	}
 	
+	public static void throwImmutable() {
+		throw immutableException();
+	}
+	
+	public static UnsupportedOperationException immutableException() {
+		return new UnsupportedOperationException("immutable");
+	}
+	
 	public static boolean visit(
 			@SuppressWarnings("rawtypes") Node visitedNode,
 			@SuppressWarnings("rawtypes") List<Node> nodes,

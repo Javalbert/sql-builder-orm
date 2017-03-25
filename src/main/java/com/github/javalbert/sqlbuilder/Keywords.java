@@ -93,6 +93,8 @@ public final class Keywords {
 	public static final String RIGHT_JOIN = RIGHT + " " + JOIN;
 	public static final String RIGHT_OUTER_JOIN = RIGHT + " " + OUTER + " " + JOIN;
 	public static final String UNION_ALL = UNION + " " + ALL;
+	public static final String WHEN_MATCHED = WHEN + " MATCHED ";
+	public static final String WHEN_NOT_MATCHED = WHEN + " " + NOT + " MATCHED ";
 	
 	/* END Compound reserved words */
 
@@ -165,6 +167,7 @@ public final class Keywords {
 		/* END Reserved words */
 		
 		/* BEGIN Compound reserved words */
+		DELETE_FROM,
 		FULL_OUTER_JOIN,
 		GROUP_BY,
 		INNER_JOIN,
@@ -179,6 +182,9 @@ public final class Keywords {
 		ORDER_BY,
 		RIGHT_JOIN,
 		RIGHT_OUTER_JOIN,
+		UNION_ALL,
+		WHEN_MATCHED,
+		WHEN_NOT_MATCHED,
 		/* END Compound reserved words */
 
 		/* BEGIN Non-reserved words */

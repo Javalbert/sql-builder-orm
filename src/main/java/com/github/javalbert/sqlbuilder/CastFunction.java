@@ -32,14 +32,7 @@ public class CastFunction extends Function {
 	}
 	
 	public CastFunction as(String dataType) {
-		Node<?> node = !nodes.isEmpty() ? nodes.get(nodes.size() - 1) : null;
-		
-		if (node == null) {
-			throw new IllegalStateException("No nodes");
-		} else if (node instanceof Aliasable) {
-			Aliasable aliasable = (Aliasable)node;
-			aliasable.setAlias(dataType);
-		}
+		NodeUtils.setAlias(dataType, nodes);
 		return this;
 	}
 	

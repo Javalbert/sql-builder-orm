@@ -15,7 +15,7 @@ package com.github.javalbert.sqlbuilder;
 public class ImmutableFetch extends Fetch {
 	@Override
 	public void setFetchCount(int fetchCount) {
-		throw new UnsupportedOperationException("immutable");
+		NodeUtils.throwImmutable();
 	}
 	
 	public ImmutableFetch(Fetch fetch) {

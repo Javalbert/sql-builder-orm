@@ -64,8 +64,7 @@ public class Update implements
 	
 	@Override
 	public Update tableName(String name) {
-		Table table = new Table(name);
-		nodes.add(table);
+		nodes.add(new Table(name));
 		return this;
 	}
 	

@@ -92,8 +92,7 @@ public class From implements Node<From>, NodeHolder, TableNameSpecifier<From> {
 	
 	@Override
 	public From tableName(String name) {
-		Table table = new Table(name);
-		nodes.add(table);
+		nodes.add(new Table(name));
 		return this;
 	}
 	

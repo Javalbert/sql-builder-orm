@@ -15,11 +15,11 @@ package com.github.javalbert.sqlbuilder;
 public class ImmutableLiteralNull extends LiteralNull {
 	@Override
 	public void setAlias(String alias) {
-		throw new UnsupportedOperationException("immutable");
+		NodeUtils.throwImmutable();
 	}
 	@Override
 	public void setValue(Object value) {
-		throw new UnsupportedOperationException("immutable");
+		NodeUtils.throwImmutable();
 	}
 	
 	public ImmutableLiteralNull(LiteralNull literal) {

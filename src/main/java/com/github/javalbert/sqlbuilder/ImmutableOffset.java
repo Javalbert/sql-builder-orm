@@ -15,7 +15,7 @@ package com.github.javalbert.sqlbuilder;
 public class ImmutableOffset extends Offset {
 	@Override
 	public void setSkipCount(int skipCount) {
-		throw new UnsupportedOperationException("immutable");
+		NodeUtils.throwImmutable();
 	}
 	
 	public ImmutableOffset(Offset offset) {

@@ -15,15 +15,15 @@ package com.github.javalbert.sqlbuilder;
 public class ImmutableFunction extends Function {
 	@Override
 	public void setAlias(String alias) {
-		throw new UnsupportedOperationException("immutable");
+		NodeUtils.throwImmutable();
 	}
 	@Override
 	public void setMaxArguments(int maxArguments) {
-		throw new UnsupportedOperationException("immutable");
+		NodeUtils.throwImmutable();
 	}
 	@Override
 	public void setName(String name) {
-		throw new UnsupportedOperationException("immutable");
+		NodeUtils.throwImmutable();
 	}
 	
 	public ImmutableFunction(Function function) {
