@@ -50,6 +50,7 @@ public final class Keywords {
 	public static final String JOIN = "JOIN";
 	public static final String LEFT = "LEFT";
 	public static final String LIKE = "LIKE";
+	public static final String MERGE = "MERGE";
 	public static final String NEXT = "NEXT";
 	public static final String NOT = "NOT";
 	public static final String NULL = "NULL";
@@ -68,6 +69,7 @@ public final class Keywords {
 	public static final String TRUE = "TRUE";
 	public static final String UNION = "UNION";
 	public static final String UPDATE = "UPDATE";
+	public static final String USING = "USING";
 	public static final String VALUES = "VALUES";
 	public static final String WHEN = "WHEN";
 	public static final String WHERE = "WHERE";
@@ -142,6 +144,7 @@ public final class Keywords {
 		JOIN,
 		LEFT,
 		LIKE,
+		MERGE,
 		NEXT,
 		NOT,
 		NULL,
@@ -160,6 +163,7 @@ public final class Keywords {
 		TRUE,
 		UNION,
 		UPDATE,
+		USING,
 		VALUES,
 		WHEN,
 		WHERE,

@@ -85,6 +85,15 @@ public class Merge implements DMLStatement<Merge>, NodeHolder, TableNameSpecifie
 		return this;
 	}
 	
+	/**
+	 * Simply delegates to <code>Merge.tableName(String)</code> but improves code readability
+	 * @param tableName
+	 * @return
+	 */
+	public Merge into(String tableName) {
+		return tableName(tableName);
+	}
+	
 	public Merge on(Condition searchCondition) {
 		nodes.add(Objects.requireNonNull(searchCondition, "condition cannot be null"));
 		return this;

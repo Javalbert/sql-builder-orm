@@ -38,6 +38,11 @@ public class ImmutableMerge extends Merge {
 	public ImmutableMerge insert(Insert insert) {
 		throw NodeUtils.immutableException();
 	}
+	
+	@Override
+	public Merge into(String tableName) {
+		throw NodeUtils.immutableException();
+	}
 
 	@Override
 	public ImmutableMerge on(Condition condition) {
