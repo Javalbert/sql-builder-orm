@@ -84,9 +84,10 @@ public class JdbcMapper {
 				classRowMapping.setAutoIncrementId(object, rs);
 			}
 		} catch (SQLException e) {
+			throw e;
+		} finally {
 			JdbcUtils.closeQuietly(rs);
 			JdbcUtils.closeQuietly(stmt);
-			throw e;
 		}
 	}
 	

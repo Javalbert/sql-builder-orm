@@ -815,14 +815,19 @@ public class ANSI implements Vendor {
 	public String print(SetValue value) {
 		StringBuilder builder = new StringBuilder();
 		
+		boolean setColumnSpecified = false;
+		
 		for (Node node : value.getNodes()) {
 			switch (node.getType()) {
 				case Node.TYPE_CASE:
 					builder.append(print((Case)node));
 					break;
 				case Node.TYPE_COLUMN:
-					builder.append(print((Column)node))
-							.append(" = ");
+					builder.append(print((Column)node));
+					if (!setColumnSpecified) {
+						builder.append(" = ");
+						setColumnSpecified = true;
+					}
 					break;
 				case Node.TYPE_EXPRESSION:
 					appendExpression(builder, (Expression)node);

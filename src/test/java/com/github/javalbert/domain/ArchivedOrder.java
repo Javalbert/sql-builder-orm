@@ -77,8 +77,13 @@ public class ArchivedOrder {
 	public ArchivedOrder() {}
 	
 	public ArchivedOrder(long orderId, long customerId, long storeKey) {
+		this(orderId, customerId, storeKey, null, null);
+	}
+	
+	public ArchivedOrder(long orderId, long customerId, long storeKey, BigDecimal salesAmount, LocalDateTime orderDateTime) {
 		this.customerId = customerId;
 		this.orderId = orderId;
 		this.storeKey = storeKey;
+		this.orderDateTime = orderDateTime;
 	}
 }
