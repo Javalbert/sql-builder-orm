@@ -37,13 +37,11 @@ public class Fetch implements Node<Fetch> {
 	
 	@Override
 	public Fetch immutable() {
-		Fetch fetch = new ImmutableFetch(this);
-		return fetch;
+		return new ImmutableFetch(this);
 	}
 	
 	@Override
 	public Fetch mutable() {
-		Fetch fetch = new Fetch(this);
-		return fetch;
+		return new Fetch(this);
 	}
 }

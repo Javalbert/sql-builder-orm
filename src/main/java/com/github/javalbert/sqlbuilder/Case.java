@@ -23,7 +23,6 @@ import com.github.javalbert.utils.string.Strings;
  * @author Albert
  *
  */
-@SuppressWarnings("rawtypes")
 public class Case implements Aliasable, ConditionBuilding<Case>, ExpressionBuilding<Case>, Node<Case>, NodeHolder {
 	public static final Token ELSE = new ConstantToken(Keywords.ELSE);
 	public static final Token END = new ConstantToken(Keywords.END, false);
@@ -31,6 +30,7 @@ public class Case implements Aliasable, ConditionBuilding<Case>, ExpressionBuild
 	public static final Token WHEN = new ConstantToken(Keywords.WHEN);
 
 	protected String alias;
+	@SuppressWarnings("rawtypes")
 	protected List<Node> nodes = new ArrayList<>();
 	private Column workColumn;
 
@@ -40,6 +40,7 @@ public class Case implements Aliasable, ConditionBuilding<Case>, ExpressionBuild
 	public void setAlias(String alias) {
 		this.alias = Strings.safeTrim(alias);
 	}
+	@SuppressWarnings("rawtypes")
 	@Override
 	public List<Node> getNodes() { return nodes; }
 	@Override
@@ -59,14 +60,12 @@ public class Case implements Aliasable, ConditionBuilding<Case>, ExpressionBuild
 	
 	@Override
 	public Case immutable() {
-		Case sqlCase = new ImmutableCase(this);
-		return sqlCase;
+		return new ImmutableCase(this);
 	}
 	
 	@Override
 	public Case mutable() {
-		Case sqlCase = new Case(this);
-		return sqlCase;
+		return new Case(this);
 	}
 	
 	/* BEGIN Fluent API */

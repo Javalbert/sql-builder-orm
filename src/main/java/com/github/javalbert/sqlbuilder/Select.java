@@ -16,15 +16,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@SuppressWarnings("rawtypes")
 public class Select implements Aliasable, DMLStatement<Select>, NodeHolder {
 	protected String alias;
+	@SuppressWarnings("rawtypes")
 	protected List<Node> nodes = new ArrayList<>();
 
 	@Override
 	public String getAlias() { return alias; }
 	@Override
 	public void setAlias(String alias) { this.alias = alias; }
+	@SuppressWarnings("rawtypes")
 	@Override
 	public List<Node> getNodes() { return nodes; }
 	@Override
@@ -44,14 +45,12 @@ public class Select implements Aliasable, DMLStatement<Select>, NodeHolder {
 	
 	@Override
 	public Select immutable() {
-		Select select = new ImmutableSelect(this);
-		return select;
+		return new ImmutableSelect(this);
 	}
 	
 	@Override
 	public Select mutable() {
-		Select select = new Select(this);
-		return select;
+		return new Select(this);
 	}
 	
 	/* BEGIN Fluent API */

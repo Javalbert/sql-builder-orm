@@ -16,10 +16,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@SuppressWarnings("rawtypes")
 public class Insert implements DMLStatement<Insert>, Node<Insert>, NodeHolder {
+	@SuppressWarnings("rawtypes")
 	protected List<Node> nodes = new ArrayList<>();
 	
+	@SuppressWarnings("rawtypes")
 	@Override
 	public List<Node> getNodes() { return nodes; }
 	@Override
@@ -42,14 +43,12 @@ public class Insert implements DMLStatement<Insert>, Node<Insert>, NodeHolder {
 	
 	@Override
 	public Insert immutable() {
-		Insert insert = new ImmutableInsert(this);
-		return insert;
+		return new ImmutableInsert(this);
 	}
 
 	@Override
 	public Insert mutable() {
-		Insert insert = new Insert(this);
-		return insert;
+		return new Insert(this);
 	}
 	
 	/* BEGIN Fluent API */
@@ -60,8 +59,7 @@ public class Insert implements DMLStatement<Insert>, Node<Insert>, NodeHolder {
 	}
 	
 	public Insert into(String name) {
-		Table table = new Table(name);
-		nodes.add(table);
+		nodes.add(new Table(name));
 		return this;
 	}
 	

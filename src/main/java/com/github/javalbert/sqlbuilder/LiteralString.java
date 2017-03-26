@@ -35,13 +35,11 @@ public class LiteralString extends Literal<String> {
 	
 	@Override
 	public LiteralString immutable() {
-		LiteralString literal = new ImmutableLiteralString(this);
-		return literal;
+		return new ImmutableLiteralString(this);
 	}
 	
 	@Override
 	public LiteralString mutable() {
-		LiteralString literal = new LiteralString(this);
-		return literal;
+		return new LiteralString(this);
 	}
 }

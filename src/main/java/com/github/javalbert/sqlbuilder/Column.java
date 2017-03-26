@@ -75,13 +75,11 @@ public class Column implements Aliasable, Node<Column> {
 	
 	@Override
 	public Column immutable() {
-		Column column = new ImmutableColumn(this);
-		return column;
+		return new ImmutableColumn(this);
 	}
 	
 	@Override
 	public Column mutable() {
-		Column column = new Column(this);
-		return column;
+		return new Column(this);
 	}
 }

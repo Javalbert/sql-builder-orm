@@ -15,19 +15,19 @@ package com.github.javalbert.sqlbuilder;
 public class ImmutableColumn extends Column {
 	@Override
 	public void setAlias(String alias) {
-		throw new UnsupportedOperationException("immutable");
+		NodeUtils.throwImmutable();
 	}
 	@Override
 	public void setName(String name) {
-		throw new UnsupportedOperationException("immutable");
+		NodeUtils.throwImmutable();
 	}
 	@Override
 	public void setPrefix(Prefix prefix) {
-		throw new UnsupportedOperationException("immutable");
+		NodeUtils.throwImmutable();
 	}
 	@Override
 	public void setPrefixValue(String prefixValue) {
-		throw new UnsupportedOperationException("immutable");
+		NodeUtils.throwImmutable();
 	}
 	
 	public ImmutableColumn(Column column) {

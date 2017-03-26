@@ -37,13 +37,11 @@ public class Offset implements Node<Offset> {
 	
 	@Override
 	public Offset immutable() {
-		Offset offset = new ImmutableOffset(this);
-		return offset;
+		return new ImmutableOffset(this);
 	}
 	
 	@Override
 	public Offset mutable() {
-		Offset offset = new Offset(this);
-		return offset;
+		return new Offset(this);
 	}
 }

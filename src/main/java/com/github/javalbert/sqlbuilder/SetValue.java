@@ -29,13 +29,11 @@ public class SetValue extends ExpressionBuilder<SetValue> implements Node<SetVal
 
 	@Override
 	public SetValue immutable() {
-		SetValue value = new ImmutableSetValue(this);
-		return value;
+		return new ImmutableSetValue(this);
 	}
 
 	@Override
 	public SetValue mutable() {
-		SetValue value = new SetValue(this);
-		return value;
+		return new SetValue(this);
 	}
 }

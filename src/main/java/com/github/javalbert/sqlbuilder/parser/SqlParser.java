@@ -19,6 +19,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.github.javalbert.sqlbuilder.AggregateFunction;
+import com.github.javalbert.sqlbuilder.Aliasable;
 import com.github.javalbert.sqlbuilder.ArithmeticOperator;
 import com.github.javalbert.sqlbuilder.BinaryOperator;
 import com.github.javalbert.sqlbuilder.Case;
@@ -37,7 +38,9 @@ import com.github.javalbert.sqlbuilder.Having;
 import com.github.javalbert.sqlbuilder.InValues;
 import com.github.javalbert.sqlbuilder.Insert;
 import com.github.javalbert.sqlbuilder.Keywords;
+import com.github.javalbert.sqlbuilder.Merge;
 import com.github.javalbert.sqlbuilder.Node;
+import com.github.javalbert.sqlbuilder.NodeHolder;
 import com.github.javalbert.sqlbuilder.OrderBy;
 import com.github.javalbert.sqlbuilder.Predicate;
 import com.github.javalbert.sqlbuilder.RelationalOperator;
@@ -630,7 +633,7 @@ public class SqlParser {
 			case Keywords.AS:
 				helper.addPendingTable();
 				ParseToken nextNode = getNextNode(nodes, i);
-				from.as(nextNode.getToken());
+				helper.addAlias(nextNode.getToken());
 				i++;
 				break;
 			case Keywords.FULL_OUTER_JOIN:
@@ -795,6 +798,124 @@ public class SqlParser {
 				helper.caseDefault(node, i);
 				break;
 		}
+	}
+	
+	private static void parseInValues(InValues values, List<ParseToken> valueNodes) {
+		ExpressionCaseHelper helper = new ExpressionCaseHelper(values);
+		
+		for (int i = 0; i < valueNodes.size(); i++) {
+			ParseToken valueNode = valueNodes.get(i);
+			
+			switch (valueNode.getToken().toUpperCase()) {
+				case ",":
+					helper.caseComma();
+					break;
+				case ParseTree.TOKEN_PARENTHESES_GROUP:
+					helper.caseParenthesesGroup(valueNode);
+					break;
+				default:
+					helper.caseDefault(valueNode, i);
+					break;
+			}
+		}
+		helper.addLastColumn();
+	}
+	
+	private static int parseMerge(Merge merge, List<ParseToken> nodes, int i) {
+		final MergeHelper helper = new MergeHelper(merge);
+		
+		for (; i < nodes.size(); i++) {
+			i = parseMergeNode(merge, nodes, i, helper);
+		}
+		return i - 1;
+	}
+	
+	private static int parseMergeNode(
+			final Merge merge,
+			final List<ParseToken> nodes,
+			int i,
+			final MergeHelper helper) {
+		final ParseToken node = nodes.get(i);
+		final String token = node.getToken();
+		
+		// Variables for table reference and WHEN clause search conditions
+		//
+		Condition searchCondition;
+		int start;
+		
+		switch (token.toUpperCase()) {
+			case Keywords.AS:
+				helper.addPendingTable();
+				ParseToken nextNode = getNextNode(nodes, i);
+				helper.addAlias(nextNode.getToken());
+				i++;
+				break;
+			case Keywords.DELETE:
+				merge.delete();
+				break;
+			case Keywords.INSERT:
+				Insert insert = new Insert();
+				merge.insert(insert);
+				i = parseInsert(insert, nodes, i + 1);
+				break;
+			case Keywords.INTO:
+			case Keywords.MATCHED:
+			case Keywords.MERGE:
+			case Keywords.NOT:
+				// Don't do anything for any of these cases
+				break;
+			case Keywords.ON:
+				helper.addPendingTable();
+				
+				searchCondition = new Condition();
+				merge.on(searchCondition);
+				
+				start = i + 1;
+				i = parseCondition(searchCondition, nodes, start, getFirstIndex(nodes, start, Keywords.WHEN));
+				i--;
+				break;
+			case Keywords.AND:
+				searchCondition = new Condition();
+				merge.on(searchCondition);
+				
+				start = i + 1;
+				i = parseCondition(searchCondition, nodes, start, getFirstIndex(nodes, start, Keywords.THEN));
+				i--;
+				break;
+			case Keywords.THEN:
+				merge.then();
+				break;
+			case ParseTree.TOKEN_PARENTHESES_GROUP:
+				Select tableReference = new Select();
+				merge.using(tableReference);
+				parseSelectTree(tableReference, nodes, i);
+				break;
+			case Keywords.UPDATE:
+				Update update = new Update();
+				merge.update(update);
+				i = parseUpdate(update, nodes, i + 1);
+				break;
+			case Keywords.USING:
+				helper.addPendingTable();
+				break;
+			case Keywords.WHEN:
+				ParseToken matchedNode = getNextNode(nodes, i);
+				String matchedNodeToken = matchedNode.getToken().toUpperCase();
+				
+				if (matchedNodeToken.equals(Keywords.MATCHED)) {
+					merge.whenMatched();
+					i++;
+				} else if (matchedNodeToken.equals(Keywords.NOT)
+						/*&& getNextNode(nodes, i + 2).getToken().toUpperCase().equals(Keywords.MATCHED)*/) {
+					merge.whenNotMatched();
+					i += 2;
+				}
+				break;
+			default:
+				helper.caseDefault(token);
+				break;
+		}
+		return i;
 	}
 
 	private static int parseOffsetOrFetch(
@@ -1001,27 +1122,6 @@ public class SqlParser {
 		
 		helper.addLastColumn();
 		return i;
-	}
-	
-	private static void parseInValues(InValues values, List<ParseToken> valueNodes) {
-		ExpressionCaseHelper helper = new ExpressionCaseHelper(values);
-		
-		for (int i = 0; i < valueNodes.size(); i++) {
-			ParseToken valueNode = valueNodes.get(i);
-			
-			switch (valueNode.getToken().toUpperCase()) {
-				case ",":
-					helper.caseComma();
-					break;
-				case ParseTree.TOKEN_PARENTHESES_GROUP:
-					helper.caseParenthesesGroup(valueNode);
-					break;
-				default:
-					helper.caseDefault(valueNode, i);
-					break;
-			}
-		}
-		helper.addLastColumn();
 	}
 	
 	private static boolean parsePendingColumn(ExpressionCaseHelper helper, ColumnBuilder<?> builder) {
@@ -1332,48 +1432,32 @@ public class SqlParser {
 			}
 		}
 	}
-
+	
 	/**
 	 * Helper class that makes unit testing parsing of FROM clause easier, 
 	 * with the slight overhead of creating this object
 	 * @author Albert
 	 *
 	 */
-	private static class FromHelper {
-		private boolean expectingDot;
-		private final From from;
-		private final StringBuilder tableName = new StringBuilder();
-		
+	private static class FromHelper extends TableNameHelper<From> {
 		public FromHelper(From from) {
-			this.from = from;
+			super(from);
 		}
 		
-		public void addPendingTable() {
-			handleInlineViewAlias();
-			SqlParser.addPendingTable(from, tableName);
-			expectingDot = false;
+		@Override
+		public void addAlias(String alias) {
+			node.as(alias);
+		}
+	}
+	
+	private static class MergeHelper extends TableNameHelper<Merge> {
+		public MergeHelper(Merge node) {
+			super(node);
 		}
 
-		public void caseDefault(String token) {
-			if (tableName.length() > 0 && expectingDot && !".".equals(token)) {
-				addPendingTable();
-				from.as(token);
-				expectingDot = false;
-			} else {
-				tableName.append(token);
-				expectingDot = !expectingDot;
-			}
-		}
-		
-		private void handleInlineViewAlias() {
-			if (tableName.length() > 0 && !from.getNodes().isEmpty()) {
-				Node<?> lastNode = from.getNodes().get(from.getNodes().size() - 1);
-				
-				if (lastNode instanceof Select) {
-					from.as(tableName.toString());
-					tableName.setLength(0);
-				}
-			}
+		@Override
+		public void addAlias(String alias) {
+			node.as(alias);
 		}
 	}
 
@@ -1404,9 +1488,10 @@ public class SqlParser {
 			switch (tokenUpperCase) {
 				case Keywords.FETCH:
 					ParseToken firstNode = getNextNode(nodes, i);
+					String firstNodeToken = firstNode.getToken().toUpperCase();
 					if (firstNode == null
-							|| !firstNode.getToken().toUpperCase().equals(Keywords.FIRST)
-							&& !firstNode.getToken().toUpperCase().equals(Keywords.NEXT)) {
+							|| !firstNodeToken.equals(Keywords.FIRST)
+							&& !firstNodeToken.equals(Keywords.NEXT)) {
 						throw new IllegalArgumentException("expected {" + Keywords.FIRST + " | " 
 							+ Keywords.NEXT + "} after " + Keywords.FETCH);
 					}
@@ -1509,6 +1594,61 @@ public class SqlParser {
 				parseCurrentToken();
 				incrementTokenIndex();
 			}
+		}
+	}
+	
+	/**
+	 * Logic was extracted from {@link FromHelper} class for more general use and
+	 * the only changes where "<code>private final T node;</code>" instead of "<code>private final From from;</code>"
+	 * <br>There is no interface to set the last node's alias, not to be
+	 * confused with {@link Aliasable} interface that defines the object that implements it
+	 * to be able to have an alias on itself
+	 * @author Albert
+	 *
+	 * @param <T> object that implements TableNameSpecifier and NodeHolder
+	 */
+	@SuppressWarnings("rawtypes")
+	private static abstract class TableNameHelper<T extends TableNameSpecifier & NodeHolder> {
+		protected boolean expectingDot;
+		protected final T node;
+		protected final StringBuilder tableName = new StringBuilder();
+		
+		public TableNameHelper(T node) {
+			this.node = node;
+		}
+		
+		public void addPendingTable() {
+			handleSubqueryAlias();
+			addTableNameInNode();
+			expectingDot = false;
+		}
+
+		public void caseDefault(String token) {
+			if (tableName.length() > 0 && expectingDot && !".".equals(token)) {
+				addPendingTable();
+				addAlias(token);
+				expectingDot = false;
+			} else {
+				tableName.append(token);
+				expectingDot = !expectingDot;
+			}
+		}
+		
+		public void handleSubqueryAlias() {
+			if (tableName.length() > 0 && !node.getNodes().isEmpty()) {
+				Node<?> lastNode = node.getNodes().get(node.getNodes().size() - 1);
+				
+				if (lastNode instanceof Select) {
+					addAlias(tableName.toString());
+					tableName.setLength(0);
+				}
+			}
+		}
+		
+		public abstract void addAlias(String alias);
+		
+		protected void addTableNameInNode() {
+			SqlParser.addPendingTable(node, tableName);
 		}
 	}
 	
@@ -1692,6 +1832,14 @@ public class SqlParser {
 					sqlStatement = insert;
 					statementType = Node.TYPE_INSERT;
 					break;
+				case Keywords.MERGE:
+					Merge merge = new Merge();
+					
+					i = parseMerge(merge, nodes, i + 1);
+					
+					sqlStatement = merge;
+					statementType = Node.TYPE_MERGE;
+					break;
 				case Keywords.SELECT:
 					Select select = new Select();
 					
@@ -1721,7 +1869,7 @@ public class SqlParser {
 			}
 		}
 	}
-	
+
 	private ParseToken sqlToParseTree(String sql) {
 		return new ParseTree(tokenize(sql)).parseTokens();
 	}

@@ -19,15 +19,15 @@ import java.util.List;
 public class ImmutableCommonTableExpression extends CommonTableExpression {
 	@Override
 	public void setColumns(List<String> columns) {
-		throw new UnsupportedOperationException("immutable");
+		NodeUtils.throwImmutable();
 	}
 	@Override
 	public void setName(String name) {
-		throw new UnsupportedOperationException("immutable");
+		NodeUtils.throwImmutable();
 	}
 	@Override
 	public void setSelect(Select select) {
-		throw new UnsupportedOperationException("immutable");
+		NodeUtils.throwImmutable();
 	}
 	
 	public ImmutableCommonTableExpression(CommonTableExpression cte) {

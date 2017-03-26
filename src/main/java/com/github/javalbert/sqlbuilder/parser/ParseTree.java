@@ -72,14 +72,13 @@ public class ParseTree {
 		}
 	}
 	
-	private static void throwExpectTokenException(String expectedToken, String tokenBeforeExpectedToken) {
-		throw new IllegalArgumentException("Expecting a " + expectedToken + " after " + tokenBeforeExpectedToken);
+	private static String getTokenAhead(List<String> tokens, int i) {
+		int nextIndex = i + 1;
+		return nextIndex < tokens.size() ? tokens.get(nextIndex) : null;
 	}
 	
-	private static boolean tokenAhead(List<String> tokens, int i, String tokenAhead) {
-		int nextIndex = i + 1;
-		String token = nextIndex < tokens.size() ? tokens.get(nextIndex) : null;
-		return tokenAhead.equals(token);
+	private static void throwExpectTokenException(String expectedToken, String tokenBeforeExpectedToken) {
+		throw new IllegalArgumentException("Expecting a " + expectedToken + " after " + tokenBeforeExpectedToken);
 	}
 	
 	private ParseToken currentParseToken;
@@ -182,6 +181,7 @@ public class ParseTree {
 		}
 		
 		ParseToken parseToken = null;
+		String tokenAhead;
 		
 		final String tokenUpperCase = currentToken.toUpperCase();
 		switch (tokenUpperCase) {
@@ -223,14 +223,17 @@ public class ParseTree {
 				addAndPush(parseToken);
 				break;
 			case Keywords.IS:
-				if (tokenAhead(tokens, currentTokenIndex, Keywords.NOT)) {
-					if (tokenAhead(tokens, currentTokenIndex + 1, Keywords.NULL)) {
+				tokenAhead = getTokenAhead(tokens, currentTokenIndex);
+				
+				if (Keywords.NOT.equals(tokenAhead)) {
+					String nullToken = getTokenAhead(tokens, currentTokenIndex + 1);
+					if (Keywords.NULL.equals(nullToken)) {
 						currentTokenIndex += 2;
 						parseToken = new ParseToken(Keywords.IS_NOT_NULL, true);
 					} else {
 						throwExpectTokenException(Keywords.NULL, Keywords.NOT);
 					}
-				} else if (tokenAhead(tokens, currentTokenIndex, Keywords.NULL)) {
+				} else if (Keywords.NULL.equals(tokenAhead)) {
 					currentTokenIndex++;
 					parseToken = new ParseToken(Keywords.IS_NULL, true);
 				} else {
@@ -246,22 +249,30 @@ public class ParseTree {
 				currentParseToken.addNode(parseToken);
 				break;
 			case Keywords.NOT:
-				if (tokenAhead(tokens, currentTokenIndex, Keywords.BETWEEN)) {
-					parseToken = new ParseToken(Keywords.NOT_BETWEEN, true);
-				} else if (tokenAhead(tokens, currentTokenIndex, Keywords.EXISTS)) {
-					parseToken = new ParseToken(Keywords.NOT_EXISTS, true);
-				} else if (tokenAhead(tokens, currentTokenIndex, Keywords.IN)) {
-					parseToken = new ParseToken(Keywords.NOT_IN, true);
-				} else if (tokenAhead(tokens, currentTokenIndex, Keywords.LIKE)) {
-					parseToken = new ParseToken(Keywords.NOT_LIKE, true);
+				tokenAhead = getTokenAhead(tokens, currentTokenIndex);
+				
+				if (Keywords.MATCHED.equals(tokenAhead)) {
+					parseToken = new ParseToken(Keywords.NOT, true);
 				} else {
-					throw new IllegalArgumentException("Expecting { " + Keywords.BETWEEN 
-							+ " | " + Keywords.EXISTS 
-							+ " | " + Keywords.IN 
-							+ " | " + Keywords.LIKE 
-							+ " } after " + tokenUpperCase);
+					if (Keywords.BETWEEN.equals(tokenAhead)) {
+						parseToken = new ParseToken(Keywords.NOT_BETWEEN, true);
+					} else if (Keywords.EXISTS.equals(tokenAhead)) {
+						parseToken = new ParseToken(Keywords.NOT_EXISTS, true);
+					} else if (Keywords.IN.equals(tokenAhead)) {
+						parseToken = new ParseToken(Keywords.NOT_IN, true);
+					} else if (Keywords.LIKE.equals(tokenAhead)) {
+						parseToken = new ParseToken(Keywords.NOT_LIKE, true);
+					} else {
+						throw new IllegalArgumentException("Expecting { "
+								+ Keywords.BETWEEN
+								+ " | " + Keywords.EXISTS
+								+ " | " + Keywords.IN
+								+ " | " + Keywords.LIKE
+								+ " | " + Keywords.MATCHED
+								+ " } after " + tokenUpperCase);
+					}
+					currentTokenIndex++;
 				}
-				currentTokenIndex++;
 				currentParseToken.addNode(parseToken);
 				break;
 			case Keywords.OFFSET:
@@ -280,13 +291,16 @@ public class ParseTree {
 			case Keywords.FULL:
 			case Keywords.LEFT:
 			case Keywords.RIGHT:
-				if (tokenAhead(tokens, currentTokenIndex, Keywords.OUTER)) {
-					if (tokenAhead(tokens, currentTokenIndex + 1, Keywords.JOIN)) {
+				tokenAhead = getTokenAhead(tokens, currentTokenIndex);
+				
+				if (Keywords.OUTER.equals(tokenAhead)) {
+					String joinToken = getTokenAhead(tokens, currentTokenIndex + 1);
+					if (Keywords.JOIN.equals(joinToken)) {
 						currentTokenIndex += 2;
 					} else {
 						throwExpectTokenException(Keywords.JOIN, Keywords.OUTER);
 					}
-				} else if (tokenAhead(tokens, currentTokenIndex, Keywords.JOIN)) {
+				} else if (Keywords.JOIN.equals(tokenAhead)) {
 					currentTokenIndex++;
 				} else {
 					throwExpectTokenException(Keywords.JOIN, tokenUpperCase);
@@ -311,7 +325,7 @@ public class ParseTree {
 				popBackToBefore(BEFORE_ORDER_BY);
 				
 				if (tokenUpperCase.equals(Keywords.UNION) 
-						&& tokenAhead(tokens, currentTokenIndex, Keywords.ALL)) {
+						&& Keywords.ALL.equals(getTokenAhead(tokens, currentTokenIndex))) {
 					parseToken = new ParseToken(Keywords.UNION_ALL, true);
 					currentTokenIndex++;
 				} else {

@@ -50,6 +50,8 @@ public final class Keywords {
 	public static final String JOIN = "JOIN";
 	public static final String LEFT = "LEFT";
 	public static final String LIKE = "LIKE";
+	public static final String MATCHED = "MATCHED";
+	public static final String MERGE = "MERGE";
 	public static final String NEXT = "NEXT";
 	public static final String NOT = "NOT";
 	public static final String NULL = "NULL";
@@ -68,6 +70,7 @@ public final class Keywords {
 	public static final String TRUE = "TRUE";
 	public static final String UNION = "UNION";
 	public static final String UPDATE = "UPDATE";
+	public static final String USING = "USING";
 	public static final String VALUES = "VALUES";
 	public static final String WHEN = "WHEN";
 	public static final String WHERE = "WHERE";
@@ -93,6 +96,8 @@ public final class Keywords {
 	public static final String RIGHT_JOIN = RIGHT + " " + JOIN;
 	public static final String RIGHT_OUTER_JOIN = RIGHT + " " + OUTER + " " + JOIN;
 	public static final String UNION_ALL = UNION + " " + ALL;
+	public static final String WHEN_MATCHED = WHEN + " " + MATCHED + " ";
+	public static final String WHEN_NOT_MATCHED = WHEN + " " + NOT + " " + MATCHED + " ";
 	
 	/* END Compound reserved words */
 
@@ -140,6 +145,8 @@ public final class Keywords {
 		JOIN,
 		LEFT,
 		LIKE,
+		MATCHED,
+		MERGE,
 		NEXT,
 		NOT,
 		NULL,
@@ -158,6 +165,7 @@ public final class Keywords {
 		TRUE,
 		UNION,
 		UPDATE,
+		USING,
 		VALUES,
 		WHEN,
 		WHERE,
@@ -165,6 +173,7 @@ public final class Keywords {
 		/* END Reserved words */
 		
 		/* BEGIN Compound reserved words */
+		DELETE_FROM,
 		FULL_OUTER_JOIN,
 		GROUP_BY,
 		INNER_JOIN,
@@ -179,6 +188,9 @@ public final class Keywords {
 		ORDER_BY,
 		RIGHT_JOIN,
 		RIGHT_OUTER_JOIN,
+		UNION_ALL,
+		WHEN_MATCHED,
+		WHEN_NOT_MATCHED,
 		/* END Compound reserved words */
 
 		/* BEGIN Non-reserved words */

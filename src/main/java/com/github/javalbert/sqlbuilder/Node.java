@@ -34,21 +34,22 @@ public interface Node<T extends Node> {
 	public static final int TYPE_LITERAL_NULL = 18;
 	public static final int TYPE_LITERAL_NUMBER = 19;
 	public static final int TYPE_LITERAL_STRING = 20;
-	public static final int TYPE_OFFSET = 21;
-	public static final int TYPE_ORDER_BY = 22;
-	public static final int TYPE_ORDER_BY_SORT = 23;
-	public static final int TYPE_PARAM = 24;
-	public static final int TYPE_PREDICATE = 25;
-	public static final int TYPE_SELECT = 26;
-	public static final int TYPE_SELECT_LIST = 27;
-	public static final int TYPE_SET_OPERATOR = 28;
-	public static final int TYPE_SET_VALUE = 29;
-	public static final int TYPE_SET_VALUES = 30;
-	public static final int TYPE_TABLE = 31;
-	public static final int TYPE_TOKEN = 32;
-	public static final int TYPE_UPDATE = 33;
-	public static final int TYPE_WHERE = 34;
-	public static final int TYPE_WITH = 35;
+	public static final int TYPE_MERGE = 21;
+	public static final int TYPE_OFFSET = 22;
+	public static final int TYPE_ORDER_BY = 23;
+	public static final int TYPE_ORDER_BY_SORT = 24;
+	public static final int TYPE_PARAM = 25;
+	public static final int TYPE_PREDICATE = 26;
+	public static final int TYPE_SELECT = 27;
+	public static final int TYPE_SELECT_LIST = 28;
+	public static final int TYPE_SET_OPERATOR = 29;
+	public static final int TYPE_SET_VALUE = 30;
+	public static final int TYPE_SET_VALUES = 31;
+	public static final int TYPE_TABLE = 32;
+	public static final int TYPE_TOKEN = 33;
+	public static final int TYPE_UPDATE = 34;
+	public static final int TYPE_WHERE = 35;
+	public static final int TYPE_WITH = 36;
 	
 	int getType();
 

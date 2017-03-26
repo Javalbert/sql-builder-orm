@@ -15,11 +15,12 @@ package com.github.javalbert.sqlbuilder;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings("rawtypes")
 public class GroupBy implements ColumnBuilder<GroupBy>, Node<GroupBy>, NodeHolder {
+	@SuppressWarnings("rawtypes")
 	protected List<Node> nodes = new ArrayList<>();
 	private Column workColumn;
 	
+	@SuppressWarnings("rawtypes")
 	@Override
 	public List<Node> getNodes() { return nodes; }
 	@Override
@@ -38,14 +39,12 @@ public class GroupBy implements ColumnBuilder<GroupBy>, Node<GroupBy>, NodeHolde
 	
 	@Override
 	public GroupBy immutable() {
-		GroupBy groupBy = new ImmutableGroupBy(this);
-		return groupBy;
+		return new ImmutableGroupBy(this);
 	}
 	
 	@Override
 	public GroupBy mutable() {
-		GroupBy groupBy = new GroupBy(this);
-		return groupBy;
+		return new GroupBy(this);
 	}
 	
 	/* BEGIN Fluent API */

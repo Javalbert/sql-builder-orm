@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-@SuppressWarnings("rawtypes")
 public final class NodeUtils {
 	public static void addColumn(NodeHolder holder, Column workColumn, String name) {
 		if (workColumn != null) {
@@ -28,6 +27,7 @@ public final class NodeUtils {
 		holder.getNodes().add(workColumn);
 	}
 	
+	@SuppressWarnings("rawtypes")
 	public static List<Node> immutableNodes(NodeHolder holder) {
 		List<Node> nodes = new ArrayList<>();
 		for (Node node : holder.getNodes()) {
@@ -36,6 +36,7 @@ public final class NodeUtils {
 		return Collections.unmodifiableList(nodes);
 	}
 
+	@SuppressWarnings("rawtypes")
 	public static List<Node> mutableNodes(NodeHolder holder) {
 		List<Node> nodes = new ArrayList<>();
 		for (Node node : holder.getNodes()) {
@@ -44,12 +45,23 @@ public final class NodeUtils {
 		return nodes;
 	}
 	
-	public static boolean visit(Node visitedNode, List<Node> nodes, NodeVisitor visitor) {
+	public static void throwImmutable() {
+		throw immutableException();
+	}
+	
+	public static UnsupportedOperationException immutableException() {
+		return new UnsupportedOperationException("immutable");
+	}
+	
+	public static boolean visit(
+			@SuppressWarnings("rawtypes") Node visitedNode,
+			@SuppressWarnings("rawtypes") List<Node> nodes,
+			NodeVisitor visitor) {
 		if (!visitor.visit(visitedNode)) {
 			return false;
 		}
 		
-		for (Node node : nodes) {
+		for (@SuppressWarnings("rawtypes") Node node : nodes) {
 			if (!node.accept(visitor)) {
 				return false;
 			}
@@ -62,8 +74,8 @@ public final class NodeUtils {
 	 * @param alias
 	 * @param nodes
 	 */
-	public static void setAlias(String alias, List<Node> nodes) {
-		Node node = !nodes.isEmpty() ? nodes.get(nodes.size() - 1) : null;
+	public static void setAlias(String alias, @SuppressWarnings("rawtypes") List<Node> nodes) {
+		Node<?> node = !nodes.isEmpty() ? nodes.get(nodes.size() - 1) : null;
 		
 		if (node == null) {
 			throw new IllegalStateException("No nodes");

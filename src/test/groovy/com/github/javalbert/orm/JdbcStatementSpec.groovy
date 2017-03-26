@@ -118,7 +118,7 @@ class JdbcStatementSpec extends Specification {
 			JdbcStatement stmt = mapper.createQuery()
 			user = stmt.setString('name', 'Javalbert')
 				.sqlStatement(getUserByName) // Doesn't matter when to call sqlStatement()
-				.setInteger('version', 1)
+				.setInteger('version', 1) // Doesn't matter that "version" is not a parameter in the SELECT statement
 				.uniqueResult(conn, User.class)
 		} finally {
 			JdbcUtils.closeQuietly(conn)

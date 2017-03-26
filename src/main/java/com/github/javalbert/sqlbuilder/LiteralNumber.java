@@ -35,13 +35,11 @@ public class LiteralNumber extends Literal<Number> {
 	
 	@Override
 	public LiteralNumber immutable() {
-		LiteralNumber literal = new ImmutableLiteralNumber(this);
-		return literal;
+		return new ImmutableLiteralNumber(this);
 	}
 	
 	@Override
 	public LiteralNumber mutable() {
-		LiteralNumber literal = new LiteralNumber(this);
-		return literal;
+		return new LiteralNumber(this);
 	}
 }

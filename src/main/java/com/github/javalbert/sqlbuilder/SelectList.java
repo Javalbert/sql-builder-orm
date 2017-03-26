@@ -31,14 +31,12 @@ public class SelectList extends ExpressionBuilder<SelectList> implements Node<Se
 	
 	@Override
 	public SelectList immutable() {
-		SelectList list = new ImmutableSelectList(this);
-		return list;
+		return new ImmutableSelectList(this);
 	}
 	
 	@Override
 	public SelectList mutable() {
-		SelectList list = new SelectList(this);
-		return list;
+		return new SelectList(this);
 	}
 	
 	/* BEGIN Fluent API */

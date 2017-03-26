@@ -15,11 +15,12 @@ package com.github.javalbert.sqlbuilder;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings("rawtypes")
 public class OrderBy implements ColumnBuilder<OrderBy>, Node<OrderBy>, NodeHolder {
+	@SuppressWarnings("rawtypes")
 	protected List<Node> nodes = new ArrayList<>();
 	private Column workColumn;
 	
+	@SuppressWarnings("rawtypes")
 	@Override
 	public List<Node> getNodes() { return nodes; }
 	@Override
@@ -38,14 +39,12 @@ public class OrderBy implements ColumnBuilder<OrderBy>, Node<OrderBy>, NodeHolde
 	
 	@Override
 	public OrderBy immutable() {
-		OrderBy orderBy = new ImmutableOrderBy(this);
-		return orderBy;
+		return new ImmutableOrderBy(this);
 	}
 	
 	@Override
 	public OrderBy mutable() {
-		OrderBy orderBy = new OrderBy(this);
-		return orderBy;
+		return new OrderBy(this);
 	}
 	
 	/* BEGIN Fluent API */

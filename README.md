@@ -16,7 +16,6 @@
 ## TODO
 - Adding JUnit tests using Spock
 - Conform to ANSI SQL
-- Implement MERGE statement
 - Implement nested JOINs
 - Implement new Java 8 features (Streams API, lamda functions)
 - Publish project to The Central Repository

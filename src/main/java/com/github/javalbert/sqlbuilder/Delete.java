@@ -16,10 +16,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@SuppressWarnings("rawtypes")
 public class Delete implements DMLStatement<Delete>, NodeHolder, TableNameSpecifier<Delete> {
+	@SuppressWarnings("rawtypes")
 	protected List<Node> nodes = new ArrayList<>();
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public List<Node> getNodes() { return nodes; }
 	@Override
@@ -38,14 +39,12 @@ public class Delete implements DMLStatement<Delete>, NodeHolder, TableNameSpecif
 
 	@Override
 	public Delete immutable() {
-		Delete delete = new ImmutableDelete(this);
-		return delete;
+		return new ImmutableDelete(this);
 	}
 
 	@Override
 	public Delete mutable() {
-		Delete delete = new Delete(this);
-		return delete;
+		return new Delete(this);
 	}
 	
 	/* BEGIN Fluent API */
@@ -58,8 +57,7 @@ public class Delete implements DMLStatement<Delete>, NodeHolder, TableNameSpecif
 
 	@Override
 	public Delete tableName(String name) {
-		Table table = new Table(name);
-		nodes.add(table);
+		nodes.add(new Table(name));
 		return this;
 	}
 	

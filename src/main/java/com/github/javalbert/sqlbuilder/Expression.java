@@ -40,14 +40,12 @@ public class Expression extends ExpressionBuilder<Expression> implements Aliasab
 	
 	@Override
 	public Expression immutable() {
-		Expression expression = new ImmutableExpression(this);
-		return expression;
+		return new ImmutableExpression(this);
 	}
 	
 	@Override
 	public Expression mutable() {
-		Expression expression = new Expression(this);
-		return expression;
+		return new Expression(this);
 	}
 	
 	/* BEGIN Fluent API */

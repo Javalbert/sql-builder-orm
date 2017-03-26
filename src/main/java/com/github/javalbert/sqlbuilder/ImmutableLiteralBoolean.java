@@ -15,11 +15,11 @@ package com.github.javalbert.sqlbuilder;
 public class ImmutableLiteralBoolean extends LiteralBoolean {
 	@Override
 	public void setAlias(String alias) {
-		throw new UnsupportedOperationException("immutable");
+		NodeUtils.throwImmutable();
 	}
 	@Override
 	public void setValue(Boolean value) {
-		throw new UnsupportedOperationException("immutable");
+		NodeUtils.throwImmutable();
 	}
 	
 	public ImmutableLiteralBoolean(LiteralBoolean literal) {

@@ -32,14 +32,12 @@ public class InValues extends ExpressionBuilder<InValues> implements Node<InValu
 
 	@Override
 	public InValues immutable() {
-		InValues values = new ImmutableInValues(this);
-		return values;
+		return new ImmutableInValues(this);
 	}
 
 	@Override
 	public InValues mutable() {
-		InValues values = new InValues(this);
-		return values;
+		return new InValues(this);
 	}
 
 	/* BEGIN Fluent API */

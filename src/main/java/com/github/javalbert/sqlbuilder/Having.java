@@ -26,14 +26,12 @@ public class Having extends Condition {
 	
 	@Override
 	public Having immutable() {
-		Having having = new ImmutableHaving(this);
-		return having;
+		return new ImmutableHaving(this);
 	}
 	
 	@Override
 	public Having mutable() {
-		Having having = new Having(this);
-		return having;
+		return new Having(this);
 	}
 	
 	/* BEGIN Fluent API */

@@ -15,11 +15,11 @@ package com.github.javalbert.sqlbuilder;
 public class ImmutableLiteralNumber extends LiteralNumber {
 	@Override
 	public void setAlias(String alias) {
-		throw new UnsupportedOperationException("immutable");
+		NodeUtils.throwImmutable();
 	}
 	@Override
 	public void setValue(Number value) {
-		throw new UnsupportedOperationException("immutable");
+		NodeUtils.throwImmutable();
 	}
 	
 	public ImmutableLiteralNumber(LiteralNumber literal) {

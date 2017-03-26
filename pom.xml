@@ -43,6 +43,7 @@
 		<gmaven.version>1.5</gmaven.version>
 		<groovy.version>2.4.8</groovy.version>
 		<h2.version>1.4.193</h2.version>
+		<hsqldb.version>2.3.4</hsqldb.version>
 		<jacoco.coveredratio>0.30</jacoco.coveredratio>
 		<jacoco.version>0.7.8</jacoco.version>
 		<objenesis.version>2.4</objenesis.version>
@@ -111,6 +112,13 @@
 				Comment out test scope while developing in Eclipse because
 				JUnit will not recognize updates unless mvn is run
 			-->
+			<scope>test</scope>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.hsqldb</groupId>
+			<artifactId>hsqldb</artifactId>
+			<version>${hsqldb.version}</version>
 			<scope>test</scope>
 		</dependency>
 		

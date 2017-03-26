@@ -15,7 +15,7 @@ package com.github.javalbert.sqlbuilder;
 public class ImmutableSelect extends Select {
 	@Override
 	public void setAlias(String alias) {
-		throw new UnsupportedOperationException("immutable");
+		NodeUtils.throwImmutable();
 	}
 
 	public ImmutableSelect(Select select) {

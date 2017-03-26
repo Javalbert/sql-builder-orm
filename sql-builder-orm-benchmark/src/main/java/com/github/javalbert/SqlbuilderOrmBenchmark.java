@@ -194,9 +194,9 @@ public class SqlbuilderOrmBenchmark {
 	public static void main(String[] args) throws RunnerException {
 		Options opt = new OptionsBuilder()
 				.include(SqlbuilderOrmBenchmark.class.getSimpleName())
-				.warmupIterations(20)
-				.measurementIterations(20)
-				.forks(10)
+				.warmupIterations(5)
+				.measurementIterations(5)
+				.forks(3)
 				.build();
 
 		new Runner(opt).run();

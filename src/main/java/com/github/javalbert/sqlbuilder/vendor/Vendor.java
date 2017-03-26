@@ -27,6 +27,7 @@ import com.github.javalbert.sqlbuilder.GroupBy;
 import com.github.javalbert.sqlbuilder.InValues;
 import com.github.javalbert.sqlbuilder.Insert;
 import com.github.javalbert.sqlbuilder.Literal;
+import com.github.javalbert.sqlbuilder.Merge;
 import com.github.javalbert.sqlbuilder.Node;
 import com.github.javalbert.sqlbuilder.Offset;
 import com.github.javalbert.sqlbuilder.OrderBy;
@@ -63,6 +64,7 @@ public interface Vendor {
 	String print(Insert insert);
 	String print(InValues inValues);
 	String print(Literal literal);
+	String print(Merge merge);
 	String print(Node node);
 	String print(Offset offset);
 	String print(OrderBy orderBy);

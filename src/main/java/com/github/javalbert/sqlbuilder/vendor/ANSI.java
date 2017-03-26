@@ -33,6 +33,7 @@ import com.github.javalbert.sqlbuilder.Insert;
 import com.github.javalbert.sqlbuilder.Join;
 import com.github.javalbert.sqlbuilder.Keywords;
 import com.github.javalbert.sqlbuilder.Literal;
+import com.github.javalbert.sqlbuilder.Merge;
 import com.github.javalbert.sqlbuilder.Node;
 import com.github.javalbert.sqlbuilder.NodeHolder;
 import com.github.javalbert.sqlbuilder.Offset;
@@ -87,13 +88,10 @@ public class ANSI implements Vendor {
 	
 	@Override
 	public String print(Case sqlCase) {
-		StringBuilder builder = new StringBuilder();
-		builder.append(Keywords.CASE);
+		StringBuilder builder = new StringBuilder(Keywords.CASE);
 		
 		for (Node node : sqlCase.getNodes()) {
-			if (builder.length() > 0) {
-				builder.append(" ");
-			}
+			builder.append(" ");
 			
 			switch (node.getType()) {
 				case Node.TYPE_CASE:
@@ -528,6 +526,48 @@ public class ANSI implements Vendor {
 		return builder.toString();
 	}
 	
+	@Override
+	public String print(Merge merge) {
+		StringBuilder builder = new StringBuilder(Keywords.MERGE);
+
+		boolean foundTargetTable = false;
+		boolean foundMergeSearchCondition = false;
+		
+		for (Node node : merge.getNodes()) {
+			builder.append(" ");
+			
+			switch (node.getType()) {
+				case Node.TYPE_CONDITION:
+					builder.append(foundMergeSearchCondition ? Keywords.AND : Keywords.ON)
+							.append(" ")
+							.append(print((Condition)node));
+					foundMergeSearchCondition = true;
+					break;
+				case Node.TYPE_INSERT:
+					builder.append(print((Insert)node));
+					break;
+				case Node.TYPE_SELECT:
+					builder.append(Keywords.USING)
+							.append(" ")
+							.append(print((Select)node, true));
+					break;
+				case Node.TYPE_TABLE:
+					builder.append(foundTargetTable ? Keywords.USING : Keywords.INTO)
+							.append(" ")
+							.append(print((Table)node));
+					foundTargetTable = true;
+					break;
+				case Node.TYPE_TOKEN:
+					builder.append(print((Token)node));
+					break;
+				case Node.TYPE_UPDATE:
+					builder.append(print((Update)node));
+					break;
+			}
+		}
+		return builder.toString();
+	}
+	
 	// Not called by any other methods in here
 	@Override
 	public String print(Node node) {
@@ -567,6 +607,8 @@ public class ANSI implements Vendor {
 			case Node.TYPE_LITERAL_NUMBER:
 			case Node.TYPE_LITERAL_STRING:
 				return print((Literal)node);
+			case Node.TYPE_MERGE:
+				return print((Merge)node);
 			case Node.TYPE_OFFSET:
 				return print((Offset)node);
 			case Node.TYPE_ORDER_BY:
@@ -773,14 +815,19 @@ public class ANSI implements Vendor {
 	public String print(SetValue value) {
 		StringBuilder builder = new StringBuilder();
 		
+		boolean setColumnSpecified = false;
+		
 		for (Node node : value.getNodes()) {
 			switch (node.getType()) {
 				case Node.TYPE_CASE:
 					builder.append(print((Case)node));
 					break;
 				case Node.TYPE_COLUMN:
-					builder.append(print((Column)node))
-							.append(" = ");
+					builder.append(print((Column)node));
+					if (!setColumnSpecified) {
+						builder.append(" = ");
+						setColumnSpecified = true;
+					}
 					break;
 				case Node.TYPE_EXPRESSION:
 					appendExpression(builder, (Expression)node);

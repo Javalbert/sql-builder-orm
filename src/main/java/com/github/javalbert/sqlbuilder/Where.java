@@ -26,14 +26,12 @@ public class Where extends Condition {
 	
 	@Override
 	public Where immutable() {
-		Where where = new ImmutableWhere(this);
-		return where;
+		return new ImmutableWhere(this);
 	}
 	
 	@Override
 	public Where mutable() {
-		Where where = new Where(this);
-		return where;
+		return new Where(this);
 	}
 	
 	/* BEGIN Fluent API */

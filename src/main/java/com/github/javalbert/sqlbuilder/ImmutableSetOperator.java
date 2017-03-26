@@ -15,11 +15,11 @@ package com.github.javalbert.sqlbuilder;
 public class ImmutableSetOperator extends SetOperator {
 	@Override
 	public void setOperator(String operator) {
-		throw new UnsupportedOperationException("immutable");
+		NodeUtils.throwImmutable();
 	}
 	@Override
 	public void setSelect(Select select) {
-		throw new UnsupportedOperationException("immutable");
+		NodeUtils.throwImmutable();
 	}
 
 	public ImmutableSetOperator(SetOperator operator) {

@@ -15,11 +15,12 @@ package com.github.javalbert.sqlbuilder;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings("rawtypes")
 public class ColumnList implements ColumnBuilder<ColumnList>, Node<ColumnList>, NodeHolder {
+	@SuppressWarnings("rawtypes")
 	protected List<Node> nodes = new ArrayList<>();
 	private Column workColumn;
 	
+	@SuppressWarnings("rawtypes")
 	@Override
 	public List<Node> getNodes() { return nodes; }
 	@Override
@@ -38,14 +39,12 @@ public class ColumnList implements ColumnBuilder<ColumnList>, Node<ColumnList>, 
 
 	@Override
 	public ColumnList immutable() {
-		ColumnList columns = new ImmutableColumnList(this);
-		return columns;
+		return new ImmutableColumnList(this);
 	}
 
 	@Override
 	public ColumnList mutable() {
-		ColumnList columns = new ColumnList(this);
-		return columns;
+		return new ColumnList(this);
 	}
 	
 	/* BEGIN Fluent API */

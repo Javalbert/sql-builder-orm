@@ -15,7 +15,7 @@ package com.github.javalbert.sqlbuilder;
 public class ImmutableCase extends Case {
 	@Override
 	public void setAlias(String alias) {
-		throw new UnsupportedOperationException("immutable");
+		NodeUtils.throwImmutable();
 	}
 	
 	public ImmutableCase(Case sqlCase) {

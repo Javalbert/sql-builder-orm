@@ -21,37 +21,14 @@ import java.util.Deque;
 
 import com.github.javalbert.utils.jdbc.JdbcUtils;
 
-public final class H2 {
+/**
+ * <a href="http://www.programmingforfuture.com/2011/02/in-process-mode-of-hsqldb-in-web.html">link</a>
+ * @author Albert
+ *
+ */
+public final class HSQLDB {
 	public static void createTables() throws ClassNotFoundException, SQLException {
 		executeStatements(
-				"CREATE TABLE IF NOT EXISTS DataTypeHolder ("
-				+ "id INT PRIMARY KEY,"
-				+ "int_val INT NOT NULL,"
-				+ "boolean_val BOOLEAN NOT NULL,"
-				+ "bigint_val BIGINT NOT NULL,"
-				+ "decimal_val DECIMAL(13, 2),"
-				+ "double_val DOUBLE NOT NULL,"
-				+ "real_val REAL NOT NULL,"
-				+ "date_val DATE,"
-				+ "timestamp_val TIMESTAMP,"
-				+ "varchar_val VARCHAR(255)"
-				+ ")",
-				"CREATE TABLE IF NOT EXISTS Java8DateHolder ("
-				+ "id IDENTITY,"
-				+ "local_date DATE,"
-				+ "local_date_time TIMESTAMP"
-				+ ")",
-				"CREATE TABLE IF NOT EXISTS User ("
-				+ "user_id INT PRIMARY KEY,"
-				+ "name VARCHAR(20),"
-				+ "active BOOLEAN,"
-				+ "version INT DEFAULT 0"
-				+ ")",
-				"CREATE TABLE IF NOT EXISTS User2 ("
-				+ "user_id INT AUTO_INCREMENT PRIMARY KEY,"
-				+ "name VARCHAR(20),"
-				+ "version INT DEFAULT 0"
-				+ ")",
 		/* https://blog.tallan.com/wp-content/uploads/2008/09/onlinesales.gif */
 				"CREATE TABLE IF NOT EXISTS Customer ("
 				+ "customer_id IDENTITY,"
@@ -92,12 +69,6 @@ public final class H2 {
 	public static void deleteRecords() {
 		try {
 			executeStatements(
-					"DELETE FROM DataTypeHolder",
-					"DELETE FROM Java8DateHolder",
-					"ALTER TABLE Java8DateHolder ALTER COLUMN id RESTART WITH 1",
-					"DELETE FROM User",
-					"DELETE FROM User2",
-					"ALTER TABLE User2 ALTER COLUMN user_id RESTART WITH 1",
 					"DELETE FROM Product",
 					"ALTER TABLE Product ALTER COLUMN product_id RESTART WITH 1",
 					"DELETE FROM Orders",
@@ -132,16 +103,12 @@ public final class H2 {
 	}
 
 	public static Connection getConnection() throws ClassNotFoundException, SQLException {
-		Class.forName("org.h2.Driver");
-		return DriverManager.getConnection("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", "", "");
+		Class.forName("org.hsqldb.jdbc.JDBCDriver");
+		return DriverManager.getConnection("jdbc:hsqldb:mem:test", "SA", "");
 	}
 	
 	public static void dropTables() throws ClassNotFoundException, SQLException {
 		executeStatements(
-				"DROP TABLE IF EXISTS DataTypeHolder",
-				"DROP TABLE IF EXISTS Java8DateHolder",
-				"DROP TABLE IF EXISTS User",
-				"DROP TABLE IF EXISTS User2",
 				"DROP TABLE IF EXISTS Product",
 				"DROP TABLE IF EXISTS Orders",
 				"DROP TABLE IF EXISTS Store",
@@ -149,5 +116,5 @@ public final class H2 {
 				"DROP TABLE IF EXISTS ArchivedOrders");
 	}
 	
-	private H2() {}
+	private HSQLDB() {}
 }

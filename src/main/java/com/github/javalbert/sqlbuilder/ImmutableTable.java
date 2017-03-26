@@ -15,11 +15,11 @@ package com.github.javalbert.sqlbuilder;
 public class ImmutableTable extends Table {
 	@Override
 	public void setAlias(String alias) {
-		throw new UnsupportedOperationException("immutable");
+		NodeUtils.throwImmutable();
 	}
 	@Override
 	public void setName(String name) {
-		throw new UnsupportedOperationException("immutable");
+		NodeUtils.throwImmutable();
 	}
 	
 	public ImmutableTable(Table table) {
