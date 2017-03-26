@@ -20,6 +20,7 @@ import com.github.javalbert.sqlbuilder.Join
 import com.github.javalbert.sqlbuilder.LiteralNumber
 import com.github.javalbert.sqlbuilder.LiteralString
 import com.github.javalbert.sqlbuilder.LogicalOperator
+import com.github.javalbert.sqlbuilder.Merge
 import com.github.javalbert.sqlbuilder.Node
 import com.github.javalbert.sqlbuilder.Offset
 import com.github.javalbert.sqlbuilder.OrderBy
@@ -38,11 +39,9 @@ import com.github.javalbert.sqlbuilder.Token
 import com.github.javalbert.sqlbuilder.Update
 import com.github.javalbert.sqlbuilder.Where
 import com.github.javalbert.sqlbuilder.With
-import com.github.javalbert.sqlbuilder.parser.ParseToken
-import com.github.javalbert.sqlbuilder.parser.ParseTree
-import com.github.javalbert.sqlbuilder.parser.SqlParser
 import com.github.javalbert.sqlbuilder.parser.SqlParser.ExpressionCaseHelper
 import com.github.javalbert.sqlbuilder.parser.SqlParser.FromHelper
+import com.github.javalbert.sqlbuilder.parser.SqlParser.MergeHelper
 import com.github.javalbert.sqlbuilder.parser.SqlParser.SelectTreeHelper
 import com.github.javalbert.sqlbuilder.parser.SqlParser.WithHelper
 
@@ -798,6 +797,117 @@ FROM phone_book"""
 		
 		and: "then Case object's alias is \"Number Word\""
 		sqlCase.alias == 'Number Word'
+	}
+	
+	def 'Parse MERGE INSERT statement USING a table as table reference and verify nodes'() {
+		given: 'SQL string "MERGE INTO Albert.dbo.DeceasedPerson dcd USING Albert.dbo.Person AS prs ON dcd.person_key = prs.person_key WHEN NOT MATCHED THEN INSERT (name_of_deceased) VALUES (prs.first_name || prs.last_name)"'
+		String sql = 'MERGE INTO Albert.dbo.DeceasedPerson dcd USING Albert.dbo.Person AS prs ON dcd.person_key = prs.person_key WHEN NOT MATCHED THEN INSERT (name_of_deceased) VALUES (prs.first_name || prs.last_name)'
+		
+		and: 'Merge object'
+		List<ParseToken> mergeNodes = getParseTokens(sql)
+		Merge merge = new Merge()
+		int i = 0
+		MergeHelper helper = new MergeHelper(merge)
+		
+		when: 'parsing "MERGE INTO Albert.dbo.DeceasedPerson dcd"'
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // MERGE
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // INTO
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // Albert
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // .
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // dbo
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // .
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // DeceasedPerson
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // dcd
+		Node targetTableNode = merge.nodes[0]
+		
+		and: 'then parsing "USING Albert.dbo.Person AS prs"'
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // USING
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // Albert
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // .
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // dbo
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // .
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // Person
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // AS
+		Node tableReferenceNode = merge.nodes[1]
+		
+		and: 'then parsing "ON dcd.person_key = prs.person_key"'
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // ON
+		Node searchCondition = merge.nodes[2]
+		
+		and: 'then parsing "WHEN NOT MATCHED THEN"'
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // WHEN NOT MATCHED
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // THEN
+		Node whenMatchedNode = merge.nodes[3]
+		Node thenNode = merge.nodes[4]
+		// ^^^ Reason why there are two nodes here instead of a single node
+		// is because of the ability to specify a search condition for the WHEN clause
+		// and is between MATCHED and THEN e.g. WHEN MATCHED AND <search condition> THEN
+		
+		and: 'then parsing "INSERT (name_of_deceased) VALUES (prs.first_name || prs.last_name)"'
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // INSERT (name_of_deceased) VALUES (prs.first_name || prs.last_name)
+		Node insertNode = merge.nodes[5]
+		
+		then: 'target table "Albert.dbo.DeceasedPerson" with alias "dcd" was added'
+		targetTableNode instanceof Table
+		targetTableNode.name == 'Albert.dbo.DeceasedPerson'
+		targetTableNode.alias == 'dcd'
+		
+		and: 'then table reference "Albert.dbo.Person" with alias "prs" was added'
+		tableReferenceNode instanceof Table
+		tableReferenceNode.name == 'Albert.dbo.Person'
+		tableReferenceNode.alias == 'prs'
+		
+		and: 'then search condition of joining DeceasedPersons table with Persons table by person_key column was added'
+		searchCondition instanceof Condition
+		
+		and: 'then WHEN NOT MATCHED THEN was added'
+		whenMatchedNode == Merge.WHEN_NOT_MATCHED
+		thenNode == Merge.THEN
+		
+		and: 'then INSERT statement was added'
+		insertNode instanceof Insert
+	}
+	
+	def 'Parse MERGE with a SELECT statement as the table reference and with a secondary search condition and verify nodes'() {
+		given: "SQL string \"MERGE INTO Person2 AS p2 USING (SELECT person_key, last_name FROM Person) p ON p2.person_key = p.person_key WHEN MATCHED AND p.last_name = 'Chan' THEN DELETE\""
+		String sql = "MERGE INTO Person2 AS p2 USING (SELECT person_key, last_name FROM Person) p ON p2.person_key = p.person_key WHEN MATCHED AND p.last_name = 'Chan' THEN DELETE"
+		
+		and: 'Merge object'
+		List<ParseToken> mergeNodes = getParseTokens(sql)
+		Merge merge = new Merge()
+		int i = 0
+		MergeHelper helper = new MergeHelper(merge)
+		
+		when: 'parsing "... USING (SELECT person_key, last_name FROM Albert.dbo.Person) p ON p2.person_key = p.person_key"'
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // MERGE
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // INTO
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // Person2
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // AS p2
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // USING
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // (SELECT person_key, last_name FROM Albert.dbo.Person)
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // p
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // ON p2.person_key = p.person_key
+		Node selectNode = merge.nodes[1]
+		
+		and: "then parsing \"WHEN MATCHED AND p.last_name = 'Chan'\""
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // WHEN MATCHED
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // AND
+		Node whenClauseSearchCondition = merge.nodes[4]
+		
+		and: 'then parsing "THEN DELETE"'
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // THEN
+		i = SqlParser.parseMergeNode(merge, mergeNodes, i, helper) + 1 // DELETE
+		Node deleteNode = merge.nodes[6]
+		
+		then: 'SELECT statement as the table reference with alias "p" was added'
+		selectNode instanceof Select
+		selectNode.alias == 'p'
+		
+		and: 'then WHEN clause search condition was added'
+		whenClauseSearchCondition instanceof Condition
+		
+		and: 'then DELETE constant token was added'
+		deleteNode == Merge.DELETE
 	}
 	
 	private List<ParseToken> getParseTokens(String sql) {

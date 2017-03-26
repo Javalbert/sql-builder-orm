@@ -50,6 +50,7 @@ public final class Keywords {
 	public static final String JOIN = "JOIN";
 	public static final String LEFT = "LEFT";
 	public static final String LIKE = "LIKE";
+	public static final String MATCHED = "MATCHED";
 	public static final String MERGE = "MERGE";
 	public static final String NEXT = "NEXT";
 	public static final String NOT = "NOT";
@@ -95,8 +96,8 @@ public final class Keywords {
 	public static final String RIGHT_JOIN = RIGHT + " " + JOIN;
 	public static final String RIGHT_OUTER_JOIN = RIGHT + " " + OUTER + " " + JOIN;
 	public static final String UNION_ALL = UNION + " " + ALL;
-	public static final String WHEN_MATCHED = WHEN + " MATCHED ";
-	public static final String WHEN_NOT_MATCHED = WHEN + " " + NOT + " MATCHED ";
+	public static final String WHEN_MATCHED = WHEN + " " + MATCHED + " ";
+	public static final String WHEN_NOT_MATCHED = WHEN + " " + NOT + " " + MATCHED + " ";
 	
 	/* END Compound reserved words */
 
@@ -144,6 +145,7 @@ public final class Keywords {
 		JOIN,
 		LEFT,
 		LIKE,
+		MATCHED,
 		MERGE,
 		NEXT,
 		NOT,

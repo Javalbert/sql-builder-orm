@@ -59,8 +59,7 @@ public class Insert implements DMLStatement<Insert>, Node<Insert>, NodeHolder {
 	}
 	
 	public Insert into(String name) {
-		Table table = new Table(name);
-		nodes.add(table);
+		nodes.add(new Table(name));
 		return this;
 	}
 	
