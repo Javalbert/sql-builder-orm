@@ -910,6 +910,105 @@ FROM phone_book"""
 		deleteNode == Merge.DELETE
 	}
 	
+	def 'Parse FROM clause with nested JOIN syntax'() {
+		given: 'SQL string "SELECT trip.id, drvr.name FROM Trips trip LEFT OUTER JOIN Driver drvr INNER JOIN Device dev ON drvr.device_id = dev.device_id ON trip.driver_id = drvr.driver_id"'
+		String sql = 'SELECT trip.id, drvr.name FROM Trips trip LEFT OUTER JOIN Driver drvr INNER JOIN Device dev ON drvr.device_id = dev.device_id ON trip.driver_id = drvr.driver_id'
+		
+		and: 'FROM object'
+		List<ParseToken> selectNodes = getParseTokens(sql)
+		ParseToken fromNode = selectNodes[1]
+		From from = new From()
+		int i = 0
+		FromHelper helper = new FromHelper(from)
+		
+		when: 'parsing "Trips trip LEFT OUTER JOIN Driver drvr"'
+		i = SqlParser.parseFromNode(from, fromNode.nodes, i, helper) + 1 // Trips
+		i = SqlParser.parseFromNode(from, fromNode.nodes, i, helper) + 1 // trip
+		i = SqlParser.parseFromNode(from, fromNode.nodes, i, helper) + 1 // LEFT OUTER JOIN
+		i = SqlParser.parseFromNode(from, fromNode.nodes, i, helper) + 1 // Driver
+		i = SqlParser.parseFromNode(from, fromNode.nodes, i, helper) + 1 // drvr
+		Node tripsTable = from.nodes[0]
+		Node leftOuterJoin = from.nodes[1]
+		Node driverTable = from.nodes[2]
+		
+		and: 'then parsing nested join "INNER JOIN Device dev ON drvr.device_id = dev.device_id"'
+		i = SqlParser.parseFromNode(from, fromNode.nodes, i, helper) + 1 // INNER JOIN
+		i = SqlParser.parseFromNode(from, fromNode.nodes, i, helper) + 1 // Device
+		i = SqlParser.parseFromNode(from, fromNode.nodes, i, helper) + 1 // dev
+		i = SqlParser.parseFromNode(from, fromNode.nodes, i, helper) + 1 // ON drvr.device_id = dev.device_id
+		Node nestedJoinClause = from.nodes[3]
+		Node deviceTable = from.nodes[4]
+		Node nestedJoinCondition = from.nodes[5]
+		
+		and: 'then parsing "ON trip.driver_id = drvr.driver_id"'
+		i = SqlParser.parseFromNode(from, fromNode.nodes, i, helper) + 1 // ON trip.driver_id = drvr.driver_id
+		Node outerJoinCondition = from.nodes[5]
+		
+		then: 'Trips table, LEFT OUTER JOIN, and Driver table is added'
+		tripsTable instanceof Table
+		leftOuterJoin == Join.LEFT_OUTER_JOIN
+		driverTable instanceof Table
+		
+		and: 'then nested INNER JOIN between Driver and Device tables is added'
+		nestedJoinClause == Join.INNER_JOIN
+		deviceTable instanceof Table
+		nestedJoinCondition instanceof Condition
+		
+		and: 'then outer join condition between Trips and Driver tables is added'
+		outerJoinCondition instanceof Condition
+	}
+	
+	def 'Parse FROM clause with nested JOINs surrounded by parentheses'() {
+		// SQL retrieved in last example from http://sqlity.net/en/1435/a-join-a-day-nested-joins/
+		given: 'SQL string "FROM Product prod JOIN (OrderHeader oh JOIN OrderDetail od ON oh.OrderID = od.OrderID) ON od.ProdID = prod.ProdID JOIN (Customer cus JOIN Person pers ON cus.PersonID = pers.BusinessEntityID) ON oh.CustID = cus.CustID"'
+		String sql = 'FROM Product prod JOIN (OrderHeader oh JOIN OrderDetail od ON oh.OrderID = od.OrderID) ON od.ProdID = prod.ProdID JOIN (Customer cus JOIN Person pers ON cus.PersonID = pers.BusinessEntityID) ON oh.CustID = cus.CustID'
+		
+		and: 'FROM object'
+		List<ParseToken> nodes = getParseTokens(sql)[0].nodes
+		From from = new From()
+		int i = 0
+		FromHelper helper = new FromHelper(from)
+		
+		when: 'parsing Product and the first nested JOIN group tables: "FROM Product prod JOIN (OrderHeader oh JOIN OrderDetail od ON oh.OrderID = od.OrderID)"'
+		i = SqlParser.parseFromNode(from, nodes, i, helper) + 1 // Product
+		i = SqlParser.parseFromNode(from, nodes, i, helper) + 1 // prod
+		i = SqlParser.parseFromNode(from, nodes, i, helper) + 1 // JOIN
+		i = SqlParser.parseFromNode(from, nodes, i, helper) + 1 // (OrderHeader oh JOIN OrderDetail od ON oh.OrderID = od.OrderID)
+		Node leftParenthesisNode = from.nodes[2]
+		Node orderHeader = from.nodes[3]
+		Node nestedJoinClause = from.nodes[4]
+		Node orderDetail = from.nodes[5]
+		Node nestedJoinCondition = from.nodes[6]
+		Node rightParenthesisNode = from.nodes[7]
+		
+		and: 'then parsing join condition "ON od.ProdID = prod.ProdID JOIN" between Product and the first nested JOIN group tables'
+		i = SqlParser.parseFromNode(from, nodes, i, helper) + 1 // ON od.ProdID = prod.ProdID
+		i = SqlParser.parseFromNode(from, nodes, i, helper) + 1 // JOIN
+		Node outerJoinCondition = from.nodes[8]
+		Node joinBetweenNestedJoinGroups = from.nodes[9]
+		
+		and: 'then parsing the second nested JOIN group "(Customer cus JOIN Person pers ON cus.PersonID = pers.BusinessEntityID)"'
+		i = SqlParser.parseFromNode(from, nodes, i, helper) + 1 // (Customer cus JOIN Person pers ON cus.PersonID = pers.BusinessEntityID)
+		Node secondLeftParenthesis = from.nodes[10]
+		Node secondRightParenthesis = from.nodes[15]
+		
+		then: 'the first nested JOIN group contains the Order tables, their join condition, and surrounded by parentheses'
+		leftParenthesisNode == From.LEFT_PARENTHESIS
+		orderHeader instanceof Table
+		nestedJoinClause == Join.INNER_JOIN
+		orderDetail instanceof Table
+		nestedJoinCondition instanceof Condition
+		rightParenthesisNode == From.RIGHT_PARENTHESIS
+		
+		and: 'then first nested JOIN group is joined with Product, and together will join with the result of the second nested JOIN group'
+		outerJoinCondition instanceof Condition
+		joinBetweenNestedJoinGroups == Join.INNER_JOIN
+		
+		and: 'then second nested JOIN group is surrounded by a set of parentheses'
+		secondLeftParenthesis == From.LEFT_PARENTHESIS
+		secondRightParenthesis == From.RIGHT_PARENTHESIS
+	}
+	
 	private List<ParseToken> getParseTokens(String sql) {
 		return new ParseTree(parser.tokenize(sql)).parseTokens().nodes;
 	}

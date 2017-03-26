@@ -17,6 +17,9 @@ import java.util.List;
 import java.util.Objects;
 
 public class From implements Node<From>, NodeHolder, TableNameSpecifier<From> {
+	public static final Token LEFT_PARENTHESIS = new ConstantToken("(");
+	public static final Token RIGHT_PARENTHESIS = new ConstantToken(")");
+	
 	@SuppressWarnings("rawtypes")
 	protected List<Node> nodes = new ArrayList<>();
 	
@@ -64,6 +67,11 @@ public class From implements Node<From>, NodeHolder, TableNameSpecifier<From> {
 		return this;
 	}
 	
+	public From inlineView(Select select) {
+		nodes.add(Objects.requireNonNull(select, "select cannot be null"));
+		return this;
+	}
+	
 	public From innerJoin() {
 		nodes.add(Join.INNER_JOIN);
 		return this;
@@ -71,6 +79,11 @@ public class From implements Node<From>, NodeHolder, TableNameSpecifier<From> {
 	
 	public From leftOuterJoin() {
 		nodes.add(Join.LEFT_OUTER_JOIN);
+		return this;
+	}
+	
+	public From leftParens() {
+		nodes.add(LEFT_PARENTHESIS);
 		return this;
 	}
 	
@@ -83,6 +96,11 @@ public class From implements Node<From>, NodeHolder, TableNameSpecifier<From> {
 		nodes.add(Join.RIGHT_OUTER_JOIN);
 		return this;
 	}
+	
+	public From rightParens() {
+		nodes.add(RIGHT_PARENTHESIS);
+		return this;
+	}
 
 	public From tableAlias(String alias) {
 		Table table = new Table(null, alias);
@@ -93,11 +111,6 @@ public class From implements Node<From>, NodeHolder, TableNameSpecifier<From> {
 	@Override
 	public From tableName(String name) {
 		nodes.add(new Table(name));
-		return this;
-	}
-	
-	public From inlineView(Select select) {
-		nodes.add(Objects.requireNonNull(select, "select cannot be null"));
 		return this;
 	}
 	
