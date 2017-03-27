@@ -14,9 +14,6 @@
 - Object graphs decided at runtime instead of compile time annotations
 
 ## TODO
-- Adding JUnit tests using Spock
-- Conform to ANSI SQL
-- Implement nested JOINs
 - Implement new Java 8 features (Streams API, lamda functions)
 - Publish project to The Central Repository
 - Write Javadoc (thread-safety)

@@ -117,6 +117,7 @@ public class SqlParser {
 			Keywords.FULL_OUTER_JOIN,
 			Keywords.INNER_JOIN,
 			Keywords.LEFT_OUTER_JOIN,
+			Keywords.ON,
 			Keywords.RIGHT_OUTER_JOIN
 			);
 	private static final Set<String> TOKEN_SET_SET_VALUE_TERMINATOR = CollectionUtils.immutableHashSet(
@@ -673,19 +674,17 @@ public class SqlParser {
 	}
 
 	private static void parseFromParenthesesGroup(From from, List<ParseToken> nodes) {
-		for (int i = 0; i < nodes.size(); i++) {
-			ParseToken node = nodes.get(i);
-			
-			final String token = node.getToken();
-			
-			switch (token.toUpperCase()) {
-				case Keywords.SELECT:
-					Select select = new Select();
-					from.inlineView(select);
-					parseSelectTree(select, nodes, 0);
-					i = nodes.size();
-					break;
-			}
+		switch (nodes.get(0).getToken().toUpperCase()) {
+			case Keywords.SELECT:
+				Select select = new Select();
+				from.inlineView(select);
+				parseSelectTree(select, nodes, 0);
+				break;
+			default: // Should be nested JOIN syntax
+				from.leftParens();
+				parseFrom(from, nodes);
+				from.rightParens();
+				break;
 		}
 	}
 	
