@@ -369,16 +369,16 @@ public class ANSI implements Vendor {
 					break;
 				case Node.TYPE_TABLE:
 					str = print((Table)node);
+					
+					if (prevNode != null && !(prevNode instanceof Join)
+							&& prevNode != From.LEFT_PARENTHESIS && prevNode != From.RIGHT_PARENTHESIS
+							) {
+						builder.append(",");
+					}
 					break;
 				case Node.TYPE_TOKEN:
 					str = print((Token)node);
 					break;
-			}
-			
-			if (node instanceof Table 
-					&& prevNode != null 
-					&& !(prevNode instanceof Join)) {
-				builder.append(",");
 			}
 			builder.append(" ");
 			builder.append(str);
