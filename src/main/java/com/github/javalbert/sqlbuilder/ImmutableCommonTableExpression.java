@@ -37,6 +37,6 @@ public class ImmutableCommonTableExpression extends CommonTableExpression {
 			columns.addAll(cte.getColumns());
 			columns = Collections.unmodifiableList(columns);
 		}
-		select = cte.getSelect().immutable();
+		select = cte.getSelect() != null ? cte.getSelect().immutable() : null;
 	}
 }

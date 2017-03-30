@@ -22,4 +22,18 @@ public class ImmutableExpression extends Expression {
 		nodes = NodeUtils.immutableNodes(expression);
 		alias = expression.getAlias();
 	}
+	
+	/* START Fluent API */
+	
+	@Override
+	public ImmutableExpression tableAlias(String alias) {
+		throw NodeUtils.immutableException();
+	}
+	
+	@Override
+	public ImmutableExpression tableName(String name) {
+		throw NodeUtils.immutableException();
+	}
+	
+	/* END Fluent API */
 }

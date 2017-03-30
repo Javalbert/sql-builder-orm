@@ -16,4 +16,18 @@ public class ImmutableGroupBy extends GroupBy {
 	public ImmutableGroupBy(GroupBy groupBy) {
 		nodes = NodeUtils.immutableNodes(groupBy);
 	}
+	
+	/* START Fluent API */
+	
+	@Override
+	public ImmutableGroupBy tableAlias(String alias) {
+		throw NodeUtils.immutableException();
+	}
+	
+	@Override
+	public ImmutableGroupBy tableName(String name) {
+		throw NodeUtils.immutableException();
+	}
+	
+	/* END Fluent API */
 }

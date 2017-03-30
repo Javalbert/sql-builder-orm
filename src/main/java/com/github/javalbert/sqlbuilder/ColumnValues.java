@@ -45,80 +45,10 @@ public class ColumnValues extends ExpressionBuilder<ColumnValues> implements Nod
 	}
 	
 	/* BEGIN Fluent API */
-	
-	@Override
-	public ColumnValues append(String token) {
-		return super.append(token);
-	}
-	
-	@Override
-	public ColumnValues append(String token, boolean isNextNodeAnExpression) {
-		return super.append(token, isNextNodeAnExpression);
-	}
-	
-	@Override
-	public ColumnValues column(String name) {
-		return super.column(name);
-	}
-	
-	@Override
-	public ColumnValues expression(Expression expression) {
-		return super.expression(expression);
-	}
-	
-	@Override
-	public ColumnValues function(Function function) {
-		return super.function(function);
-	}
-	
-	@Override
-	public ColumnValues literal(Boolean bool) {
-		return super.literal(bool);
-	}
-	
-	@Override
-	public ColumnValues literal(Number number) {
-		return super.literal(number);
-	}
-	
-	@Override
-	public ColumnValues literal(String str) {
-		return super.literal(str);
-	}
-	
-	@Override
-	public ColumnValues literalNull() {
-		return super.literalNull();
-	}
-	
-	@Override
-	public ColumnValues param(String name) {
-		return super.param(name);
-	}
-	
-	@Override
-	public ColumnValues sqlCase(Case sqlCase) {
-		return super.sqlCase(sqlCase);
-	}
 
 	public ColumnValues sqlDefault() {
 		nodes.add(DEFAULT);
 		return this;
-	}
-	
-	@Override
-	public ColumnValues subquery(Select select) {
-		return super.subquery(select);
-	}
-	
-	@Override
-	public ColumnValues tableAlias(String alias) {
-		return super.tableAlias(alias);
-	}
-	
-	@Override
-	public ColumnValues tableName(String name) {
-		return super.tableName(name);
 	}
 	
 	/* END Fluent API */
