@@ -16,4 +16,18 @@ public class ImmutableOrderBy extends OrderBy {
 	public ImmutableOrderBy(OrderBy orderBy) {
 		nodes = NodeUtils.immutableNodes(orderBy);
 	}
+	
+	/* START Fluent API */
+	
+	@Override
+	public ImmutableOrderBy tableAlias(String alias) {
+		throw NodeUtils.immutableException();
+	}
+	
+	@Override
+	public ImmutableOrderBy tableName(String name) {
+		throw NodeUtils.immutableException();
+	}
+	
+	/* END Fluent API */
 }

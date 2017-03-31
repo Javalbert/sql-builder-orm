@@ -23,7 +23,9 @@ public class ImmutableSetOperator extends SetOperator {
 	}
 
 	public ImmutableSetOperator(SetOperator operator) {
-		this(operator.getOperator(), operator.getSelect().immutable());
+		this(
+				operator.getOperator(),
+				operator.getSelect() != null ? operator.getSelect().immutable() : null);
 	}
 	
 	protected ImmutableSetOperator(String operator) {

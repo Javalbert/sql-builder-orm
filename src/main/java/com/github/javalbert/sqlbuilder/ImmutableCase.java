@@ -22,4 +22,18 @@ public class ImmutableCase extends Case {
 		alias = sqlCase.getAlias();
 		nodes = NodeUtils.immutableNodes(sqlCase);
 	}
+	
+	/* START Fluent API */
+	
+	@Override
+	public ImmutableCase tableAlias(String alias) {
+		throw NodeUtils.immutableException();
+	}
+	
+	@Override
+	public ImmutableCase tableName(String name) {
+		throw NodeUtils.immutableException();
+	}
+	
+	/* END Fluent API */
 }

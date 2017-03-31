@@ -31,4 +31,18 @@ public class ImmutableFunction extends Function {
 		alias = function.getAlias();
 		nodes = NodeUtils.immutableNodes(function);
 	}
+	
+	/* START Fluent API */
+	
+	@Override
+	public ImmutableFunction tableAlias(String alias) {
+		throw NodeUtils.immutableException();
+	}
+	
+	@Override
+	public ImmutableFunction tableName(String name) {
+		throw NodeUtils.immutableException();
+	}
+	
+	/* END Fluent API */
 }

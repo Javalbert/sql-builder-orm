@@ -16,4 +16,18 @@ public class ImmutableInValues extends InValues {
 	public ImmutableInValues(InValues values) {
 		nodes = NodeUtils.immutableNodes(values);
 	}
+	
+	/* START Fluent API */
+	
+	@Override
+	public ImmutableInValues tableAlias(String alias) {
+		throw NodeUtils.immutableException();
+	}
+	
+	@Override
+	public ImmutableInValues tableName(String name) {
+		throw NodeUtils.immutableException();
+	}
+	
+	/* END Fluent API */
 }

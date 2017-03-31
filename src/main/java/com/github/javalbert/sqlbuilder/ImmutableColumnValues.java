@@ -16,4 +16,18 @@ public class ImmutableColumnValues extends ColumnValues {
 	public ImmutableColumnValues(ColumnValues values) {
 		nodes = NodeUtils.immutableNodes(values);
 	}
+	
+	/* START Fluent API */
+	
+	@Override
+	public ImmutableColumnValues tableAlias(String alias) {
+		throw NodeUtils.immutableException();
+	}
+	
+	@Override
+	public ImmutableColumnValues tableName(String name) {
+		throw NodeUtils.immutableException();
+	}
+	
+	/* END Fluent API */
 }
