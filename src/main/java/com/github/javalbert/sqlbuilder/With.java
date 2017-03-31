@@ -50,6 +50,11 @@ public class With implements Node<With>, NodeHolder {
 	}
 	
 	/* BEGIN Fluent API */
+
+	public With as(Select select) {
+		getLast().setSelect(Objects.requireNonNull(select, "select cannot be null"));
+		return this;
+	}
 	
 	public With column(String column) {
 		CommonTableExpression cte = getLast();
@@ -61,11 +66,6 @@ public class With implements Node<With>, NodeHolder {
 		}
 		
 		columns.add(Strings.safeTrim(column));
-		return this;
-	}
-
-	public With as(Select select) {
-		getLast().setSelect(Objects.requireNonNull(select, "select cannot be null"));
 		return this;
 	}
 

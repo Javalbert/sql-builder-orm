@@ -16,4 +16,18 @@ public class ImmutableSelectList extends SelectList {
 	public ImmutableSelectList(SelectList list) {
 		nodes = NodeUtils.immutableNodes(list);
 	}
+	
+	/* START Fluent API */
+	
+	@Override
+	public ImmutableSelectList tableAlias(String alias) {
+		throw NodeUtils.immutableException();
+	}
+	
+	@Override
+	public ImmutableSelectList tableName(String name) {
+		throw NodeUtils.immutableException();
+	}
+	
+	/* END Fluent API */
 }

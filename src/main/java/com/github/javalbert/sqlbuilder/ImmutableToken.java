@@ -15,7 +15,7 @@ package com.github.javalbert.sqlbuilder;
 public class ImmutableToken extends Token {
 	@Override
 	public void setToken(String token) {
-		throw new UnsupportedOperationException("token is immutable");
+		NodeUtils.throwImmutable();
 	}
 	
 	public ImmutableToken(String token) {

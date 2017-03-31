@@ -16,4 +16,18 @@ public class ImmutableSetValue extends SetValue {
 	public ImmutableSetValue(SetValue value) {
 		nodes = NodeUtils.immutableNodes(value);
 	}
+	
+	/* START Fluent API */
+	
+	@Override
+	public ImmutableSetValue tableAlias(String alias) {
+		throw NodeUtils.immutableException();
+	}
+	
+	@Override
+	public ImmutableSetValue tableName(String name) {
+		throw NodeUtils.immutableException();
+	}
+	
+	/* END Fluent API */
 }

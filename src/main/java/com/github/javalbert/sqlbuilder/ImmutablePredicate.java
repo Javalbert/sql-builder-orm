@@ -16,4 +16,18 @@ public class ImmutablePredicate extends Predicate {
 	public ImmutablePredicate(Predicate predicate) {
 		nodes = NodeUtils.immutableNodes(predicate);
 	}
+	
+	/* START Fluent API */
+	
+	@Override
+	public ImmutablePredicate tableAlias(String alias) {
+		throw NodeUtils.immutableException();
+	}
+	
+	@Override
+	public ImmutablePredicate tableName(String name) {
+		throw NodeUtils.immutableException();
+	}
+	
+	/* END Fluent API */
 }
