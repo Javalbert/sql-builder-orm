@@ -139,4 +139,11 @@ public class DataTypeHolder {
 		this.timestampVal = timestampVal;
 		this.varcharVal = varcharVal;
 	}
+	
+	@Override
+	public String toString() {
+		return "DataTypeHolder [id=" + id + ", intVal=" + intVal + ", booleanVal=" + booleanVal + ", bigintVal="
+				+ bigintVal + ", decimalVal=" + decimalVal + ", doubleVal=" + doubleVal + ", realVal=" + realVal
+				+ ", dateVal=" + dateVal + ", timestampVal=" + timestampVal + ", varcharVal=" + varcharVal + "]";
+	}
 }
