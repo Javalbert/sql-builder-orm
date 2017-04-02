@@ -22,6 +22,8 @@ import com.github.javalbert.sqlbuilder.Update
 import com.github.javalbert.sqlbuilder.Where
 import com.github.javalbert.sqlbuilder.With
 import com.github.javalbert.utils.jdbc.JdbcUtils
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 import com.github.javalbert.domain.Customer
 import com.github.javalbert.domain.DataTypeHolder
 import com.github.javalbert.domain.Order
@@ -600,5 +602,37 @@ class JdbcStatementSpec extends Specification {
 		
 		then: 'error is thrown'
 		thrown(SQLException)
+	}
+	
+	def 'Do something to each entity as they are being created by calling JdbcStatement.forEach() method'() {
+		given: 'four Stores in the database'
+		mapper.register(Store.class)
+		Connection conn = null
+		try {
+			conn = H2.getConnection()
+			mapper.save(conn, new Store('Pizza Hut'))
+			mapper.save(conn, new Store('Pizza Nova'))
+			mapper.save(conn, new Store('Pizza Pizza'))
+			mapper.save(conn, new Store('Sushi-Ya Japan'))
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		when: "call JdbcStatement's forEach() method to add each created entity to a list of GSON JsonObjects"
+		List<JsonObject> jsonList = new ArrayList<>()
+		Gson gson = new Gson()
+		try {
+			conn = H2.getConnection()
+			mapper.createQuery(mapper.selectFrom(Store.class))
+				.forEach(conn, Store.class, {
+					store ->
+					jsonList.add(gson.toJsonTree(store))
+				})
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		then: 'the list in JSON is equal to a JSON array of the stores'
+		gson.toJson(jsonList) == '[{"storeKey":1,"storeName":"Pizza Hut"},{"storeKey":2,"storeName":"Pizza Nova"},{"storeKey":3,"storeName":"Pizza Pizza"},{"storeKey":4,"storeName":"Sushi-Ya Japan"}]'
 	}
 }

@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -236,6 +237,24 @@ public class JdbcStatement {
 		} catch (SQLException e) {
 			throw e;
 		} finally {
+			close(stmt);
+		}
+	}
+	
+	public <T> void forEach(Connection connection, Class<T> clazz, Consumer<T> consumer)
+		throws SQLException {
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			stmt = getPreparedStatement(connection);
+			rs = stmt.executeQuery();
+			
+			jdbcMapper.forEach(clazz, (Select)sqlStatement, rs, consumer);
+		} catch (SQLException e) {
+			throw e;
+		} finally {
+			JdbcUtils.closeQuietly(rs);
 			close(stmt);
 		}
 	}
