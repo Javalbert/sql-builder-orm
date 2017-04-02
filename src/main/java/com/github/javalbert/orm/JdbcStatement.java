@@ -278,6 +278,22 @@ public class JdbcStatement {
 		return stmt;
 	}
 	
+	public <T> T getSingleResult(Connection connection, Class<T> clazz) throws SQLException {
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			stmt = getPreparedStatement(connection);
+			rs = stmt.executeQuery();
+			return rs.next() ? jdbcMapper.toObject(clazz, (Select)sqlStatement, rs) : null;
+		} catch (SQLException e) {
+			throw e;
+		} finally {
+			JdbcUtils.closeQuietly(rs);
+			close(stmt);
+		}
+	}
+	
 	public void setParameters(PreparedStatement stmt) throws SQLException {
 		for (ParamIndex index : paramIndices) {
 			JdbcParam param = index.getParam();

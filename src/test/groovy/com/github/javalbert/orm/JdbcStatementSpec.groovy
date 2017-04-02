@@ -3,6 +3,7 @@ package com.github.javalbert.orm
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
+import java.sql.SQLException
 import java.sql.Timestamp
 
 import com.github.javalbert.orm.JdbcMapper
@@ -541,5 +542,63 @@ class JdbcStatementSpec extends Specification {
 		
 		and: '"Skipping Rope" product matches with 1 other product with different price'
 		resultList[2][otherOrderId] == 4
+	}
+	
+	def 'Return a single result even if it may not be unique'() {
+		given: 'four User entities saved into the database'
+		H2.deleteRecords()
+		mapper.register(User.class)
+		Connection conn = null
+		try {
+			conn = H2.getConnection()
+			mapper.save(conn, new User(1, 'Albert'))
+			mapper.save(conn, new User(2, 'Tony'))
+			mapper.save(conn, new User(3, 'Raymond'))
+			mapper.save(conn, new User(4, 'Patrick'))
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		when: 'selecting the first User'
+		User user = null
+		try {
+			conn = H2.getConnection()
+			user = mapper.createQuery(mapper.selectFrom(User.class))
+					.getSingleResult(conn, User.class)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		then: 'the first user "Albert" is retrieved'
+		user.name == 'Albert'
+	}
+	
+	def 'Throw error when getting a unique result if the result is not unique'() {
+		given: 'four User entities saved into the database'
+		H2.deleteRecords()
+		mapper.register(User.class)
+		Connection conn = null
+		try {
+			conn = H2.getConnection()
+			mapper.save(conn, new User(1, 'Albert'))
+			mapper.save(conn, new User(2, 'Tony'))
+			mapper.save(conn, new User(3, 'Raymond'))
+			mapper.save(conn, new User(4, 'Patrick'))
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		when: 'getting a unique User'
+		User user = null
+		try {
+			conn = H2.getConnection()
+			user = mapper.createQuery(mapper.selectFrom(User.class))
+					.uniqueResult(conn, User.class)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		then: 'error is thrown'
+		thrown(SQLException)
 	}
 }
