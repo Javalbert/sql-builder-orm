@@ -21,10 +21,15 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
+import org.jooq.DSLContext;
+import org.jooq.SQLDialect;
+import org.jooq.javalbert.tables.records.DatatypeholderRecord;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Level;
@@ -38,11 +43,15 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
+import org.sql2o.Sql2o;
 
 import com.github.javalbert.hibernate.DataTypeHolderHibernate;
 import com.github.javalbert.hibernate.HibernateUtils;
 import com.github.javalbert.orm.JdbcMapper;
 import com.github.javalbert.utils.jdbc.JdbcUtils;
+
+import static org.jooq.impl.DSL.*;
+import static org.jooq.javalbert.tables.Datatypeholder.*;
 
 public class SqlbuilderOrmBenchmark {
 	@State(Scope.Thread)
@@ -150,6 +159,104 @@ public class SqlbuilderOrmBenchmark {
 	}
 	
 	@State(Scope.Thread)
+	public static class RetrievalJooqState {
+		public Connection connection;
+		public DSLContext create;
+		public Long id;
+		
+		@Setup(Level.Trial)
+		public void doSetup() {
+			try {
+				H2.createTables();
+				connection = H2.getConnection();
+				create = using(connection, SQLDialect.H2);
+				
+				DatatypeholderRecord row = create.newRecord(DATATYPEHOLDER);
+				row.setIntVal(Integer.MAX_VALUE);
+				row.setBooleanVal(true);
+				row.setBigintVal(Long.MAX_VALUE);
+				row.setDecimalVal(BigDecimal.TEN);
+				row.setDoubleVal(Double.MAX_VALUE);
+				row.setRealVal(Float.MAX_VALUE);
+				row.setDateVal(Date.valueOf(LocalDate.of(2017, 3, 5)));
+				row.setTimestampVal(Timestamp.valueOf(LocalDateTime.of(2017, 3, 5, 20, 45)));
+				row.setVarcharVal("Wing Street");
+				row.store();
+				id = row.getId();
+			} catch (ClassNotFoundException | SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		@TearDown(Level.Trial)
+        public void doTearDown() {
+			create.close();
+        }
+	}
+	
+	@State(Scope.Thread)
+	public static class RetrievalSql2oState {
+		public org.sql2o.Connection connection;
+		public long id;
+		public Sql2o sql2o;
+
+		@Setup(Level.Trial)
+		public void doSetup() {
+			try {
+				H2.createTables();
+			} catch (ClassNotFoundException | SQLException e) {
+				e.printStackTrace();
+			}
+			
+			sql2o = new Sql2o("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", "", "");
+			
+			Map<String, String> colMaps = new HashMap<>();
+			colMaps.put("int_val", "intVal");
+			colMaps.put("boolean_val", "booleanVal");
+			colMaps.put("bigint_val", "bigintVal");
+			colMaps.put("decimal_val", "decimalVal");
+			colMaps.put("double_val", "doubleVal");
+			colMaps.put("real_val", "realVal");
+			colMaps.put("date_val", "dateVal");
+			colMaps.put("timestamp_val", "timestampVal");
+			colMaps.put("varchar_val", "varcharVal");
+			sql2o.setDefaultColumnMappings(colMaps);
+			
+			connection = sql2o.open();
+			
+			id = (long)connection.createQuery(
+					"INSERT INTO DataTypeHolder ("
+					+ "int_val,"
+					+ "boolean_val,"
+					+ "bigint_val,"
+					+ "decimal_val,"
+					+ "double_val,"
+					+ "real_val,"
+					+ "date_val,"
+					+ "timestamp_val,"
+					+ "varchar_val) "
+					+ "VALUES (:intVal, :booleanVal, :bigintVal, :decimalVal, :doubleVal, :realVal, :dateVal, :timestampVal, :varcharVal)",
+					true)
+			.addParameter("intVal", Integer.MAX_VALUE)
+			.addParameter("booleanVal", true)
+			.addParameter("bigintVal", Long.MAX_VALUE)
+			.addParameter("decimalVal", BigDecimal.TEN)
+			.addParameter("doubleVal", Double.MAX_VALUE)
+			.addParameter("realVal", Float.MAX_VALUE)
+			.addParameter("dateVal", Date.valueOf(LocalDate.of(2017, 3, 5)))
+			.addParameter("timestampVal", Timestamp.valueOf(LocalDateTime.of(2017, 3, 5, 20, 45)))
+			.addParameter("varcharVal", "Wing Street")
+			.executeUpdate()
+			.getKey();
+		}
+		
+		@TearDown(Level.Trial)
+        public void doTearDown() {
+			connection.close();
+		}
+	}
+	
+	@State(Scope.Thread)
 	public static class RetrievalSqlbuilderOrmState {
 		public Connection connection;
 		public int id;
@@ -200,19 +307,21 @@ public class SqlbuilderOrmBenchmark {
 				.build();
 
 		new Runner(opt).run();
-    }
+		
+//		new NonJMHBenchmark().run();
+	}
 	
 	@OutputTimeUnit(TimeUnit.NANOSECONDS)
 	@BenchmarkMode(Mode.AverageTime)
-    @Benchmark
-    public DataTypeHolderHibernate testRetrievalHibernateStatelessSession(RetrievalHibernateStatelessSessionState state) {
+	@Benchmark
+	public DataTypeHolderHibernate testRetrievalHibernateStatelessSession(RetrievalHibernateStatelessSessionState state) {
 		return (DataTypeHolderHibernate)state.session.get(DataTypeHolderHibernate.class, state.id);
-    }
+	}
 	
 	@OutputTimeUnit(TimeUnit.NANOSECONDS)
 	@BenchmarkMode(Mode.AverageTime)
-    @Benchmark
-    public DataTypeHolder testRetrievalJdbc(RetrievalJdbcState state) throws SQLException {
+	@Benchmark
+	public DataTypeHolder testRetrievalJdbc(RetrievalJdbcState state) throws SQLException {
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
 		try {
@@ -232,7 +341,9 @@ public class SqlbuilderOrmBenchmark {
 					+ " WHERE id = ?");
 			stmt.setInt(1, state.id);
 			rs = stmt.executeQuery();
-			rs.next();
+			if (!rs.next()) {
+				return null;
+			}
 			
 			DataTypeHolder row = new DataTypeHolder();
 			row.setId(rs.getInt(1));
@@ -252,12 +363,45 @@ public class SqlbuilderOrmBenchmark {
 			JdbcUtils.closeQuietly(rs);
 			JdbcUtils.closeQuietly(stmt);
 		}
-    }
+	}
 	
 	@OutputTimeUnit(TimeUnit.NANOSECONDS)
 	@BenchmarkMode(Mode.AverageTime)
-    @Benchmark
-    public DataTypeHolder testRetrievalSqlbuilderOrm(RetrievalSqlbuilderOrmState state) throws SQLException {
+	@Benchmark
+	public DataTypeHolderHibernate testRetrievalJooq(RetrievalJooqState state) {
+		return state.create.select()
+				.from(DATATYPEHOLDER)
+				.where(DATATYPEHOLDER.ID.eq(1L))
+				.fetchAny()
+				.into(DataTypeHolderHibernate.class);
+	}
+	
+	@OutputTimeUnit(TimeUnit.NANOSECONDS)
+	@BenchmarkMode(Mode.AverageTime)
+	@Benchmark
+	public DataTypeHolder testRetrievalSql2o(RetrievalSql2oState state) {
+		return state.connection.createQuery(
+				"SELECT"
+				+ " id,"
+				+ " int_val,"
+				+ " boolean_val,"
+				+ " bigint_val,"
+				+ " decimal_val,"
+				+ " double_val,"
+				+ " real_val,"
+				+ " date_val,"
+				+ " timestamp_val,"
+				+ " varchar_val"
+				+ " FROM DataTypeHolder"
+				+ " WHERE id = :id")
+				.addParameter("id", state.id)
+				.executeAndFetchFirst(DataTypeHolder.class);
+	}
+	
+	@OutputTimeUnit(TimeUnit.NANOSECONDS)
+	@BenchmarkMode(Mode.AverageTime)
+	@Benchmark
+	public DataTypeHolder testRetrievalSqlbuilderOrm(RetrievalSqlbuilderOrmState state) throws SQLException {
 		return state.jdbcMapper.get(state.connection, DataTypeHolder.class, state.id);
-    }
+	}
 }
