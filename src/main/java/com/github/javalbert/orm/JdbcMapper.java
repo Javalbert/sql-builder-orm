@@ -513,6 +513,6 @@ public class JdbcMapper {
 		}
 		return classRowMapping;
 	}
-	
+
 	/* END Private methods */
 }

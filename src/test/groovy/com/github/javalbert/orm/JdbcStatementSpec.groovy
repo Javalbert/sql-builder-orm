@@ -3,8 +3,10 @@ package com.github.javalbert.orm
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
+import java.sql.ResultSetMetaData
 import java.sql.SQLException
 import java.sql.Timestamp
+import java.sql.Types
 
 import com.github.javalbert.orm.JdbcMapper
 import com.github.javalbert.orm.JdbcStatement
@@ -22,6 +24,7 @@ import com.github.javalbert.sqlbuilder.Update
 import com.github.javalbert.sqlbuilder.Where
 import com.github.javalbert.sqlbuilder.With
 import com.github.javalbert.utils.jdbc.JdbcUtils
+import com.github.javalbert.utils.jdbc.ResultSetHelper
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.github.javalbert.domain.Customer
@@ -606,6 +609,7 @@ class JdbcStatementSpec extends Specification {
 	
 	def 'Do something to each entity as they are being created by calling JdbcStatement.forEach() method'() {
 		given: 'four Stores in the database'
+		H2.deleteRecords()
 		mapper.register(Store.class)
 		Connection conn = null
 		try {
@@ -634,5 +638,55 @@ class JdbcStatementSpec extends Specification {
 		
 		then: 'the list in JSON is equal to a JSON array of the stores'
 		gson.toJson(jsonList) == '[{"storeKey":1,"storeName":"Pizza Hut"},{"storeKey":2,"storeName":"Pizza Nova"},{"storeKey":3,"storeName":"Pizza Pizza"},{"storeKey":4,"storeName":"Sushi-Ya Japan"}]'
+	}
+	
+	def 'Do something to each row in the ResultSet by calling JdbcStatement.forEachRow() method'() {
+		given: 'four Stores in the database'
+		H2.deleteRecords()
+		mapper.register(Store.class)
+		Connection conn = null
+		try {
+			conn = H2.getConnection()
+			mapper.save(conn, new Store('Pizza Hut'))
+			mapper.save(conn, new Store('Pizza Nova'))
+			mapper.save(conn, new Store('Pizza Pizza'))
+			mapper.save(conn, new Store('Sushi-Ya Japan'))
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		when: "call JdbcStatement's forEachRow() method to create GSON JsonObject for each row in the ResultSet"
+		List<JsonObject> jsonList = new ArrayList<>()
+		Gson gson = new Gson()
+		try {
+			conn = H2.getConnection()
+			mapper.createQuery(mapper.selectFrom(Store.class))
+				.forEachRow(conn, {
+					ResultSetHelper rs ->
+					ResultSetMetaData rsmd = rs.getMetaData()
+					
+					JsonObject json = new JsonObject()
+					
+					for (int i = 1; i <= rsmd.getColumnCount(); i++) {
+						String propertyName = rsmd.getColumnLabel(i)
+						
+						switch (rsmd.getColumnType(i)) {
+							case Types.BIGINT:
+								json.addProperty(propertyName, rs.getLong(i))
+								break;
+							case Types.VARCHAR:
+								json.addProperty(propertyName, rs.getString(i))
+								break;
+						}
+					}
+					
+					jsonList.add(json)
+				})
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		then: 'the list in JSON is equal to a JSON array of the stores'
+		gson.toJson(jsonList) == '[{"STORE_KEY":1,"STORE_NAME":"Pizza Hut"},{"STORE_KEY":2,"STORE_NAME":"Pizza Nova"},{"STORE_KEY":3,"STORE_NAME":"Pizza Pizza"},{"STORE_KEY":4,"STORE_NAME":"Sushi-Ya Japan"}]'
 	}
 }

@@ -242,7 +242,7 @@ public class JdbcStatement {
 	}
 	
 	public <T> void forEach(Connection connection, Class<T> clazz, Consumer<T> consumer)
-		throws SQLException {
+			throws SQLException {
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
 		
@@ -251,6 +251,26 @@ public class JdbcStatement {
 			rs = stmt.executeQuery();
 			
 			jdbcMapper.forEach(clazz, (Select)sqlStatement, rs, consumer);
+		} catch (SQLException e) {
+			throw e;
+		} finally {
+			JdbcUtils.closeQuietly(rs);
+			close(stmt);
+		}
+	}
+	
+	public void forEachRow(Connection connection, Consumer<ResultSetHelper> consumer)
+			throws SQLException {
+		PreparedStatement stmt = null;
+		ResultSetHelper rs = null;
+		
+		try {
+			stmt = getPreparedStatement(connection);
+			rs = new ResultSetHelper(stmt.executeQuery());
+			
+			while (rs.next()) {
+				consumer.accept(rs);
+			}
 		} catch (SQLException e) {
 			throw e;
 		} finally {
