@@ -37,6 +37,7 @@
 			<version>${jmh.version}</version>
 			<scope>provided</scope>
 		</dependency>
+		
 		<dependency>
 		    <groupId>com.h2database</groupId>
 		    <artifactId>h2</artifactId>
@@ -51,6 +52,21 @@
 		    <groupId>org.hibernate</groupId>
 		    <artifactId>hibernate-core</artifactId>
 		    <version>${hibernate.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jooq</groupId>
+			<artifactId>jooq</artifactId>
+			<version>${jooq.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jooq</groupId>
+			<artifactId>jooq-codegen</artifactId>
+			<version>${jooq.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jooq</groupId>
+			<artifactId>jooq-meta</artifactId>
+			<version>${jooq.version}</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.slf4j</groupId>
@@ -69,8 +85,10 @@
 		<jmh.version>1.0</jmh.version>
 		<javac.target>1.8</javac.target>
 		<uberjar.name>benchmarks</uberjar.name>
+		
 		<h2.version>1.4.193</h2.version>
 		<hibernate.version>5.2.8.Final</hibernate.version>
+		<jooq.version>3.9.1</jooq.version>
 		<slf4j.version>1.7.24</slf4j.version>
 		<sql-builder-orm.version>0.1.0</sql-builder-orm.version>
 		<sql2o.version>1.5.4</sql2o.version>

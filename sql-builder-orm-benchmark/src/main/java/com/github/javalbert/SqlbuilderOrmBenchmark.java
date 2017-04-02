@@ -27,6 +27,9 @@ import java.util.concurrent.TimeUnit;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
+import org.jooq.DSLContext;
+import org.jooq.SQLDialect;
+import org.jooq.javalbert.tables.records.DatatypeholderRecord;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Level;
@@ -46,6 +49,9 @@ import com.github.javalbert.hibernate.DataTypeHolderHibernate;
 import com.github.javalbert.hibernate.HibernateUtils;
 import com.github.javalbert.orm.JdbcMapper;
 import com.github.javalbert.utils.jdbc.JdbcUtils;
+
+import static org.jooq.impl.DSL.*;
+import static org.jooq.javalbert.tables.Datatypeholder.*;
 
 public class SqlbuilderOrmBenchmark {
 	@State(Scope.Thread)
@@ -153,10 +159,46 @@ public class SqlbuilderOrmBenchmark {
 	}
 	
 	@State(Scope.Thread)
+	public static class RetrievalJooqState {
+		public Connection connection;
+		public DSLContext create;
+		public Long id;
+		
+		@Setup(Level.Trial)
+		public void doSetup() {
+			try {
+				H2.createTables();
+				connection = H2.getConnection();
+				create = using(connection, SQLDialect.H2);
+				
+				DatatypeholderRecord row = create.newRecord(DATATYPEHOLDER);
+				row.setIntVal(Integer.MAX_VALUE);
+				row.setBooleanVal(true);
+				row.setBigintVal(Long.MAX_VALUE);
+				row.setDecimalVal(BigDecimal.TEN);
+				row.setDoubleVal(Double.MAX_VALUE);
+				row.setRealVal(Float.MAX_VALUE);
+				row.setDateVal(Date.valueOf(LocalDate.of(2017, 3, 5)));
+				row.setTimestampVal(Timestamp.valueOf(LocalDateTime.of(2017, 3, 5, 20, 45)));
+				row.setVarcharVal("Wing Street");
+				row.store();
+				id = row.getId();
+			} catch (ClassNotFoundException | SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		@TearDown(Level.Trial)
+        public void doTearDown() {
+			create.close();
+        }
+	}
+	
+	@State(Scope.Thread)
 	public static class RetrievalSql2oState {
-		private org.sql2o.Connection connection;
-		private long id;
-		private Sql2o sql2o;
+		public org.sql2o.Connection connection;
+		public long id;
+		public Sql2o sql2o;
 
 		@Setup(Level.Trial)
 		public void doSetup() {
@@ -321,6 +363,17 @@ public class SqlbuilderOrmBenchmark {
 			JdbcUtils.closeQuietly(rs);
 			JdbcUtils.closeQuietly(stmt);
 		}
+	}
+	
+	@OutputTimeUnit(TimeUnit.NANOSECONDS)
+	@BenchmarkMode(Mode.AverageTime)
+	@Benchmark
+	public DataTypeHolderHibernate testRetrievalJooq(RetrievalJooqState state) {
+		return state.create.select()
+				.from(DATATYPEHOLDER)
+				.where(DATATYPEHOLDER.ID.eq(1L))
+				.fetchAny()
+				.into(DataTypeHolderHibernate.class);
 	}
 	
 	@OutputTimeUnit(TimeUnit.NANOSECONDS)

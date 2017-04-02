@@ -16,37 +16,44 @@ import java.sql.SQLException;
 
 import com.github.javalbert.SqlbuilderOrmBenchmark.RetrievalHibernateStatelessSessionState;
 import com.github.javalbert.SqlbuilderOrmBenchmark.RetrievalJdbcState;
+import com.github.javalbert.SqlbuilderOrmBenchmark.RetrievalJooqState;
 import com.github.javalbert.SqlbuilderOrmBenchmark.RetrievalSql2oState;
 import com.github.javalbert.SqlbuilderOrmBenchmark.RetrievalSqlbuilderOrmState;
 import com.github.javalbert.hibernate.DataTypeHolderHibernate;
 
 public class NonJMHBenchmark {
-	private long hibernate;
-	private long jdbc;
-	private long sql2o;
-	private long sqlborm;
+	public long hibernateTime;
+	public long jdbcTime;
+	public long jooqTime;
+	public long sql2oTime;
+	public long sqlbOrmTime;
+	
+	private SqlbuilderOrmBenchmark benchmark = new SqlbuilderOrmBenchmark();
 	
 	public void run() {
+		// Shut down Hibernate logging
+		// CREDIT: http://stackoverflow.com/a/18323888
 		java.util.logging.Logger.getLogger("org.hibernate").setLevel(java.util.logging.Level.OFF);
+
+		System.out.println("Warmup started");
 		
 		for (int i = 0; i < 1000; i++) {
 			testHibernate();
 			testJdbc();
+			testJooq();
 			testSql2o();
-			testSqlborm();
+			testSqlbOrm();
 		}
 		
-		hibernate = 0L;
-		jdbc = 0L;
-		sql2o = 0L;
-		sqlborm = 0L;
+		hibernateTime = 0L;
+		jooqTime = 0L;
+		jdbcTime = 0L;
+		sql2oTime = 0L;
+		sqlbOrmTime = 0L;
 		
 		try {
-			System.out.println("Ready");
 			Thread.sleep(1000L);
-			System.out.println("Set");
-			Thread.sleep(1000L);
-			System.out.println("Go!!!");
+			System.out.println("Warmup ended");
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -54,33 +61,35 @@ public class NonJMHBenchmark {
 		for (int i = 0; i < 1000; i++) {
 			testHibernate();
 			testJdbc();
+			testJooq();
 			testSql2o();
-			testSqlborm();
+			testSqlbOrm();
 		}
 		
-		System.out.println("Hibernate: " + (hibernate / 1000000.0));
-		System.out.println("JDBC: " + (jdbc / 1000000.0));
-		System.out.println("Sql2o: " + (sql2o / 1000000.0));
-		System.out.println("SqlbORM: " + (sqlborm / 1000000.0));
+		print("Hibernate", hibernateTime);
+		print("JDBC", jdbcTime);
+		print("jOOQ", jooqTime);
+		print("Sql2o", sql2oTime);
+		print("SqlbORM", sqlbOrmTime);
 	}
 	
-	private DataTypeHolderHibernate testHibernate() {
+	public DataTypeHolderHibernate testHibernate() {
 		RetrievalHibernateStatelessSessionState hibernateState = new RetrievalHibernateStatelessSessionState();
 		hibernateState.doSetup();
 		long start = System.nanoTime();
-		DataTypeHolderHibernate holder = new SqlbuilderOrmBenchmark().testRetrievalHibernateStatelessSession(hibernateState);
-		hibernate += System.nanoTime() - start;
+		DataTypeHolderHibernate holder = benchmark.testRetrievalHibernateStatelessSession(hibernateState);
+		hibernateTime += System.nanoTime() - start;
 		hibernateState.doTearDown();
 		return holder;
 	}
 	
-	private DataTypeHolder testJdbc() {
+	public DataTypeHolder testJdbc() {
 		try {
 			RetrievalJdbcState jdbcState = new RetrievalJdbcState();
 			jdbcState.doSetup();
 			long start = System.nanoTime();
-			DataTypeHolder holder = new SqlbuilderOrmBenchmark().testRetrievalJdbc(jdbcState);
-			jdbc += System.nanoTime() - start;
+			DataTypeHolder holder = benchmark.testRetrievalJdbc(jdbcState);
+			jdbcTime += System.nanoTime() - start;
 			jdbcState.doTearDown();
 			return holder;
 		} catch (SQLException e) {
@@ -88,27 +97,41 @@ public class NonJMHBenchmark {
 		}
 	}
 	
-	private DataTypeHolder testSql2o() {
+	public DataTypeHolderHibernate testJooq() {
+		RetrievalJooqState jooqState = new RetrievalJooqState();
+		jooqState.doSetup();
+		long start = System.nanoTime();
+		DataTypeHolderHibernate holder = benchmark.testRetrievalJooq(jooqState);
+		jooqTime += System.nanoTime() - start;
+		jooqState.doTearDown();
+		return holder;
+	}
+	
+	public DataTypeHolder testSql2o() {
 		RetrievalSql2oState sql2oState = new RetrievalSql2oState();
 		sql2oState.doSetup();
 		long start = System.nanoTime();
-		DataTypeHolder holder = new SqlbuilderOrmBenchmark().testRetrievalSql2o(sql2oState);
-		sql2o += System.nanoTime() - start;
+		DataTypeHolder holder = benchmark.testRetrievalSql2o(sql2oState);
+		sql2oTime += System.nanoTime() - start;
 		sql2oState.doTearDown();
 		return holder;
 	}
 	
-	private DataTypeHolder testSqlborm() {
+	public DataTypeHolder testSqlbOrm() {
 		try {
-			RetrievalSqlbuilderOrmState sqlbormState = new RetrievalSqlbuilderOrmState();
-			sqlbormState.doSetup();
+			RetrievalSqlbuilderOrmState sqlbOrmState = new RetrievalSqlbuilderOrmState();
+			sqlbOrmState.doSetup();
 			long start = System.nanoTime();
-			DataTypeHolder holder = new SqlbuilderOrmBenchmark().testRetrievalSqlbuilderOrm(sqlbormState);
-			sqlborm += System.nanoTime() - start;
-			sqlbormState.doTearDown();
+			DataTypeHolder holder = benchmark.testRetrievalSqlbuilderOrm(sqlbOrmState);
+			sqlbOrmTime += System.nanoTime() - start;
+			sqlbOrmState.doTearDown();
 			return holder;
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
+	}
+	
+	private void print(String library, long time) {
+		System.out.println(library + ": " + String.format("%.2f", time / 1000000.0));
 	}
 }
