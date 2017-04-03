@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
@@ -35,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,6 +48,7 @@ import com.github.javalbert.sqlbuilder.NodeVisitor;
 import com.github.javalbert.sqlbuilder.Param;
 import com.github.javalbert.sqlbuilder.Select;
 import com.github.javalbert.sqlbuilder.SqlStatement;
+import com.github.javalbert.sqlbuilder.parser.SqlParser;
 import com.github.javalbert.utils.ClassUtils;
 import com.github.javalbert.utils.jdbc.JdbcUtils;
 import com.github.javalbert.utils.jdbc.PreparedStatementImpl;
@@ -176,11 +179,17 @@ public class JdbcStatement {
 	
 	public List<int[]> getBatchRowCountsList() { return batchRowCountsList; }
 	public int getMaxBatchSize() { return maxBatchSize; }
+	void setSql(String sql) {
+		this.sql = Objects.requireNonNull(sql, "sql cannot be null");
+		shouldInitSql = false;
+	}
 	@SuppressWarnings("rawtypes")
 	public SqlStatement getSqlStatement() { return sqlStatement; }
 	
+	/* START Constructors */
+	
 	public JdbcStatement(JdbcMapper jdbcMapper) {
-		this(jdbcMapper, null);
+		this(jdbcMapper, (SqlStatement<?>)null);
 	}
 	
 	/**
@@ -192,6 +201,24 @@ public class JdbcStatement {
 		this.jdbcMapper = Objects.requireNonNull(jdbcMapper, "jdbcMapper cannot be null");
 		sqlStatement(sqlStatement);
 	}
+	
+	/**
+	 * If <b>sql</b> contains any parameters, they must be named parameters
+	 * i.e. instead of <code>?</code>, use <code>:parameterName</code>
+	 * @param jdbcMapper
+	 * @param sql
+	 */
+	public JdbcStatement(JdbcMapper jdbcMapper, String sql) {
+		this.jdbcMapper = Objects.requireNonNull(jdbcMapper, "jdbcMapper cannot be null");
+		
+		// Calling sqlStatement() will set shouldInitSql = true ...
+		sqlStatement(new SqlParser().parse(sql).getSqlStatement());
+		// ... while calling setSql() will set shouldInitSql = false
+		// which should improve performance
+		setSql(sql);
+	}
+	
+	/* END Constructors */
 
 	/**
 	 * 
@@ -239,6 +266,44 @@ public class JdbcStatement {
 			close(stmt);
 		}
 	}
+	
+	public <T> void forEach(Connection connection, Class<T> clazz, Consumer<T> consumer)
+			throws SQLException {
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			stmt = getPreparedStatement(connection);
+			rs = stmt.executeQuery();
+			
+			jdbcMapper.forEach(clazz, (Select)sqlStatement, rs, consumer);
+		} catch (SQLException e) {
+			throw e;
+		} finally {
+			JdbcUtils.closeQuietly(rs);
+			close(stmt);
+		}
+	}
+	
+	public void forEachRow(Connection connection, Consumer<ResultSetHelper> consumer)
+			throws SQLException {
+		PreparedStatement stmt = null;
+		ResultSetHelper rs = null;
+		
+		try {
+			stmt = getPreparedStatement(connection);
+			rs = new ResultSetHelper(stmt.executeQuery());
+			
+			while (rs.next()) {
+				consumer.accept(rs);
+			}
+		} catch (SQLException e) {
+			throw e;
+		} finally {
+			JdbcUtils.closeQuietly(rs);
+			close(stmt);
+		}
+	}
 
 	/**
 	 * 
@@ -276,6 +341,22 @@ public class JdbcStatement {
 			shouldReplacePreparedStatement = false;
 		}
 		return stmt;
+	}
+	
+	public <T> T getSingleResult(Connection connection, Class<T> clazz) throws SQLException {
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			stmt = getPreparedStatement(connection);
+			rs = stmt.executeQuery();
+			return rs.next() ? jdbcMapper.toObject(clazz, (Select)sqlStatement, rs) : null;
+		} catch (SQLException e) {
+			throw e;
+		} finally {
+			JdbcUtils.closeQuietly(rs);
+			close(stmt);
+		}
 	}
 	
 	public void setParameters(PreparedStatement stmt) throws SQLException {
@@ -538,6 +619,22 @@ public class JdbcStatement {
 		List<T> list = new ArrayList<>();
 		toCollection(connection, clazz, list);
 		return list;
+	}
+	
+	public List<Map<String, Object>> toListOfMaps(Connection connection) throws SQLException {
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			stmt = getPreparedStatement(connection);
+			rs = stmt.executeQuery();
+			return toListOfMaps(rs);
+		} catch (SQLException e) {
+			throw e;
+		} finally {
+			JdbcUtils.closeQuietly(rs);
+			close(stmt);
+		}
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -1092,9 +1189,8 @@ public class JdbcStatement {
 			throw new IllegalStateException("sqlStatement is null, call JdbcStatement.sqlStatement(SqlStatement) method or construct JdbcStatement with SqlStatement parameter");
 		}
 		
-		sql = jdbcMapper.getVendor().print(sqlStatement);
+		setSql(jdbcMapper.getVendor().print(sqlStatement));
 		logger.debug("JdbcStatement sql: {}", sql);
-		shouldInitSql = false;
 	}
 	
 	private JdbcStatement setCollection(String name, int paramType, Collection<?> x) {
@@ -1127,6 +1223,21 @@ public class JdbcStatement {
 			param.setValue(x);
 		}
 		return this;
+	}
+	
+	private List<Map<String, Object>> toListOfMaps(ResultSet rs) throws SQLException {
+		final ResultSetMetaData rsmd = rs.getMetaData();
+		final int columnCount = rsmd.getColumnCount();
+		
+		List<Map<String, Object>> list = new ArrayList<>();
+		while (rs.next()) {
+			Map<String, Object> map = new LinkedHashMap<>();
+			for (int i = 1; i <= columnCount; i++) {
+				map.put(rsmd.getColumnLabel(i), rs.getObject(i));
+			}
+			list.add(map);
+		}
+		return list;
 	}
 	
 	private List<Object[]> toResultList(ResultSet rs) throws SQLException {

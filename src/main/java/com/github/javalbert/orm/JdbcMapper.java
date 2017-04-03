@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -186,11 +187,15 @@ public class JdbcMapper {
 	 * @return
 	 */
 	public JdbcStatement createQuery() {
-		return createQuery(null);
+		return createQuery((SqlStatement<?>)null);
 	}
 	
 	public JdbcStatement createQuery(SqlStatement<?> sqlStatement) {
 		return new JdbcStatement(this, sqlStatement);
+	}
+	
+	public JdbcStatement createQuery(String sql) {
+		return new JdbcStatement(this, sql);
 	}
 	
 	public boolean delete(Connection connection, Object object) throws SQLException {
@@ -420,7 +425,18 @@ public class JdbcMapper {
 	
 	/* END Public methods */
 	
-	/* START Protected methods */
+	/* START Package protected methods */
+	
+	<T> void forEach(Class<T> clazz, Select select, ResultSet rs, Consumer<T> consumer) throws SQLException {
+		ResultSetHelper rsHelper = new ResultSetHelper(rs);
+		
+		ClassRowMapping classRowMapping = getClassRowMapping(clazz);
+		List<FieldColumnMapping> columnMappings = getColumnMappings(classRowMapping, select);
+		
+		while (rs.next()) {
+			consumer.accept(createObject(clazz, columnMappings, rsHelper));
+		}
+	}
 	
 	/**
 	 * WARN: This does not call ResultSet.next()
@@ -435,8 +451,7 @@ public class JdbcMapper {
 		List<FieldColumnMapping> columnMappings = getColumnMappings(classRowMapping, select);
 
 		ResultSetHelper rsHelper = new ResultSetHelper(rs);
-		T object = createObject(clazz, columnMappings, rsHelper);
-		return object;
+		return createObject(clazz, columnMappings, rsHelper);
 	}
 	
 	<T> Collection<T> toCollection(Class<T> clazz, Select select, ResultSet rs, Collection<T> objects) throws SQLException {
@@ -446,8 +461,7 @@ public class JdbcMapper {
 		List<FieldColumnMapping> columnMappings = getColumnMappings(classRowMapping, select);
 		
 		while (rs.next()) {
-			T object = createObject(clazz, columnMappings, rsHelper);
-			objects.add(object);
+			objects.add(createObject(clazz, columnMappings, rsHelper));
 		}
 		return objects;
 	}
@@ -472,7 +486,7 @@ public class JdbcMapper {
 		return map;
 	}
 	
-	/* END Protected methods */
+	/* END Package protected methods */
 	
 	/* BEGIN Private methods */
 	
@@ -503,6 +517,6 @@ public class JdbcMapper {
 		}
 		return classRowMapping;
 	}
-	
+
 	/* END Private methods */
 }

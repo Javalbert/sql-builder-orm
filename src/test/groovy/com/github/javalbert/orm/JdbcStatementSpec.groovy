@@ -3,7 +3,12 @@ package com.github.javalbert.orm
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
+import java.sql.ResultSetMetaData
+import java.sql.SQLException
 import java.sql.Timestamp
+import java.sql.Types
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 import com.github.javalbert.orm.JdbcMapper
 import com.github.javalbert.orm.JdbcStatement
@@ -21,6 +26,9 @@ import com.github.javalbert.sqlbuilder.Update
 import com.github.javalbert.sqlbuilder.Where
 import com.github.javalbert.sqlbuilder.With
 import com.github.javalbert.utils.jdbc.JdbcUtils
+import com.github.javalbert.utils.jdbc.ResultSetHelper
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 import com.github.javalbert.domain.Customer
 import com.github.javalbert.domain.DataTypeHolder
 import com.github.javalbert.domain.Order
@@ -541,5 +549,228 @@ class JdbcStatementSpec extends Specification {
 		
 		and: '"Skipping Rope" product matches with 1 other product with different price'
 		resultList[2][otherOrderId] == 4
+	}
+	
+	def 'Return a single result even if it may not be unique'() {
+		given: 'four User entities saved into the database'
+		H2.deleteRecords()
+		mapper.register(User.class)
+		Connection conn = null
+		try {
+			conn = H2.getConnection()
+			mapper.save(conn, new User(1, 'Albert'))
+			mapper.save(conn, new User(2, 'Tony'))
+			mapper.save(conn, new User(3, 'Raymond'))
+			mapper.save(conn, new User(4, 'Patrick'))
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		when: 'selecting the first User'
+		User user = null
+		try {
+			conn = H2.getConnection()
+			user = mapper.createQuery(mapper.selectFrom(User.class))
+					.getSingleResult(conn, User.class)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		then: 'the first user "Albert" is retrieved'
+		user.name == 'Albert'
+	}
+	
+	def 'Throw error when getting a unique result if the result is not unique'() {
+		given: 'four User entities saved into the database'
+		H2.deleteRecords()
+		mapper.register(User.class)
+		Connection conn = null
+		try {
+			conn = H2.getConnection()
+			mapper.save(conn, new User(1, 'Albert'))
+			mapper.save(conn, new User(2, 'Tony'))
+			mapper.save(conn, new User(3, 'Raymond'))
+			mapper.save(conn, new User(4, 'Patrick'))
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		when: 'getting a unique User'
+		User user = null
+		try {
+			conn = H2.getConnection()
+			user = mapper.createQuery(mapper.selectFrom(User.class))
+					.uniqueResult(conn, User.class)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		then: 'error is thrown'
+		thrown(SQLException)
+	}
+	
+	def 'Do something to each entity as they are being created by calling JdbcStatement.forEach() method'() {
+		given: 'four Stores in the database'
+		H2.deleteRecords()
+		mapper.register(Store.class)
+		Connection conn = null
+		try {
+			conn = H2.getConnection()
+			mapper.save(conn, new Store('Pizza Hut'))
+			mapper.save(conn, new Store('Pizza Nova'))
+			mapper.save(conn, new Store('Pizza Pizza'))
+			mapper.save(conn, new Store('Sushi-Ya Japan'))
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		when: "calling JdbcStatement's forEach() method to add each created entity to a list of GSON JsonObjects"
+		List<JsonObject> jsonList = new ArrayList<>()
+		Gson gson = new Gson()
+		try {
+			conn = H2.getConnection()
+			mapper.createQuery(mapper.selectFrom(Store.class))
+				.forEach(conn, Store.class, {
+					store ->
+					jsonList.add(gson.toJsonTree(store))
+				})
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		then: 'the list in JSON is equal to a JSON array of the stores'
+		gson.toJson(jsonList) == '[{"storeKey":1,"storeName":"Pizza Hut"},{"storeKey":2,"storeName":"Pizza Nova"},{"storeKey":3,"storeName":"Pizza Pizza"},{"storeKey":4,"storeName":"Sushi-Ya Japan"}]'
+	}
+	
+	def 'Do something to each row in the ResultSet by calling JdbcStatement.forEachRow() method'() {
+		given: 'four Stores in the database'
+		H2.deleteRecords()
+		mapper.register(Store.class)
+		Connection conn = null
+		try {
+			conn = H2.getConnection()
+			mapper.save(conn, new Store('Pizza Hut'))
+			mapper.save(conn, new Store('Pizza Nova'))
+			mapper.save(conn, new Store('Pizza Pizza'))
+			mapper.save(conn, new Store('Sushi-Ya Japan'))
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		when: "calling JdbcStatement's forEachRow() method to create GSON JsonObject for each row in the ResultSet"
+		List<JsonObject> jsonList = new ArrayList<>()
+		Gson gson = new Gson()
+		try {
+			conn = H2.getConnection()
+			mapper.createQuery(mapper.selectFrom(Store.class))
+				.forEachRow(conn, {
+					ResultSetHelper rs ->
+					ResultSetMetaData rsmd = rs.getMetaData()
+					
+					JsonObject json = new JsonObject()
+					
+					for (int i = 1; i <= rsmd.getColumnCount(); i++) {
+						String propertyName = rsmd.getColumnLabel(i)
+						
+						switch (rsmd.getColumnType(i)) {
+							case Types.BIGINT:
+								json.addProperty(propertyName, rs.getLong(i))
+								break;
+							case Types.VARCHAR:
+								json.addProperty(propertyName, rs.getString(i))
+								break;
+						}
+					}
+					
+					jsonList.add(json)
+				})
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		then: 'the list in JSON is equal to a JSON array of the stores'
+		gson.toJson(jsonList) == '[{"STORE_KEY":1,"STORE_NAME":"Pizza Hut"},{"STORE_KEY":2,"STORE_NAME":"Pizza Nova"},{"STORE_KEY":3,"STORE_NAME":"Pizza Pizza"},{"STORE_KEY":4,"STORE_NAME":"Sushi-Ya Japan"}]'
+	}
+	
+	def 'Get list of maps where each map is a row in the ResultSet'() {
+		given: 'four Stores in the database'
+		H2.deleteRecords()
+		mapper.register(Store.class)
+		Connection conn = null
+		try {
+			conn = H2.getConnection()
+			mapper.save(conn, new Store('Pizza Hut'))
+			mapper.save(conn, new Store('Pizza Nova'))
+			mapper.save(conn, new Store('Pizza Pizza'))
+			mapper.save(conn, new Store('Sushi-Ya Japan'))
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		
+		when: "calling JdbcStatement's toListOfMaps() method"
+		List<Map<String, Object>> list = null
+		try {
+			conn = H2.getConnection()
+			list = mapper.createQuery(mapper.selectFrom(Store.class))
+					.toListOfMaps(conn)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		then: 'the list is equal to a list of maps where the map entries are the four Stores'
+		list == [[STORE_KEY:1,STORE_NAME:'Pizza Hut'],[STORE_KEY:2,STORE_NAME:'Pizza Nova'],[STORE_KEY:3,STORE_NAME:'Pizza Pizza'],[STORE_KEY:4,STORE_NAME:'Sushi-Ya Japan']]
+	}
+	
+	def 'Create query by passing a SQL string instead of a SqlStatement object'() {
+		given: 'one DataTypeHolder in the database'
+		H2.deleteRecords()
+		mapper.register(DataTypeHolder.class)
+		Connection conn = null
+		try {
+			DataTypeHolder holder = new DataTypeHolder();
+			holder.setId(1)
+			holder.setIntVal(Integer.MAX_VALUE);
+			holder.setBooleanVal(true);
+			holder.setBigintVal(Long.MAX_VALUE);
+			holder.setDecimalVal(BigDecimal.TEN);
+			holder.setDoubleVal(Double.MAX_VALUE);
+			holder.setRealVal(Float.MAX_VALUE);
+			holder.setDateVal(java.sql.Date.valueOf(LocalDate.of(2017, 3, 5)));
+			holder.setTimestampVal(Timestamp.valueOf(LocalDateTime.of(2017, 3, 5, 20, 45)));
+			holder.setVarcharVal("Wing Street");
+			
+			conn = H2.getConnection()
+			mapper.save(conn, holder)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		when: 'creating a query by SQL string to get a DataTypeHolder by ID'
+		DataTypeHolder holder = null;
+		try {
+			conn = H2.getConnection()
+			holder = mapper.createQuery(
+					"SELECT"
+					+ " id,"
+					+ " int_val,"
+					+ " boolean_val,"
+					+ " bigint_val,"
+					+ " decimal_val,"
+					+ " double_val,"
+					+ " real_val,"
+					+ " date_val,"
+					+ " timestamp_val,"
+					+ " varchar_val"
+					+ " FROM DataTypeHolder"
+					+ " WHERE id = :id")
+					.setInteger('id', 1)
+					.getSingleResult(conn, DataTypeHolder.class)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		then: 'the DataTypeHolder is returned'
+		holder.id == 1
 	}
 }

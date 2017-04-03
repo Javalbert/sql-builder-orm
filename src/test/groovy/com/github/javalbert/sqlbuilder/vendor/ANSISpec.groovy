@@ -60,7 +60,6 @@ class ANSISpec extends Specification {
 		String reprint = vendor.print(select)
 		
 		then: 'SQL strings match'
-		println reprint
 		sql == reprint
 	}
 }
