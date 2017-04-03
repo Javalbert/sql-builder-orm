@@ -6,18 +6,22 @@ Test environment: Intel Core i7-4790k, Windows 10 x64 + High Performance Power P
 
 | Benchmark | Mode | Samples | Score | Score error | Units |
 |---|---|---:|---:|---:|---|
-| testRetrievalHibernateStatelessSession | avgt | 15 | 4455.904 | 39.205 | ns/op |
-| testRetrievalJdbc | avgt | 15 | 614.322 | 7.473 | ns/op |
-| testRetrievalJooq | avgt | 15 | 7674.354 | 39.303 | ns/op |
-| testRetrievalSql2o | avgt | 15 | 70712.486 | 62101.671 | ns/op |
-| testRetrievalSqlbuilderOrm | avgt | 15 | 4345.117 | 10.736 | ns/op |
+| testRetrievalHibernateGetById | avgt | 15 | 4446.329 | 40.730 | ns/op |
+| testRetrievalHibernateQueryById | avgt | 15 | 5437.500 | 93.925 | ns/op |
+| testRetrievalJdbc | avgt | 15 | 614.788 | 6.625 | ns/op |
+| testRetrievalJooq | avgt | 15 | 7775.380 | 40.337 | ns/op |
+| testRetrievalSql2o | avgt | 15 | 75717.887 | 63003.542 | ns/op |
+| testRetrievalSqlbOrmGetById | avgt | 15 | 2671.766 | 64.161 | ns/op |
+| testRetrievalSqlbOrmQueryById | avgt | 15 | 20401.501 | 199.725 | ns/op |
 
 [Non-JMH benchmark](src/main/java/com/github/javalbert/NonJMHBenchmark.java) version of the above, executed 1000 times in a for loop:
 
-| Library | Duration |
+| Library | Duration (ms) |
 |---|---:|
-| Hibernate | 235ms |
-| JDBC | 18ms |
-| jOOQ | 115ms |
-| Sql2o | 72ms |
-| SqlbORM | 46ms |
+| Hibernate (get by ID) | 158.25 |
+| Hibernate (query by ID) | 588.53 |
+| JDBC | 18.90 |
+| jOOQ | 116.37 |
+| Sql2o | 71.36 |
+| SqlbORM (get by ID) | 44.59 |
+| SqlbORM (query by ID) | 81.45 |

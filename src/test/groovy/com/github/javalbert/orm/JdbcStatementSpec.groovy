@@ -7,6 +7,8 @@ import java.sql.ResultSetMetaData
 import java.sql.SQLException
 import java.sql.Timestamp
 import java.sql.Types
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 import com.github.javalbert.orm.JdbcMapper
 import com.github.javalbert.orm.JdbcStatement
@@ -718,5 +720,57 @@ class JdbcStatementSpec extends Specification {
 		
 		then: 'the list is equal to a list of maps where the map entries are the four Stores'
 		list == [[STORE_KEY:1,STORE_NAME:'Pizza Hut'],[STORE_KEY:2,STORE_NAME:'Pizza Nova'],[STORE_KEY:3,STORE_NAME:'Pizza Pizza'],[STORE_KEY:4,STORE_NAME:'Sushi-Ya Japan']]
+	}
+	
+	def 'Create query by passing a SQL string instead of a SqlStatement object'() {
+		given: 'one DataTypeHolder in the database'
+		H2.deleteRecords()
+		mapper.register(DataTypeHolder.class)
+		Connection conn = null
+		try {
+			DataTypeHolder holder = new DataTypeHolder();
+			holder.setId(1)
+			holder.setIntVal(Integer.MAX_VALUE);
+			holder.setBooleanVal(true);
+			holder.setBigintVal(Long.MAX_VALUE);
+			holder.setDecimalVal(BigDecimal.TEN);
+			holder.setDoubleVal(Double.MAX_VALUE);
+			holder.setRealVal(Float.MAX_VALUE);
+			holder.setDateVal(java.sql.Date.valueOf(LocalDate.of(2017, 3, 5)));
+			holder.setTimestampVal(Timestamp.valueOf(LocalDateTime.of(2017, 3, 5, 20, 45)));
+			holder.setVarcharVal("Wing Street");
+			
+			conn = H2.getConnection()
+			mapper.save(conn, holder)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		when: 'creating a query by SQL string to get a DataTypeHolder by ID'
+		DataTypeHolder holder = null;
+		try {
+			conn = H2.getConnection()
+			holder = mapper.createQuery(
+					"SELECT"
+					+ " id,"
+					+ " int_val,"
+					+ " boolean_val,"
+					+ " bigint_val,"
+					+ " decimal_val,"
+					+ " double_val,"
+					+ " real_val,"
+					+ " date_val,"
+					+ " timestamp_val,"
+					+ " varchar_val"
+					+ " FROM DataTypeHolder"
+					+ " WHERE id = :id")
+					.setInteger('id', 1)
+					.getSingleResult(conn, DataTypeHolder.class)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		then: 'the DataTypeHolder is returned'
+		holder.id == 1
 	}
 }

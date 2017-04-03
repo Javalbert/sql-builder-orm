@@ -38,6 +38,7 @@ import com.github.javalbert.sqlbuilder.SelectList;
 import com.github.javalbert.sqlbuilder.SelectNodeFinder;
 import com.github.javalbert.sqlbuilder.SqlStatement;
 import com.github.javalbert.sqlbuilder.Update;
+import com.github.javalbert.sqlbuilder.parser.SqlParser;
 import com.github.javalbert.sqlbuilder.vendor.ANSI;
 import com.github.javalbert.sqlbuilder.vendor.Vendor;
 import com.github.javalbert.utils.ClassUtils;
@@ -187,11 +188,15 @@ public class JdbcMapper {
 	 * @return
 	 */
 	public JdbcStatement createQuery() {
-		return createQuery(null);
+		return createQuery((SqlStatement<?>)null);
 	}
 	
 	public JdbcStatement createQuery(SqlStatement<?> sqlStatement) {
 		return new JdbcStatement(this, sqlStatement);
+	}
+	
+	public JdbcStatement createQuery(String sql) {
+		return createQuery(new SqlParser().parse(sql).getSqlStatement());
 	}
 	
 	public boolean delete(Connection connection, Object object) throws SQLException {

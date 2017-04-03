@@ -314,8 +314,17 @@ public class SqlbuilderOrmBenchmark {
 	@OutputTimeUnit(TimeUnit.NANOSECONDS)
 	@BenchmarkMode(Mode.AverageTime)
 	@Benchmark
-	public DataTypeHolderHibernate testRetrievalHibernateStatelessSession(RetrievalHibernateStatelessSessionState state) {
+	public DataTypeHolderHibernate testRetrievalHibernateGetById(RetrievalHibernateStatelessSessionState state) {
 		return (DataTypeHolderHibernate)state.session.get(DataTypeHolderHibernate.class, state.id);
+	}
+	
+	@OutputTimeUnit(TimeUnit.NANOSECONDS)
+	@BenchmarkMode(Mode.AverageTime)
+	@Benchmark
+	public DataTypeHolderHibernate testRetrievalHibernateQueryById(RetrievalHibernateStatelessSessionState state) {
+		return (DataTypeHolderHibernate)state.session.createQuery("from DataTypeHolderHibernate where id = :id", DataTypeHolderHibernate.class)
+				.setParameter("id", 1)
+				.uniqueResult();
 	}
 	
 	@OutputTimeUnit(TimeUnit.NANOSECONDS)
@@ -401,7 +410,29 @@ public class SqlbuilderOrmBenchmark {
 	@OutputTimeUnit(TimeUnit.NANOSECONDS)
 	@BenchmarkMode(Mode.AverageTime)
 	@Benchmark
-	public DataTypeHolder testRetrievalSqlbuilderOrm(RetrievalSqlbuilderOrmState state) throws SQLException {
+	public DataTypeHolder testRetrievalSqlbOrmGetById(RetrievalSqlbuilderOrmState state) throws SQLException {
 		return state.jdbcMapper.get(state.connection, DataTypeHolder.class, state.id);
+	}
+	
+	@OutputTimeUnit(TimeUnit.NANOSECONDS)
+	@BenchmarkMode(Mode.AverageTime)
+	@Benchmark
+	public DataTypeHolder testRetrievalSqlbOrmQueryById(RetrievalSqlbuilderOrmState state) throws SQLException {
+		return state.jdbcMapper.createQuery(
+				"SELECT"
+				+ " id,"
+				+ " int_val,"
+				+ " boolean_val,"
+				+ " bigint_val,"
+				+ " decimal_val,"
+				+ " double_val,"
+				+ " real_val,"
+				+ " date_val,"
+				+ " timestamp_val,"
+				+ " varchar_val"
+				+ " FROM DataTypeHolder"
+				+ " WHERE id = :id")
+				.setInteger("id", state.id)
+				.uniqueResult(state.connection, DataTypeHolder.class);
 	}
 }
