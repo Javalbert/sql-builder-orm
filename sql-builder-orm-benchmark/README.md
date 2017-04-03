@@ -2,7 +2,7 @@
 
 Test environment: Intel Core i7-4790k, Windows 10 x64 + High Performance Power Plan, Java version "1.8.0_121" Java Hotspot(TM) 64-Bit Server VM (build 25.121-b13, mixed mode)
 
-[Benchmark](src/main/java/com/github/javalbert/SqlbuilderOrmBenchmark.java) which tests getting a single object by ID:
+[Benchmark](src/main/java/com/github/javalbert/EntityByIdBenchmark.java) which tests getting a single object by ID:
 
 | Benchmark | Mode | Samples | Score | Score error | Units |
 |---|---|---:|---:|---:|---|
@@ -14,7 +14,7 @@ Test environment: Intel Core i7-4790k, Windows 10 x64 + High Performance Power P
 | testRetrievalSqlbOrmGetById | avgt | | 15 | 2700.575 | 67.184 | ns/op |
 | testRetrievalSqlbOrmQueryById | avgt | | 15 | 19417.833 | 188.876 | ns/op |
 
-[Non-JMH benchmark](src/main/java/com/github/javalbert/NonJMHBenchmark.java) version of the above, executed 1000 times in a for loop:
+[Non-JMH benchmark](src/main/java/com/github/javalbert/EntityByIdNonJMH.java) version of the above, executed 1000 times in a for loop:
 
 | Library | Duration (ms) |
 |---|---:|
