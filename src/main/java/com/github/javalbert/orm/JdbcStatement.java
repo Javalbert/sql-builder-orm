@@ -48,6 +48,7 @@ import com.github.javalbert.sqlbuilder.NodeVisitor;
 import com.github.javalbert.sqlbuilder.Param;
 import com.github.javalbert.sqlbuilder.Select;
 import com.github.javalbert.sqlbuilder.SqlStatement;
+import com.github.javalbert.sqlbuilder.parser.SqlParser;
 import com.github.javalbert.utils.ClassUtils;
 import com.github.javalbert.utils.jdbc.JdbcUtils;
 import com.github.javalbert.utils.jdbc.PreparedStatementImpl;
@@ -178,11 +179,17 @@ public class JdbcStatement {
 	
 	public List<int[]> getBatchRowCountsList() { return batchRowCountsList; }
 	public int getMaxBatchSize() { return maxBatchSize; }
+	void setSql(String sql) {
+		this.sql = Objects.requireNonNull(sql, "sql cannot be null");
+		shouldInitSql = false;
+	}
 	@SuppressWarnings("rawtypes")
 	public SqlStatement getSqlStatement() { return sqlStatement; }
 	
+	/* START Constructors */
+	
 	public JdbcStatement(JdbcMapper jdbcMapper) {
-		this(jdbcMapper, null);
+		this(jdbcMapper, (SqlStatement<?>)null);
 	}
 	
 	/**
@@ -194,6 +201,24 @@ public class JdbcStatement {
 		this.jdbcMapper = Objects.requireNonNull(jdbcMapper, "jdbcMapper cannot be null");
 		sqlStatement(sqlStatement);
 	}
+	
+	/**
+	 * If <b>sql</b> contains any parameters, they must be named parameters
+	 * i.e. instead of <code>?</code>, use <code>:parameterName</code>
+	 * @param jdbcMapper
+	 * @param sql
+	 */
+	public JdbcStatement(JdbcMapper jdbcMapper, String sql) {
+		this.jdbcMapper = Objects.requireNonNull(jdbcMapper, "jdbcMapper cannot be null");
+		
+		// Calling sqlStatement() will set shouldInitSql = true ...
+		sqlStatement(new SqlParser().parse(sql).getSqlStatement());
+		// ... while calling setSql() will set shouldInitSql = false
+		// which should improve performance
+		setSql(sql);
+	}
+	
+	/* END Constructors */
 
 	/**
 	 * 
@@ -1164,9 +1189,8 @@ public class JdbcStatement {
 			throw new IllegalStateException("sqlStatement is null, call JdbcStatement.sqlStatement(SqlStatement) method or construct JdbcStatement with SqlStatement parameter");
 		}
 		
-		sql = jdbcMapper.getVendor().print(sqlStatement);
+		setSql(jdbcMapper.getVendor().print(sqlStatement));
 		logger.debug("JdbcStatement sql: {}", sql);
-		shouldInitSql = false;
 	}
 	
 	private JdbcStatement setCollection(String name, int paramType, Collection<?> x) {

@@ -14,14 +14,14 @@ package com.github.javalbert;
 
 import java.sql.SQLException;
 
-import com.github.javalbert.SqlbuilderOrmBenchmark.RetrievalHibernateStatelessSessionState;
-import com.github.javalbert.SqlbuilderOrmBenchmark.RetrievalJdbcState;
-import com.github.javalbert.SqlbuilderOrmBenchmark.RetrievalJooqState;
-import com.github.javalbert.SqlbuilderOrmBenchmark.RetrievalSql2oState;
-import com.github.javalbert.SqlbuilderOrmBenchmark.RetrievalSqlbuilderOrmState;
+import com.github.javalbert.EntityByIdBenchmark.RetrievalHibernateStatelessSessionState;
+import com.github.javalbert.EntityByIdBenchmark.RetrievalJdbcState;
+import com.github.javalbert.EntityByIdBenchmark.RetrievalJooqState;
+import com.github.javalbert.EntityByIdBenchmark.RetrievalSql2oState;
+import com.github.javalbert.EntityByIdBenchmark.RetrievalSqlbuilderOrmState;
 import com.github.javalbert.hibernate.DataTypeHolderHibernate;
 
-public class NonJMHBenchmark {
+public class EntityByIdNonJMH {
 	public long hibernateGetByIdTime;
 	public long hibernateQueryByIdTime;
 	public long jdbcTime;
@@ -30,7 +30,7 @@ public class NonJMHBenchmark {
 	public long sqlbOrmGetByIdTime;
 	public long sqlbOrmQueryByIdTime;
 	
-	private SqlbuilderOrmBenchmark benchmark = new SqlbuilderOrmBenchmark();
+	private EntityByIdBenchmark benchmark = new EntityByIdBenchmark();
 	
 	public void run() {
 		// Shut down Hibernate logging

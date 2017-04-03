@@ -12,6 +12,9 @@
  *******************************************************************************/
 package com.github.javalbert;
 
+import static org.jooq.impl.DSL.*;
+import static org.jooq.javalbert.tables.Datatypeholder.*;
+
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
@@ -39,10 +42,6 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
-import org.openjdk.jmh.runner.Runner;
-import org.openjdk.jmh.runner.RunnerException;
-import org.openjdk.jmh.runner.options.Options;
-import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.sql2o.Sql2o;
 
 import com.github.javalbert.hibernate.DataTypeHolderHibernate;
@@ -50,10 +49,7 @@ import com.github.javalbert.hibernate.HibernateUtils;
 import com.github.javalbert.orm.JdbcMapper;
 import com.github.javalbert.utils.jdbc.JdbcUtils;
 
-import static org.jooq.impl.DSL.*;
-import static org.jooq.javalbert.tables.Datatypeholder.*;
-
-public class SqlbuilderOrmBenchmark {
+public class EntityByIdBenchmark {
 	@State(Scope.Thread)
 	public static class RetrievalHibernateStatelessSessionState {
 		public int id;
@@ -296,19 +292,6 @@ public class SqlbuilderOrmBenchmark {
 				e.printStackTrace();
 			}
         }
-	}
-	
-	public static void main(String[] args) throws RunnerException {
-		Options opt = new OptionsBuilder()
-				.include(SqlbuilderOrmBenchmark.class.getSimpleName())
-				.warmupIterations(5)
-				.measurementIterations(5)
-				.forks(3)
-				.build();
-
-		new Runner(opt).run();
-		
-//		new NonJMHBenchmark().run();
 	}
 	
 	@OutputTimeUnit(TimeUnit.NANOSECONDS)
