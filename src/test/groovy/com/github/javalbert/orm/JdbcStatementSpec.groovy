@@ -622,7 +622,7 @@ class JdbcStatementSpec extends Specification {
 			JdbcUtils.closeQuietly(conn)
 		}
 		
-		when: "call JdbcStatement's forEach() method to add each created entity to a list of GSON JsonObjects"
+		when: "calling JdbcStatement's forEach() method to add each created entity to a list of GSON JsonObjects"
 		List<JsonObject> jsonList = new ArrayList<>()
 		Gson gson = new Gson()
 		try {
@@ -655,7 +655,7 @@ class JdbcStatementSpec extends Specification {
 			JdbcUtils.closeQuietly(conn)
 		}
 		
-		when: "call JdbcStatement's forEachRow() method to create GSON JsonObject for each row in the ResultSet"
+		when: "calling JdbcStatement's forEachRow() method to create GSON JsonObject for each row in the ResultSet"
 		List<JsonObject> jsonList = new ArrayList<>()
 		Gson gson = new Gson()
 		try {
@@ -688,5 +688,35 @@ class JdbcStatementSpec extends Specification {
 		
 		then: 'the list in JSON is equal to a JSON array of the stores'
 		gson.toJson(jsonList) == '[{"STORE_KEY":1,"STORE_NAME":"Pizza Hut"},{"STORE_KEY":2,"STORE_NAME":"Pizza Nova"},{"STORE_KEY":3,"STORE_NAME":"Pizza Pizza"},{"STORE_KEY":4,"STORE_NAME":"Sushi-Ya Japan"}]'
+	}
+	
+	def 'Get list of maps where each map is a row in the ResultSet'() {
+		given: 'four Stores in the database'
+		H2.deleteRecords()
+		mapper.register(Store.class)
+		Connection conn = null
+		try {
+			conn = H2.getConnection()
+			mapper.save(conn, new Store('Pizza Hut'))
+			mapper.save(conn, new Store('Pizza Nova'))
+			mapper.save(conn, new Store('Pizza Pizza'))
+			mapper.save(conn, new Store('Sushi-Ya Japan'))
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		
+		when: "calling JdbcStatement's toListOfMaps() method"
+		List<Map<String, Object>> list = null
+		try {
+			conn = H2.getConnection()
+			list = mapper.createQuery(mapper.selectFrom(Store.class))
+					.toListOfMaps(conn)
+		} finally {
+			JdbcUtils.closeQuietly(conn)
+		}
+		
+		then: 'the list is equal to a list of maps where the map entries are the four Stores'
+		list == [[STORE_KEY:1,STORE_NAME:'Pizza Hut'],[STORE_KEY:2,STORE_NAME:'Pizza Nova'],[STORE_KEY:3,STORE_NAME:'Pizza Pizza'],[STORE_KEY:4,STORE_NAME:'Sushi-Ya Japan']]
 	}
 }

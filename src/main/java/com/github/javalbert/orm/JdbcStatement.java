@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
@@ -593,6 +594,22 @@ public class JdbcStatement {
 		List<T> list = new ArrayList<>();
 		toCollection(connection, clazz, list);
 		return list;
+	}
+	
+	public List<Map<String, Object>> toListOfMaps(Connection connection) throws SQLException {
+		PreparedStatement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			stmt = getPreparedStatement(connection);
+			rs = stmt.executeQuery();
+			return toListOfMaps(rs);
+		} catch (SQLException e) {
+			throw e;
+		} finally {
+			JdbcUtils.closeQuietly(rs);
+			close(stmt);
+		}
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -1182,6 +1199,21 @@ public class JdbcStatement {
 			param.setValue(x);
 		}
 		return this;
+	}
+	
+	private List<Map<String, Object>> toListOfMaps(ResultSet rs) throws SQLException {
+		final ResultSetMetaData rsmd = rs.getMetaData();
+		final int columnCount = rsmd.getColumnCount();
+		
+		List<Map<String, Object>> list = new ArrayList<>();
+		while (rs.next()) {
+			Map<String, Object> map = new LinkedHashMap<>();
+			for (int i = 1; i <= columnCount; i++) {
+				map.put(rsmd.getColumnLabel(i), rs.getObject(i));
+			}
+			list.add(map);
+		}
+		return list;
 	}
 	
 	private List<Object[]> toResultList(ResultSet rs) throws SQLException {
