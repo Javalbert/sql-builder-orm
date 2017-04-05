@@ -6,13 +6,13 @@ Test environment: Intel Core i7-4790k, Windows 10 x64 + High Performance Power P
 
 | Benchmark | Mode | Samples | Score | Score error | Units |
 |---|---|---:|---:|---:|---|
-| testRetrievalHibernateGetById | avgt | | 15 | 4372.836 | 37.874 | ns/op |
-| testRetrievalHibernateQueryById | avgt | | 15 | 5368.254 | 64.305 | ns/op |
-| testRetrievalJdbc | avgt | | 15 | 610.772 | 3.052 | ns/op |
-| testRetrievalJooq | avgt | | 15 | 7682.461 | 62.970 | ns/op |
-| testRetrievalSql2o | avgt | | 15 | 92056.040 | 66644.627 | ns/op |
-| testRetrievalSqlbOrmGetById | avgt | | 15 | 2700.575 | 67.184 | ns/op |
-| testRetrievalSqlbOrmQueryById | avgt | | 15 | 19417.833 | 188.876 | ns/op |
+| testRetrievalHibernateGetById | avgt | 15 | 4372.836 | 37.874 | ns/op |
+| testRetrievalHibernateQueryById | avgt | 15 | 5368.254 | 64.305 | ns/op |
+| testRetrievalJdbc | avgt | 15 | 610.772 | 3.052 | ns/op |
+| testRetrievalJooq | avgt | 15 | 7682.461 | 62.970 | ns/op |
+| testRetrievalSql2o | avgt | 15 | 92056.040 | 66644.627 | ns/op |
+| testRetrievalSqlbOrmGetById | avgt | 15 | 2700.575 | 67.184 | ns/op |
+| testRetrievalSqlbOrmQueryById | avgt | 15 | 19417.833 | 188.876 | ns/op |
 
 [Non-JMH benchmark](src/main/java/com/github/javalbert/EntityByIdNonJMH.java) version of the above, executed 1000 times in a for loop:
 
