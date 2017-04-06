@@ -353,19 +353,14 @@ public class BatchResolver extends ObjectGraphResolver {
 		
 		public RelatedObjectSelect(Relationship relationship) {
 			GraphEntity<?> ownerEntity = relationship.getOwnerEntity();
-			if (Strings.isNullOrEmpty(ownerEntity.getTableAlias())) {
-				throw new IllegalStateException(relationship + "'s owner entity is missing its table alias");
-			}
-			
 			GraphEntity<?> relatedEntity = relationship.getRelatedEntity();
-			if (Strings.isNullOrEmpty(relatedEntity.getTableAlias())) {
-				throw new IllegalStateException(relationship + "'s related entity is missing its table alias");
-			}
 			
 			ownerClass = ownerEntity.getEntityClass();
-			ownerTableAlias = ownerEntity.getTableAlias();
+			ownerTableAlias = Strings.illegalStateOnEmpty(ownerEntity.getTableAlias(),
+					relationship + "'s owner entity is missing its table alias");
 			relatedClass = relatedEntity.getEntityClass();
-			relatedTableAlias = relatedEntity.getTableAlias();
+			relatedTableAlias = Strings.illegalStateOnEmpty(relatedEntity.getTableAlias(),
+					relationship + "'s related entity is missing its table alias");
 			this.relationship = relationship;
 		}
 		
