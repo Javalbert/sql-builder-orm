@@ -23,6 +23,11 @@ public class ImmutableExpression extends Expression {
 		alias = expression.getAlias();
 	}
 	
+	@Override
+	public ImmutableExpression immutable() {
+		return this;
+	}
+	
 	/* START Fluent API */
 	
 	@Override

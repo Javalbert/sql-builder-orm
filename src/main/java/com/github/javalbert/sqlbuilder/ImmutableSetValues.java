@@ -19,4 +19,9 @@ public class ImmutableSetValues extends SetValues {
 	public ImmutableSetValues(SetValues values) {
 		nodes = NodeUtils.immutableNodes(values);
 	}
+	
+	@Override
+	public ImmutableSetValues immutable() {
+		return this;
+	}
 }

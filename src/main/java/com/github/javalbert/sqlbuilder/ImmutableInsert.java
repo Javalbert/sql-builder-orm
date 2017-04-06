@@ -16,4 +16,9 @@ public class ImmutableInsert extends Insert {
 	public ImmutableInsert(Insert insert) {
 		nodes = NodeUtils.immutableNodes(insert);
 	}
+	
+	@Override
+	public ImmutableInsert immutable() {
+		return this;
+	}
 }

@@ -17,6 +17,11 @@ public class ImmutableGroupBy extends GroupBy {
 		nodes = NodeUtils.immutableNodes(groupBy);
 	}
 	
+	@Override
+	public ImmutableGroupBy immutable() {
+		return this;
+	}
+	
 	/* START Fluent API */
 	
 	@Override

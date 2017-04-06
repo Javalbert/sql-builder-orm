@@ -26,4 +26,9 @@ public class ImmutableParam extends Param {
 		super(param.getName());
 		alias = param.getAlias();
 	}
+	
+	@Override
+	public ImmutableParam immutable() {
+		return this;
+	}
 }

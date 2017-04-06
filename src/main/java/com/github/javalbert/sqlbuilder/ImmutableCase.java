@@ -23,6 +23,11 @@ public class ImmutableCase extends Case {
 		nodes = NodeUtils.immutableNodes(sqlCase);
 	}
 	
+	@Override
+	public ImmutableCase immutable() {
+		return this;
+	}
+	
 	/* START Fluent API */
 	
 	@Override

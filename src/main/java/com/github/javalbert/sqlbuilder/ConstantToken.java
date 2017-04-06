@@ -31,7 +31,7 @@ public class ConstantToken extends ImmutableToken {
 	}
 	
 	@Override
-	public Token immutable() {
+	public ImmutableToken immutable() {
 		return this;
 	}
 	

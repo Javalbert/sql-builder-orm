@@ -22,4 +22,9 @@ public class ImmutableSelect extends Select {
 		alias = select.getAlias();
 		nodes = NodeUtils.immutableNodes(select);
 	}
+	
+	@Override
+	public ImmutableSelect immutable() {
+		return this;
+	}
 }

@@ -35,4 +35,9 @@ public class ImmutableSetOperator extends SetOperator {
 	protected ImmutableSetOperator(String operator, Select select) {
 		super(operator, select);
 	}
+	
+	@Override
+	public ImmutableSetOperator immutable() {
+		return this;
+	}
 }

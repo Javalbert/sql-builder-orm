@@ -17,6 +17,11 @@ public class ImmutablePredicate extends Predicate {
 		nodes = NodeUtils.immutableNodes(predicate);
 	}
 	
+	@Override
+	public ImmutablePredicate immutable() {
+		return this;
+	}
+	
 	/* START Fluent API */
 	
 	@Override

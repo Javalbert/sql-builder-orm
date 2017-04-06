@@ -17,6 +17,11 @@ public class ImmutableColumnList extends ColumnList {
 		nodes = NodeUtils.immutableNodes(columns);
 	}
 	
+	@Override
+	public ImmutableColumnList immutable() {
+		return this;
+	}
+	
 	/* START Fluent API */
 	
 	@Override

@@ -16,4 +16,9 @@ public class ImmutableCondition extends Condition {
 	public ImmutableCondition(Condition condition) {
 		nodes = NodeUtils.immutableNodes(condition);
 	}
+	
+	@Override
+	public ImmutableCondition immutable() {
+		return this;
+	}
 }

@@ -16,4 +16,9 @@ public class ImmutableWhere extends Where {
 	public ImmutableWhere(Condition where) {
 		nodes = NodeUtils.immutableNodes(where);
 	}
+	
+	@Override
+	public ImmutableWhere immutable() {
+		return this;
+	}
 }

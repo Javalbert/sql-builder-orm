@@ -16,4 +16,9 @@ public class ImmutableFrom extends From {
 	public ImmutableFrom(From from) {
 		nodes = NodeUtils.immutableNodes(from);
 	}
+	
+	@Override
+	public ImmutableFrom immutable() {
+		return this;
+	}
 }

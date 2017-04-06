@@ -32,6 +32,11 @@ public class ImmutableFunction extends Function {
 		nodes = NodeUtils.immutableNodes(function);
 	}
 	
+	@Override
+	public ImmutableFunction immutable() {
+		return this;
+	}
+	
 	/* START Fluent API */
 	
 	@Override

@@ -17,6 +17,11 @@ public class ImmutableSelectList extends SelectList {
 		nodes = NodeUtils.immutableNodes(list);
 	}
 	
+	@Override
+	public ImmutableSelectList immutable() {
+		return this;
+	}
+	
 	/* START Fluent API */
 	
 	@Override

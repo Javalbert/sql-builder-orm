@@ -21,4 +21,9 @@ public class ImmutableFetch extends Fetch {
 	public ImmutableFetch(Fetch fetch) {
 		super(fetch.getFetchCount());
 	}
+	
+	@Override
+	public ImmutableFetch immutable() {
+		return this;
+	}
 }

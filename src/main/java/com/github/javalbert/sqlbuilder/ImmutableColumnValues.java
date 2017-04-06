@@ -17,6 +17,11 @@ public class ImmutableColumnValues extends ColumnValues {
 		nodes = NodeUtils.immutableNodes(values);
 	}
 	
+	@Override
+	public ImmutableColumnValues immutable() {
+		return this;
+	}
+	
 	/* START Fluent API */
 	
 	@Override

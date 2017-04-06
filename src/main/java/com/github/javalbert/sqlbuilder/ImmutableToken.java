@@ -29,4 +29,9 @@ public class ImmutableToken extends Token {
 	public ImmutableToken(Token token) {
 		this(token.getToken(), token.isNextNodeAnExpression());
 	}
+	
+	@Override
+	public ImmutableToken immutable() {
+		return this;
+	}
 }

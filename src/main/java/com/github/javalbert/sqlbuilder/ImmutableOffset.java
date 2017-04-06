@@ -21,4 +21,9 @@ public class ImmutableOffset extends Offset {
 	public ImmutableOffset(Offset offset) {
 		super(offset.getSkipCount());
 	}
+	
+	@Override
+	public ImmutableOffset immutable() {
+		return this;
+	}
 }

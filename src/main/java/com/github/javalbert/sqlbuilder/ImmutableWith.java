@@ -16,4 +16,9 @@ public class ImmutableWith extends With {
 	public ImmutableWith(With with) {
 		nodes = NodeUtils.immutableNodes(with);
 	}
+	
+	@Override
+	public ImmutableWith immutable() {
+		return this;
+	}
 }

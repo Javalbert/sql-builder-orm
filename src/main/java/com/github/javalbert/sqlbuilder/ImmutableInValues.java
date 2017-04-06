@@ -17,6 +17,11 @@ public class ImmutableInValues extends InValues {
 		nodes = NodeUtils.immutableNodes(values);
 	}
 	
+	@Override
+	public ImmutableInValues immutable() {
+		return this;
+	}
+	
 	/* START Fluent API */
 	
 	@Override
