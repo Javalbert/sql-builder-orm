@@ -43,6 +43,10 @@ public class TableColumn implements SelectColumn<TableColumn> {
 		return null;
 	}
 	
+	public Predicate eq(TableColumn column) {
+		return new Predicate(this, column, PredicateOperator.EQ);
+	}
+	
 	TableColumn copy() {
 		TableColumn copy = new TableColumn();
 		copy.alias = alias;

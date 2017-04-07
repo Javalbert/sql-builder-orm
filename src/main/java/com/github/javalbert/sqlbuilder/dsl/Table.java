@@ -14,7 +14,7 @@ package com.github.javalbert.sqlbuilder.dsl;
 
 import com.github.javalbert.utils.string.Strings;
 
-public class Table {
+public class Table implements TableReference {
 	private String name;
 	private TableAlias tableAlias;
 

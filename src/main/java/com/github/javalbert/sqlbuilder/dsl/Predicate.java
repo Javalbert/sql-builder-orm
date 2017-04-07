@@ -12,20 +12,26 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-public interface TableReference {
-	default JoinedTable fullOuterJoin(TableReference table) {
-		return new JoinedTable(this, table, JoinType.FULL);
+import java.util.Objects;
+
+public class Predicate implements BooleanExpression {
+	private final TableColumn leftColumn;
+	private final PredicateOperator operator;
+	private final TableColumn rightColumn;
+
+	public TableColumn getLeftColumn() {
+		return leftColumn;
 	}
-	
-	default JoinedTable innerJoin(TableReference table) {
-		return new JoinedTable(this, table, JoinType.INNER);
+	public PredicateOperator getOperator() {
+		return operator;
 	}
-	
-	default JoinedTable leftOuterJoin(TableReference table) {
-		return new JoinedTable(this, table, JoinType.LEFT);
+	public TableColumn getRightColumn() {
+		return rightColumn;
 	}
-	
-	default JoinedTable rightOuterJoin(TableReference table) {
-		return new JoinedTable(this, table, JoinType.RIGHT);
+
+	Predicate(TableColumn leftColumn, TableColumn rightColumn, PredicateOperator operator) {
+		this.leftColumn = Objects.requireNonNull(leftColumn, "leftColumn cannot be null");
+		this.operator = Objects.requireNonNull(operator, "operator cannot be null");
+		this.rightColumn = Objects.requireNonNull(rightColumn, "rightColumn cannot be null");
 	}
 }

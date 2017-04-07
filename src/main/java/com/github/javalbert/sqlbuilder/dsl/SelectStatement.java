@@ -13,6 +13,7 @@
 package com.github.javalbert.sqlbuilder.dsl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -20,6 +21,7 @@ public class SelectStatement implements SelectColumn<SelectStatement> {
 	private String alias;
 	@SuppressWarnings("rawtypes")
 	private List<SelectColumn> columns;
+	private List<TableReference> tables;
 
 	@Override
 	public String getAlias() {
@@ -28,6 +30,9 @@ public class SelectStatement implements SelectColumn<SelectStatement> {
 	@SuppressWarnings("rawtypes")
 	public List<SelectColumn> getColumns() {
 		return columns;
+	}
+	public List<TableReference> getTables() {
+		return tables;
 	}
 	
 	SelectStatement(List<SelectColumn<?>> columns) {
@@ -46,9 +51,13 @@ public class SelectStatement implements SelectColumn<SelectStatement> {
 		return stmt;
 	}
 	
-	public SelectStatement from(Table table) {
-		SelectStatement stmt = copy();
+	public SelectStatement from(TableReference...tables) {
+		if (tables == null || tables.length == 0) {
+			throw new IllegalArgumentException("tables cannot be null or empty");
+		}
 		
+		SelectStatement stmt = copy();
+		stmt.tables = Collections.unmodifiableList(Arrays.asList(tables));
 		return stmt;
 	}
 	
@@ -56,6 +65,7 @@ public class SelectStatement implements SelectColumn<SelectStatement> {
 		SelectStatement copy = new SelectStatement();
 		copy.alias = alias;
 		copy.columns = columns;
+		copy.tables = tables;
 		return copy;
 	}
 }

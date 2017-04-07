@@ -12,20 +12,6 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-public interface TableReference {
-	default JoinedTable fullOuterJoin(TableReference table) {
-		return new JoinedTable(this, table, JoinType.FULL);
-	}
+public class Condition {
 	
-	default JoinedTable innerJoin(TableReference table) {
-		return new JoinedTable(this, table, JoinType.INNER);
-	}
-	
-	default JoinedTable leftOuterJoin(TableReference table) {
-		return new JoinedTable(this, table, JoinType.LEFT);
-	}
-	
-	default JoinedTable rightOuterJoin(TableReference table) {
-		return new JoinedTable(this, table, JoinType.RIGHT);
-	}
 }
