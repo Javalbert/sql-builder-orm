@@ -15,6 +15,30 @@ package com.github.javalbert.sqlbuilder.dsl;
 import java.util.Arrays;
 
 public class DSL {
+	public static Condition group(Condition condition) {
+		return condition.grouped();
+	}
+	
+	@SuppressWarnings("rawtypes")
+	public static Literal literal(Boolean value) {
+		return value != null ? Boolean.TRUE.equals(value)
+				? LiteralBoolean.TRUE : LiteralBoolean.FALSE : literalNull();
+	}
+	
+	@SuppressWarnings("rawtypes")
+	public static Literal literal(Number value) {
+		return new LiteralNumber(value);
+	}
+	
+	@SuppressWarnings("rawtypes")
+	public static Literal literal(String value) {
+		return value != null ? new LiteralString(value) : literalNull();
+	}
+	
+	public static LiteralNull literalNull() {
+		return LiteralNull.INSTANCE;
+	}
+	
 	/**
 	 * {@code SELECT *}
 	 * @return

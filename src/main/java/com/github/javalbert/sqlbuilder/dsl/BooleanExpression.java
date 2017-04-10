@@ -18,5 +18,11 @@ package com.github.javalbert.sqlbuilder.dsl;
  *
  */
 public interface BooleanExpression {
+	default Condition and(BooleanExpression booleanExpression) {
+		return new Condition(this, booleanExpression, LogicalOperator.AND);
+	}
 	
+	default Condition or(BooleanExpression booleanExpression) {
+		return new Condition(this, booleanExpression, LogicalOperator.OR);
+	}
 }

@@ -12,6 +12,43 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-public class Condition {
+public class Condition implements BooleanExpression {
+	private BooleanExpression leftExpression;
+	private LogicalOperator logicalOperator;
+	private boolean grouped;
+	private BooleanExpression rightExpression;
 	
+	public BooleanExpression getLeftExpression() {
+		return leftExpression;
+	}
+	public LogicalOperator getLogicalOperator() {
+		return logicalOperator;
+	}
+	public boolean isGrouped() {
+		return grouped;
+	}
+	public BooleanExpression getRightExpression() {
+		return rightExpression;
+	}
+
+	Condition(
+			BooleanExpression leftExpression,
+			BooleanExpression rightExpression,
+			LogicalOperator logicalOperator) {
+		this.leftExpression = leftExpression;
+		this.logicalOperator = logicalOperator;
+		this.rightExpression = rightExpression;
+	}
+	
+	Condition copy() {
+		Condition copy = new Condition(leftExpression, rightExpression, logicalOperator);
+		copy.grouped = grouped;
+		return copy;
+	}
+	
+	Condition grouped() {
+		Condition condition = copy();
+		condition.grouped = true;
+		return condition;
+	}
 }

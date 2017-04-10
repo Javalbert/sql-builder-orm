@@ -17,11 +17,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class SelectStatement implements SelectColumn<SelectStatement> {
+public class SelectStatement
+implements Predicand, SelectColumn<SelectStatement> {
 	private String alias;
 	@SuppressWarnings("rawtypes")
 	private List<SelectColumn> columns;
 	private List<TableReference> tables;
+	private BooleanExpression whereCondition;
 
 	@Override
 	public String getAlias() {
@@ -33,6 +35,9 @@ public class SelectStatement implements SelectColumn<SelectStatement> {
 	}
 	public List<TableReference> getTables() {
 		return tables;
+	}
+	public BooleanExpression getWhereCondition() {
+		return whereCondition;
 	}
 	
 	SelectStatement(List<SelectColumn<?>> columns) {
@@ -61,11 +66,18 @@ public class SelectStatement implements SelectColumn<SelectStatement> {
 		return stmt;
 	}
 	
+	public SelectStatement where(BooleanExpression whereCondition) {
+		SelectStatement stmt = copy();
+		stmt.whereCondition = whereCondition;
+		return stmt;
+	}
+	
 	SelectStatement copy() {
 		SelectStatement copy = new SelectStatement();
 		copy.alias = alias;
 		copy.columns = columns;
 		copy.tables = tables;
+		copy.whereCondition = whereCondition;
 		return copy;
 	}
 }

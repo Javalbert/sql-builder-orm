@@ -14,7 +14,8 @@ package com.github.javalbert.sqlbuilder.dsl;
 
 import com.github.javalbert.utils.string.Strings;
 
-public class TableColumn implements SelectColumn<TableColumn> {
+public class TableColumn
+implements Predicand, SelectColumn<TableColumn> {
 	private String alias;
 	private String name;
 	private TableAlias tableAlias;
@@ -40,11 +41,7 @@ public class TableColumn implements SelectColumn<TableColumn> {
 	public TableColumn as(String alias) {
 		TableColumn column = copy();
 		column.alias = alias;
-		return null;
-	}
-	
-	public Predicate eq(TableColumn column) {
-		return new Predicate(this, column, PredicateOperator.EQ);
+		return column;
 	}
 	
 	TableColumn copy() {

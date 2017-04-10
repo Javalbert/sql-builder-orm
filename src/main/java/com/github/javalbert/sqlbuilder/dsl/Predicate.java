@@ -15,23 +15,27 @@ package com.github.javalbert.sqlbuilder.dsl;
 import java.util.Objects;
 
 public class Predicate implements BooleanExpression {
-	private final TableColumn leftColumn;
+	private final Predicand leftPredicand;
 	private final PredicateOperator operator;
-	private final TableColumn rightColumn;
+	private final Predicand rightPredicand;
 
-	public TableColumn getLeftColumn() {
-		return leftColumn;
+	public Predicand getLeftPredicand() {
+		return leftPredicand;
 	}
 	public PredicateOperator getOperator() {
 		return operator;
 	}
-	public TableColumn getRightColumn() {
-		return rightColumn;
+	public Predicand getRightPredicand() {
+		return rightPredicand;
+	}
+	
+	Predicate(Predicand leftPredicand, PredicateOperator operator) {
+		this(leftPredicand, null, operator);
 	}
 
-	Predicate(TableColumn leftColumn, TableColumn rightColumn, PredicateOperator operator) {
-		this.leftColumn = Objects.requireNonNull(leftColumn, "leftColumn cannot be null");
+	Predicate(Predicand leftPredicand, Predicand rightPredicand, PredicateOperator operator) {
+		this.leftPredicand = Objects.requireNonNull(leftPredicand, "leftPredicand cannot be null");
 		this.operator = Objects.requireNonNull(operator, "operator cannot be null");
-		this.rightColumn = Objects.requireNonNull(rightColumn, "rightColumn cannot be null");
+		this.rightPredicand = rightPredicand;
 	}
 }

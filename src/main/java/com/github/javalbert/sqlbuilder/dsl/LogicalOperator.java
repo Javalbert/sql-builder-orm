@@ -12,13 +12,7 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-public enum PredicateOperator {
-	EQ,
-	GT,
-	GT_EQ,
-	IS_NOT_NULL,
-	IS_NULL,
-	LT,
-	LT_EQ,
-	NOT_EQ
+public enum LogicalOperator {
+	AND,
+	OR
 }

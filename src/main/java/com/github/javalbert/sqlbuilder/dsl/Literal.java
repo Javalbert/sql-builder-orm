@@ -12,13 +12,30 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-public enum PredicateOperator {
-	EQ,
-	GT,
-	GT_EQ,
-	IS_NOT_NULL,
-	IS_NULL,
-	LT,
-	LT_EQ,
-	NOT_EQ
+import java.util.Objects;
+
+/**
+ * 
+ * @author Albert
+ *
+ * @param <I> the class extending {@code Literal}
+ * @param <T> the type of the literal
+ */
+public abstract class Literal<I, T> implements Predicand, SelectColumn<I> {
+	protected String alias;
+	protected T value;
+	
+	protected Literal(T value2) {
+		this.value = Objects.requireNonNull(value, "value cannot be null");
+	}
+	
+	@Override
+	public String getAlias() {
+		return alias;
+	}
+	public T getValue() {
+		return value;
+	}
+	
+	abstract I copy();
 }

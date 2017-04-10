@@ -12,13 +12,22 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-public enum PredicateOperator {
-	EQ,
-	GT,
-	GT_EQ,
-	IS_NOT_NULL,
-	IS_NULL,
-	LT,
-	LT_EQ,
-	NOT_EQ
+public class LiteralNumber extends Literal<LiteralNumber, Number> {
+	LiteralNumber(Number value) {
+		super(value);
+	}
+
+	@Override
+	public LiteralNumber as(String alias) {
+		LiteralNumber literal = copy();
+		literal.alias = alias;
+		return literal;
+	}
+	
+	@Override
+	LiteralNumber copy() {
+		LiteralNumber copy = new LiteralNumber(value);
+		copy.alias = alias;
+		return copy;
+	}
 }
