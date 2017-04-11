@@ -12,31 +12,17 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-import java.util.Objects;
+import com.github.javalbert.utils.string.Strings;
 
-/**
- * 
- * @author Albert
- *
- * @param <I> the class extending {@code Literal}
- * @param <T> the type of the literal
- */
-public abstract class Literal<I, T>
-implements ExpressionBuilder, Predicand, SelectColumn<I> {
-	protected String alias;
-	protected T value;
+public class Parameter
+implements ExpressionBuilder, Predicand {
+	private final String name;
 	
-	protected Literal(T value2) {
-		this.value = Objects.requireNonNull(value, "value cannot be null");
+	public String getName() {
+		return name;
 	}
 	
-	@Override
-	public String getAlias() {
-		return alias;
+	public Parameter(String name) {
+		this.name = Strings.illegalArgOnEmpty(name, "name cannot be null or empty");
 	}
-	public T getValue() {
-		return value;
-	}
-	
-	abstract I copy();
 }

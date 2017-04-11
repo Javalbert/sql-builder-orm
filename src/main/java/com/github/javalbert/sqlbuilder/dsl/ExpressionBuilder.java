@@ -12,31 +12,28 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-import java.util.Objects;
-
-/**
- * 
- * @author Albert
- *
- * @param <I> the class extending {@code Literal}
- * @param <T> the type of the literal
- */
-public abstract class Literal<I, T>
-implements ExpressionBuilder, Predicand, SelectColumn<I> {
-	protected String alias;
-	protected T value;
-	
-	protected Literal(T value2) {
-		this.value = Objects.requireNonNull(value, "value cannot be null");
+public interface ExpressionBuilder {
+	default Expression concat(ExpressionBuilder right) {
+		return new Expression(this, right, ExpressionOperator.CONCAT);
 	}
 	
-	@Override
-	public String getAlias() {
-		return alias;
-	}
-	public T getValue() {
-		return value;
+	default Expression divide(ExpressionBuilder right) {
+		return new Expression(this, right, ExpressionOperator.DIVIDE);
 	}
 	
-	abstract I copy();
+	default Expression minus(ExpressionBuilder right) {
+		return new Expression(this, right, ExpressionOperator.MINUS);
+	}
+	
+	default Expression mod(ExpressionBuilder right) {
+		return new Expression(this, right, ExpressionOperator.MOD);
+	}
+	
+	default Expression multiply(ExpressionBuilder right) {
+		return new Expression(this, right, ExpressionOperator.MULTIPLY);
+	}
+	
+	default Expression plus(ExpressionBuilder right) {
+		return new Expression(this, right, ExpressionOperator.PLUS);
+	}
 }

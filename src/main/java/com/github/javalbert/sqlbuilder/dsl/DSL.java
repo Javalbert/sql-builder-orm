@@ -39,6 +39,10 @@ public class DSL {
 		return LiteralNull.INSTANCE;
 	}
 	
+	public static Parameter param(String name) {
+		return new Parameter(name);
+	}
+	
 	/**
 	 * {@code SELECT *}
 	 * @return

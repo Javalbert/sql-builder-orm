@@ -12,49 +12,45 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-import com.github.javalbert.utils.string.Strings;
+import java.util.Objects;
 
-public class TableColumn
-implements ExpressionBuilder, Predicand, SelectColumn<TableColumn> {
+public class Expression
+implements ExpressionBuilder, Predicand, SelectColumn<Expression> {
 	private String alias;
-	private String name;
-	private TableAlias tableAlias;
+	private ExpressionBuilder left;
+	private ExpressionOperator operator;
+	private ExpressionBuilder right;
 	
 	@Override
 	public String getAlias() {
 		return alias;
 	}
-	public String getName() {
-		return name;
+	public ExpressionBuilder getLeft() {
+		return left;
 	}
-	public TableAlias getTableAlias() {
-		return tableAlias;
+	public ExpressionOperator getOperator() {
+		return operator;
 	}
-	
-	public TableColumn(String name) {
-		this.name = Strings.illegalArgOnEmpty(name, "name cannot be null or empty");
-	}
-	
-	private TableColumn() {}
-	
-	@Override
-	public TableColumn as(String alias) {
-		TableColumn column = copy();
-		column.alias = alias;
-		return column;
-	}
-	
-	TableColumn copy() {
-		TableColumn copy = new TableColumn();
-		copy.alias = alias;
-		copy.name = name;
-		copy.tableAlias = tableAlias;
-		return copy;
+	public ExpressionBuilder getRight() {
+		return right;
 	}
 
-	TableColumn tableAlias(TableAlias tableAlias) {
-		TableColumn column = copy();
-		column.tableAlias = tableAlias;
-		return column;
+	Expression(ExpressionBuilder left, ExpressionBuilder right, ExpressionOperator operator) {
+		this.left = Objects.requireNonNull(left, "left cannot be null");
+		this.operator = Objects.requireNonNull(operator, "operator cannot be null");
+		this.right = Objects.requireNonNull(right, "right cannot be null");
+	}
+	
+	@Override
+	public Expression as(String alias) {
+		Expression expression = copy();
+		expression.alias = alias;
+		return expression;
+	}
+	
+	Expression copy() {
+		Expression copy = new Expression(left, right, operator);
+		copy.alias = alias;
+		return copy;
 	}
 }
