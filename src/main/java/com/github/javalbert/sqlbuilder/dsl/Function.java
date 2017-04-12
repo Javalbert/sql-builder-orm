@@ -32,6 +32,9 @@ implements ExpressionBuilder, Predicand, SelectColumn<Function>, ValueExpression
 	public String getName() {
 		return name;
 	}
+	public List<ValueExpression> getParameters() {
+		return parameters;
+	}
 	
 	public Function(String name) {
 		this.name = Strings.illegalArgOnEmpty(name, "name cannot be null or empty");

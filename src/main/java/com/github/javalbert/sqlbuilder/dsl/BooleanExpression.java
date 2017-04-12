@@ -12,11 +12,6 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-/**
- * Marker interface
- * @author Albert
- *
- */
 public interface BooleanExpression {
 	default Condition and(BooleanExpression booleanExpression) {
 		return new Condition(this, booleanExpression, LogicalOperator.AND);

@@ -19,6 +19,14 @@ public class DSL {
 		return AggregateFunction.AVG.call(parameter);
 	}
 	
+	public static Case sqlCase() {
+		return sqlCase(null);
+	}
+	
+	public static Case sqlCase(ValueExpression simpleExpression) {
+		return new Case(simpleExpression);
+	}
+	
 	public static Function count(ValueExpression parameter) {
 		return AggregateFunction.COUNT.call(parameter);
 	}

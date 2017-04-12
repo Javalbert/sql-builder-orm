@@ -22,7 +22,8 @@ implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExp
 	private String alias;
 	@SuppressWarnings("rawtypes")
 	private List<SelectColumn> columns;
-	private List<TableReference> tables;
+	@SuppressWarnings("unchecked")
+	private List<TableReference> tables = Collections.EMPTY_LIST;
 	private BooleanExpression whereCondition;
 
 	@Override
