@@ -18,7 +18,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class SelectStatement
-implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement> {
+implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExpression {
 	private String alias;
 	@SuppressWarnings("rawtypes")
 	private List<SelectColumn> columns;

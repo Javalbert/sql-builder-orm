@@ -12,17 +12,12 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-import com.github.javalbert.utils.string.Strings;
-
-public class Parameter
-implements ExpressionBuilder, Predicand, ValueExpression {
-	private final String name;
+public class AggregateFunction {
+	public static final Function AVG = new Function("AVG");
+	public static final Function COUNT = new Function("COUNT");
+	public static final Function MAX = new Function("MAX");
+	public static final Function MIN = new Function("MIN");
+	public static final Function SUM = new Function("SUM");
 	
-	public String getName() {
-		return name;
-	}
-	
-	public Parameter(String name) {
-		this.name = Strings.illegalArgOnEmpty(name, "name cannot be null or empty");
-	}
+	private AggregateFunction() {}
 }

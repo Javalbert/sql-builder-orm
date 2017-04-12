@@ -22,7 +22,7 @@ import java.util.Objects;
  * @param <T> the type of the literal
  */
 public abstract class Literal<I, T>
-implements ExpressionBuilder, Predicand, SelectColumn<I> {
+implements ExpressionBuilder, Predicand, SelectColumn<I>, ValueExpression {
 	protected String alias;
 	protected T value;
 	

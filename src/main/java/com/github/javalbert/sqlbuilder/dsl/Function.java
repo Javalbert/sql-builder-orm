@@ -12,13 +12,18 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import com.github.javalbert.utils.string.Strings;
 
-public class TableColumn
-implements ExpressionBuilder, Predicand, SelectColumn<TableColumn>, ValueExpression {
+public class Function
+implements ExpressionBuilder, Predicand, SelectColumn<Function>, ValueExpression {
 	private String alias;
-	private String name;
-	private TableAlias tableAlias;
+	private final String name;
+	@SuppressWarnings("unchecked")
+	private List<ValueExpression> parameters = Collections.EMPTY_LIST;
 	
 	@Override
 	public String getAlias() {
@@ -27,34 +32,41 @@ implements ExpressionBuilder, Predicand, SelectColumn<TableColumn>, ValueExpress
 	public String getName() {
 		return name;
 	}
-	public TableAlias getTableAlias() {
-		return tableAlias;
-	}
 	
-	public TableColumn(String name) {
+	public Function(String name) {
 		this.name = Strings.illegalArgOnEmpty(name, "name cannot be null or empty");
 	}
-	
-	private TableColumn() {}
-	
-	@Override
-	public TableColumn as(String alias) {
-		TableColumn column = copy();
-		column.alias = alias;
-		return column;
-	}
-	
-	TableColumn copy() {
-		TableColumn copy = new TableColumn();
-		copy.alias = alias;
-		copy.name = name;
-		copy.tableAlias = tableAlias;
-		return copy;
-	}
 
-	TableColumn tableAlias(TableAlias tableAlias) {
-		TableColumn column = copy();
-		column.tableAlias = tableAlias;
-		return column;
+	@Override
+	public Function as(String alias) {
+		Function function = copy();
+		function.alias = alias;
+		return function;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public Function call() {
+		Function function = copy();
+		function.parameters = Collections.EMPTY_LIST;
+		return function;
+	}
+	
+	public Function call(ValueExpression parameter) {
+		Function function = copy();
+		function.parameters = Collections.singletonList(parameter);
+		return function;
+	}
+	
+	public Function call(ValueExpression...parameters) {
+		Function function = copy();
+		function.parameters = Collections.unmodifiableList(Arrays.asList(parameters));
+		return function;
+	}
+	
+	Function copy() {
+		Function copy = new Function(name);
+		copy.alias = alias;
+		copy.parameters = parameters;
+		return copy;
 	}
 }

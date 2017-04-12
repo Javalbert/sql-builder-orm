@@ -15,7 +15,7 @@ package com.github.javalbert.sqlbuilder.dsl;
 import java.util.Objects;
 
 public class Expression
-implements ExpressionBuilder, Predicand, SelectColumn<Expression> {
+implements ExpressionBuilder, Predicand, SelectColumn<Expression>, ValueExpression {
 	private String alias;
 	private ExpressionBuilder left;
 	private ExpressionOperator operator;

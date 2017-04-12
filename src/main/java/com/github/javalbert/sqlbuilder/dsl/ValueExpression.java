@@ -12,17 +12,9 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-import com.github.javalbert.utils.string.Strings;
-
-public class Parameter
-implements ExpressionBuilder, Predicand, ValueExpression {
-	private final String name;
-	
-	public String getName() {
-		return name;
-	}
-	
-	public Parameter(String name) {
-		this.name = Strings.illegalArgOnEmpty(name, "name cannot be null or empty");
-	}
-}
+/**
+ * Marker interface
+ * @author Albert
+ *
+ */
+public interface ValueExpression {}

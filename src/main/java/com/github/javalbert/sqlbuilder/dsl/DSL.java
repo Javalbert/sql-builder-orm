@@ -15,6 +15,14 @@ package com.github.javalbert.sqlbuilder.dsl;
 import java.util.Arrays;
 
 public class DSL {
+	public static Function avg(ValueExpression parameter) {
+		return AggregateFunction.AVG.call(parameter);
+	}
+	
+	public static Function count(ValueExpression parameter) {
+		return AggregateFunction.COUNT.call(parameter);
+	}
+	
 	public static Condition group(Condition condition) {
 		return condition.grouped();
 	}
@@ -39,6 +47,14 @@ public class DSL {
 		return LiteralNull.INSTANCE;
 	}
 	
+	public static Function max(ValueExpression parameter) {
+		return AggregateFunction.MAX.call(parameter);
+	}
+	
+	public static Function min(ValueExpression parameter) {
+		return AggregateFunction.MIN.call(parameter);
+	}
+	
 	public static Parameter param(String name) {
 		return new Parameter(name);
 	}
@@ -53,5 +69,9 @@ public class DSL {
 	
 	public static SelectStatement select(@SuppressWarnings("rawtypes") SelectColumn...columns) {
 		return new SelectStatement(Arrays.asList(columns));
+	}
+	
+	public static Function sum(ValueExpression parameter) {
+		return AggregateFunction.SUM.call(parameter);
 	}
 }
