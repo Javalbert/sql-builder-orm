@@ -13,24 +13,48 @@
 package com.github.javalbert.sqlbuilder.dsl;
 
 public interface ExpressionBuilder {
+	default Expression concat(String value) {
+		return concat(DSL.literal(value));
+	}
+	
 	default Expression concat(ExpressionBuilder right) {
 		return new Expression(this, right, ExpressionOperator.CONCAT);
+	}
+	
+	default Expression divide(Number value) {
+		return divide(DSL.literal(value));
 	}
 	
 	default Expression divide(ExpressionBuilder right) {
 		return new Expression(this, right, ExpressionOperator.DIVIDE);
 	}
 	
+	default Expression minus(Number value) {
+		return minus(DSL.literal(value));
+	}
+	
 	default Expression minus(ExpressionBuilder right) {
 		return new Expression(this, right, ExpressionOperator.MINUS);
+	}
+	
+	default Expression mod(Number value) {
+		return mod(DSL.literal(value));
 	}
 	
 	default Expression mod(ExpressionBuilder right) {
 		return new Expression(this, right, ExpressionOperator.MOD);
 	}
 	
+	default Expression multiply(Number value) {
+		return multiply(DSL.literal(value));
+	}
+	
 	default Expression multiply(ExpressionBuilder right) {
 		return new Expression(this, right, ExpressionOperator.MULTIPLY);
+	}
+	
+	default Expression plus(Number value) {
+		return plus(DSL.literal(value));
 	}
 	
 	default Expression plus(ExpressionBuilder right) {

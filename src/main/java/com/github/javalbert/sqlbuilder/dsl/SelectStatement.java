@@ -20,8 +20,13 @@ import java.util.List;
 public class SelectStatement
 implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExpression {
 	private String alias;
-	@SuppressWarnings("rawtypes")
-	private List<SelectColumn> columns;
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private List<SelectColumn> columns = Collections.EMPTY_LIST;
+	@SuppressWarnings("unchecked")
+	private List<TableColumn> groupByColumns = Collections.EMPTY_LIST;
+	private BooleanExpression havingCondition;
+	@SuppressWarnings("unchecked")
+	private List<OrderByColumn> orderByColumns = Collections.EMPTY_LIST;
 	@SuppressWarnings("unchecked")
 	private List<TableReference> tables = Collections.EMPTY_LIST;
 	private BooleanExpression whereCondition;
@@ -33,6 +38,15 @@ implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExp
 	@SuppressWarnings("rawtypes")
 	public List<SelectColumn> getColumns() {
 		return columns;
+	}
+	public List<TableColumn> getGroupByColumns() {
+		return groupByColumns;
+	}
+	public BooleanExpression getHavingCondition() {
+		return havingCondition;
+	}
+	public List<OrderByColumn> getOrderByColumns() {
+		return orderByColumns;
 	}
 	public List<TableReference> getTables() {
 		return tables;
@@ -67,6 +81,24 @@ implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExp
 		return stmt;
 	}
 	
+	public SelectStatement groupBy(TableColumn...groupByColumns) {
+		SelectStatement stmt = copy();
+		stmt.groupByColumns = Collections.unmodifiableList(Arrays.asList(groupByColumns));
+		return stmt;
+	}
+	
+	public SelectStatement having(BooleanExpression havingCondition) {
+		SelectStatement stmt = copy();
+		stmt.havingCondition = havingCondition;
+		return stmt;
+	}
+	
+	public SelectStatement orderBy(OrderByColumn...orderByColumns) {
+		SelectStatement stmt = copy();
+		stmt.orderByColumns = Collections.unmodifiableList(Arrays.asList(orderByColumns));
+		return stmt;
+	}
+	
 	public SelectStatement where(BooleanExpression whereCondition) {
 		SelectStatement stmt = copy();
 		stmt.whereCondition = whereCondition;
@@ -77,6 +109,9 @@ implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExp
 		SelectStatement copy = new SelectStatement();
 		copy.alias = alias;
 		copy.columns = columns;
+		copy.groupByColumns = groupByColumns;
+		copy.havingCondition = havingCondition;
+		copy.orderByColumns = orderByColumns;
 		copy.tables = tables;
 		copy.whereCondition = whereCondition;
 		return copy;

@@ -15,8 +15,12 @@ package com.github.javalbert.sqlbuilder.dsl;
 import java.util.Arrays;
 
 public class DSL {
+	public static ColumnAlias alias(String alias) {
+		return new ColumnAlias(alias);
+	}
+	
 	public static Function avg(ValueExpression parameter) {
-		return AggregateFunction.AVG.call(parameter);
+		return Functions.AVG.call(parameter);
 	}
 	
 	public static Case sqlCase() {
@@ -28,7 +32,7 @@ public class DSL {
 	}
 	
 	public static Function count(ValueExpression parameter) {
-		return AggregateFunction.COUNT.call(parameter);
+		return Functions.COUNT.call(parameter);
 	}
 	
 	public static Condition group(Condition condition) {
@@ -56,11 +60,11 @@ public class DSL {
 	}
 	
 	public static Function max(ValueExpression parameter) {
-		return AggregateFunction.MAX.call(parameter);
+		return Functions.MAX.call(parameter);
 	}
 	
 	public static Function min(ValueExpression parameter) {
-		return AggregateFunction.MIN.call(parameter);
+		return Functions.MIN.call(parameter);
 	}
 	
 	public static Parameter param(String name) {
@@ -80,6 +84,6 @@ public class DSL {
 	}
 	
 	public static Function sum(ValueExpression parameter) {
-		return AggregateFunction.SUM.call(parameter);
+		return Functions.SUM.call(parameter);
 	}
 }

@@ -14,51 +14,18 @@ package com.github.javalbert.sqlbuilder.dsl;
 
 import com.github.javalbert.utils.string.Strings;
 
-public class TableColumn
-implements ExpressionBuilder, OrderByColumn, Predicand, SelectColumn<TableColumn>, ValueExpression {
-	private String alias;
-	private String name;
-	private TableAlias tableAlias;
-	
-	@Override
+public class ColumnAlias implements OrderByColumn {
+	private final String alias;
+
 	public String getAlias() {
 		return alias;
 	}
-	public String getName() {
-		return name;
-	}
 	@Override
 	public String getOrderByColumnLabel() {
-		return !Strings.isNullOrEmpty(alias) ? alias : name;
-	}
-	public TableAlias getTableAlias() {
-		return tableAlias;
+		return alias;
 	}
 	
-	public TableColumn(String name) {
-		this.name = Strings.illegalArgOnEmpty(name, "name cannot be null or empty");
-	}
-	
-	private TableColumn() {}
-	
-	@Override
-	public TableColumn as(String alias) {
-		TableColumn column = copy();
-		column.alias = alias;
-		return column;
-	}
-	
-	TableColumn copy() {
-		TableColumn copy = new TableColumn();
-		copy.alias = alias;
-		copy.name = name;
-		copy.tableAlias = tableAlias;
-		return copy;
-	}
-
-	TableColumn tableAlias(TableAlias tableAlias) {
-		TableColumn column = copy();
-		column.tableAlias = tableAlias;
-		return column;
+	public ColumnAlias(String alias) {
+		this.alias = Strings.illegalArgOnEmpty(alias, "alias cannot be null or empty");
 	}
 }

@@ -39,7 +39,17 @@ implements ExpressionBuilder, Predicand, SelectColumn<Case>, ValueExpression {
 	}
 
 	public Case() {
-		this(null);
+		this(LiteralNull.INSTANCE);
+	}
+	
+	public Case(Boolean value) {
+		this(DSL.literal(value));
+	}
+	public Case(Number value) {
+		this(DSL.literal(value));
+	}
+	public Case(String value) {
+		this(DSL.literal(value));
 	}
 	
 	/**
@@ -49,7 +59,8 @@ implements ExpressionBuilder, Predicand, SelectColumn<Case>, ValueExpression {
 	 * clause uses a boolean expression
 	 */
 	public Case(ValueExpression simpleCaseExpression) {
-		this.simpleCaseExpression = simpleCaseExpression;
+		this.simpleCaseExpression = simpleCaseExpression != null
+				? simpleCaseExpression : LiteralNull.INSTANCE;
 	}
 	
 	@Override
@@ -59,10 +70,30 @@ implements ExpressionBuilder, Predicand, SelectColumn<Case>, ValueExpression {
 		return sqlCase;
 	}
 	
+	public Case ifElse(Boolean value) {
+		return ifElse(DSL.literal(value));
+	}
+	public Case ifElse(Number value) {
+		return ifElse(DSL.literal(value));
+	}
+	public Case ifElse(String value) {
+		return ifElse(DSL.literal(value));
+	}
+	
 	public Case ifElse(ValueExpression elseExpression) {
 		Case sqlCase = copy();
 		sqlCase.elseExpression = elseExpression;
 		return sqlCase;
+	}
+	
+	public Case then(Boolean value) {
+		return then(DSL.literal(value));
+	}
+	public Case then(Number value) {
+		return then(DSL.literal(value));
+	}
+	public Case then(String value) {
+		return then(DSL.literal(value));
 	}
 	
 	public Case then(ValueExpression then) {
@@ -79,17 +110,27 @@ implements ExpressionBuilder, Predicand, SelectColumn<Case>, ValueExpression {
 		return sqlCase;
 	}
 	
+	public Case when(Boolean value) {
+		return when(DSL.literal(value));
+	}
+	public Case when(Number value) {
+		return when(DSL.literal(value));
+	}
+	public Case when(String value) {
+		return when(DSL.literal(value));
+	}
+	
 	public Case when(BooleanExpression booleanExpression) {
 		assertSearchedCaseExpression();
 		Case sqlCase = copy();
-		copyAndAddWhenClauses(sqlCase, When.forSearchedCase(booleanExpression));
+		copyAndAddWhenClauses(sqlCase, When.search(booleanExpression));
 		return sqlCase;
 	}
 	
 	public Case when(ValueExpression simpleExpression) {
 		assertSimpleCaseExpression();
 		Case sqlCase = copy();
-		copyAndAddWhenClauses(sqlCase, When.forSimpleCase(simpleExpression));
+		copyAndAddWhenClauses(sqlCase, When.simple(simpleExpression));
 		return sqlCase;
 	}
 	

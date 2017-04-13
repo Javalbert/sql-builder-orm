@@ -12,17 +12,25 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-/**
- * 
- * @author Albert
- *
- * @param <T> the implementing type
- */
-public interface Aliasable<T> {
-	String getAlias();
-	T as(String alias);
+import java.util.Objects;
+
+import com.github.javalbert.utils.string.Strings;
+
+public class OrderByColumnImpl implements OrderByColumn {
+	private final String label;
+	private SortType sortType;
 	
-	default T as(ColumnAlias alias) {
-		return as(alias.getAlias());
+	@Override
+	public String getOrderByColumnLabel() {
+		return label;
+	}
+	@Override
+	public SortType getSortType() {
+		return sortType;
+	}
+	
+	public OrderByColumnImpl(String label, SortType sortType) {
+		this.label = Strings.illegalArgOnEmpty(label, "label cannot be null or empty");
+		this.sortType = Objects.requireNonNull(sortType, "sort type cannot be null or empty");
 	}
 }

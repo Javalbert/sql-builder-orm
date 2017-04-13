@@ -12,17 +12,7 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-/**
- * 
- * @author Albert
- *
- * @param <T> the implementing type
- */
-public interface Aliasable<T> {
-	String getAlias();
-	T as(String alias);
-	
-	default T as(ColumnAlias alias) {
-		return as(alias.getAlias());
-	}
+public enum SortType {
+	ASC,
+	DESC
 }

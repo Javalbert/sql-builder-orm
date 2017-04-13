@@ -15,12 +15,12 @@ package com.github.javalbert.sqlbuilder.dsl;
 import java.util.Objects;
 
 public class When {
-	public static When forSearchedCase(BooleanExpression booleanExpression) {
+	public static When search(BooleanExpression booleanExpression) {
 		return new When(Objects.requireNonNull(booleanExpression,
 				"boolean expression cannot be null"), null);
 	}
 	
-	public static When forSimpleCase(ValueExpression simpleExpression) {
+	public static When simple(ValueExpression simpleExpression) {
 		return new When(null, simpleExpression != null ? simpleExpression : LiteralNull.INSTANCE);
 	}
 	

@@ -12,17 +12,13 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-/**
- * 
- * @author Albert
- *
- * @param <T> the implementing type
- */
-public interface Aliasable<T> {
-	String getAlias();
-	T as(String alias);
+public class Functions {
+	public static final Function AVG = new Function("AVG");
+	public static final Function CAST = new Function("CAST");
+	public static final Function COUNT = new Function("COUNT");
+	public static final Function MAX = new Function("MAX");
+	public static final Function MIN = new Function("MIN");
+	public static final Function SUM = new Function("SUM");
 	
-	default T as(ColumnAlias alias) {
-		return as(alias.getAlias());
-	}
+	private Functions() {}
 }

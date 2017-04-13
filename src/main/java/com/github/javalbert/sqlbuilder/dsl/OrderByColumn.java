@@ -12,12 +12,17 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-public class AggregateFunction {
-	public static final Function AVG = new Function("AVG");
-	public static final Function COUNT = new Function("COUNT");
-	public static final Function MAX = new Function("MAX");
-	public static final Function MIN = new Function("MIN");
-	public static final Function SUM = new Function("SUM");
+public interface OrderByColumn {
+	String getOrderByColumnLabel();
+	default SortType getSortType() {
+		return SortType.ASC;
+	}
 	
-	private AggregateFunction() {}
+	default OrderByColumn asc() {
+		return new OrderByColumnImpl(getOrderByColumnLabel(), SortType.ASC);
+	}
+	
+	default OrderByColumn desc() {
+		return new OrderByColumnImpl(getOrderByColumnLabel(), SortType.DESC);
+	}
 }
