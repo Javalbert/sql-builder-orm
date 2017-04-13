@@ -22,11 +22,14 @@ implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExp
 	private String alias;
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private List<SelectColumn> columns = Collections.EMPTY_LIST;
+	private boolean distinct;
 	@SuppressWarnings("unchecked")
 	private List<TableColumn> groupByColumns = Collections.EMPTY_LIST;
 	private BooleanExpression havingCondition;
 	@SuppressWarnings("unchecked")
 	private List<OrderByColumn> orderByColumns = Collections.EMPTY_LIST;
+	@SuppressWarnings("unchecked")
+	private List<SetOperation> setOperations = Collections.EMPTY_LIST;
 	@SuppressWarnings("unchecked")
 	private List<TableReference> tables = Collections.EMPTY_LIST;
 	private BooleanExpression whereCondition;
@@ -38,6 +41,9 @@ implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExp
 	@SuppressWarnings("rawtypes")
 	public List<SelectColumn> getColumns() {
 		return columns;
+	}
+	public boolean isDistinct() {
+		return distinct;
 	}
 	public List<TableColumn> getGroupByColumns() {
 		return groupByColumns;
@@ -70,6 +76,12 @@ implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExp
 		stmt.alias = alias;
 		return stmt;
 	}
+
+	public SelectStatement distinct(boolean distinct) {
+		SelectStatement stmt = copy();
+		stmt.distinct = distinct;
+		return stmt;
+	}
 	
 	public SelectStatement from(TableReference...tables) {
 		if (tables == null || tables.length == 0) {
@@ -99,6 +111,12 @@ implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExp
 		return stmt;
 	}
 	
+	public SelectStatement setOperations(SetOperation...setOperations) {
+		SelectStatement stmt = copy();
+		stmt.setOperations = Collections.unmodifiableList(Arrays.asList(setOperations));
+		return stmt;
+	}
+	
 	public SelectStatement where(BooleanExpression whereCondition) {
 		SelectStatement stmt = copy();
 		stmt.whereCondition = whereCondition;
@@ -109,9 +127,11 @@ implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExp
 		SelectStatement copy = new SelectStatement();
 		copy.alias = alias;
 		copy.columns = columns;
+		copy.distinct = distinct;
 		copy.groupByColumns = groupByColumns;
 		copy.havingCondition = havingCondition;
 		copy.orderByColumns = orderByColumns;
+		copy.setOperations = setOperations;
 		copy.tables = tables;
 		copy.whereCondition = whereCondition;
 		return copy;

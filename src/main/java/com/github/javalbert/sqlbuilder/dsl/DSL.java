@@ -35,8 +35,16 @@ public class DSL {
 		return Functions.COUNT.call(parameter);
 	}
 	
+	public static SetOperation except(SelectStatement query) {
+		return new SetOperation(query, SetOperator.EXCEPT);
+	}
+	
 	public static Condition group(Condition condition) {
 		return condition.grouped();
+	}
+	
+	public static SetOperation intersect(SelectStatement query) {
+		return new SetOperation(query, SetOperator.INTERSECT);
 	}
 	
 	@SuppressWarnings("rawtypes")
@@ -85,5 +93,13 @@ public class DSL {
 	
 	public static Function sum(ValueExpression parameter) {
 		return Functions.SUM.call(parameter);
+	}
+	
+	public static SetOperation union(SelectStatement query) {
+		return new SetOperation(query, SetOperator.UNION);
+	}
+	
+	public static SetOperation unionAll(SelectStatement query) {
+		return new SetOperation(query, SetOperator.UNION_ALL);
 	}
 }
