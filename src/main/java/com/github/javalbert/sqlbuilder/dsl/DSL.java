@@ -39,6 +39,10 @@ public class DSL {
 		return new SetOperation(query, SetOperator.EXCEPT);
 	}
 	
+	public static ExistsPredicate exists(SelectStatement subquery) {
+		return new ExistsPredicate(subquery);
+	}
+	
 	public static Condition group(Condition condition) {
 		return condition.grouped();
 	}
@@ -55,7 +59,7 @@ public class DSL {
 	
 	@SuppressWarnings("rawtypes")
 	public static Literal literal(Number value) {
-		return new LiteralNumber(value);
+		return value != null ? new LiteralNumber(value) : literalNull();
 	}
 	
 	@SuppressWarnings("rawtypes")
@@ -73,6 +77,10 @@ public class DSL {
 	
 	public static Function min(ValueExpression parameter) {
 		return Functions.MIN.call(parameter);
+	}
+	
+	public static ExistsPredicate notExists(SelectStatement subquery) {
+		return new ExistsPredicate(subquery, true);
 	}
 	
 	public static Parameter param(String name) {

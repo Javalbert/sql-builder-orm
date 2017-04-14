@@ -17,6 +17,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import com.github.javalbert.utils.collections.CollectionUtils;
+
 public class SelectStatement
 implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExpression {
 	private String alias;
@@ -62,10 +64,9 @@ implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExp
 	}
 	
 	SelectStatement(List<SelectColumn<?>> columns) {
-		if (columns == null || columns.isEmpty()) {
-			throw new IllegalArgumentException("columns cannot be null or empty");
-		}
-		this.columns = Collections.unmodifiableList(new ArrayList<>(columns));
+		this.columns = Collections.unmodifiableList(new ArrayList<>(
+				CollectionUtils.illegalArgOnEmpty(columns, "columns cannot be null or empty")
+				));
 	}
 	
 	private SelectStatement() {}
@@ -80,6 +81,14 @@ implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExp
 	public SelectStatement distinct(boolean distinct) {
 		SelectStatement stmt = copy();
 		stmt.distinct = distinct;
+		return stmt;
+	}
+	
+	public SelectStatement except(SelectStatement query) {
+		SelectStatement stmt = copy();
+		List<SetOperation> setOperations = new ArrayList<>(stmt.setOperations);
+		setOperations.add(DSL.except(query));
+		stmt.setOperations = Collections.unmodifiableList(setOperations);
 		return stmt;
 	}
 	
@@ -105,6 +114,14 @@ implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExp
 		return stmt;
 	}
 	
+	public SelectStatement intersect(SelectStatement query) {
+		SelectStatement stmt = copy();
+		List<SetOperation> setOperations = new ArrayList<>(stmt.setOperations);
+		setOperations.add(DSL.intersect(query));
+		stmt.setOperations = Collections.unmodifiableList(setOperations);
+		return stmt;
+	}
+	
 	public SelectStatement orderBy(OrderByColumn...orderByColumns) {
 		SelectStatement stmt = copy();
 		stmt.orderByColumns = Collections.unmodifiableList(Arrays.asList(orderByColumns));
@@ -114,6 +131,22 @@ implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExp
 	public SelectStatement setOperations(SetOperation...setOperations) {
 		SelectStatement stmt = copy();
 		stmt.setOperations = Collections.unmodifiableList(Arrays.asList(setOperations));
+		return stmt;
+	}
+	
+	public SelectStatement union(SelectStatement query) {
+		SelectStatement stmt = copy();
+		List<SetOperation> setOperations = new ArrayList<>(stmt.setOperations);
+		setOperations.add(DSL.union(query));
+		stmt.setOperations = Collections.unmodifiableList(setOperations);
+		return stmt;
+	}
+	
+	public SelectStatement unionAll(SelectStatement query) {
+		SelectStatement stmt = copy();
+		List<SetOperation> setOperations = new ArrayList<>(stmt.setOperations);
+		setOperations.add(DSL.unionAll(query));
+		stmt.setOperations = Collections.unmodifiableList(setOperations);
 		return stmt;
 	}
 	

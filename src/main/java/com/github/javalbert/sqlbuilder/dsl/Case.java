@@ -59,8 +59,7 @@ implements ExpressionBuilder, Predicand, SelectColumn<Case>, ValueExpression {
 	 * clause uses a boolean expression
 	 */
 	public Case(ValueExpression simpleCaseExpression) {
-		this.simpleCaseExpression = simpleCaseExpression != null
-				? simpleCaseExpression : LiteralNull.INSTANCE;
+		this.simpleCaseExpression = ValueExpression.ifNull(simpleCaseExpression);
 	}
 	
 	@Override

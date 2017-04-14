@@ -12,19 +12,22 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-/**
- * Marker interface
- * @author Albert
- *
- */
-public interface ValueExpression {
-	/**
-	 * 
-	 * @param expression
-	 * @return <b>expression</b> if it is not null,
-	 * otherwise return {@code LiteralNull.INSTANCE}
-	 */
-	public static ValueExpression ifNull(ValueExpression expression) {
-		return expression != null ? expression : LiteralNull.INSTANCE;
+import java.util.Objects;
+
+public class ExistsPredicate extends Predicate {
+	public SelectStatement getSubquery() {
+		return (SelectStatement)getRightPredicand();
 	}
+	
+	ExistsPredicate(SelectStatement subquery) {
+		this(subquery, false);
+	}
+	
+	ExistsPredicate(SelectStatement subquery, boolean negate) {
+		super(
+				null,
+				Objects.requireNonNull(subquery, "subquery cannot be null"),
+				negate ? PredicateOperator.NOT_EXISTS : PredicateOperator.EXISTS);
+	}
+
 }

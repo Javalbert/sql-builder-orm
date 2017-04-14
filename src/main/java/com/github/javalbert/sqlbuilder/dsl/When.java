@@ -21,7 +21,7 @@ public class When {
 	}
 	
 	public static When simple(ValueExpression simpleExpression) {
-		return new When(null, simpleExpression != null ? simpleExpression : LiteralNull.INSTANCE);
+		return new When(null, ValueExpression.ifNull(simpleExpression));
 	}
 	
 	private final BooleanExpression booleanExpression;

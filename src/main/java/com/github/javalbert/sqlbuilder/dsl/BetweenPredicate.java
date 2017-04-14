@@ -12,19 +12,31 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-/**
- * Marker interface
- * @author Albert
- *
- */
-public interface ValueExpression {
-	/**
-	 * 
-	 * @param expression
-	 * @return <b>expression</b> if it is not null,
-	 * otherwise return {@code LiteralNull.INSTANCE}
-	 */
-	public static ValueExpression ifNull(ValueExpression expression) {
-		return expression != null ? expression : LiteralNull.INSTANCE;
+public class BetweenPredicate extends Predicate {
+	private final ValueExpression value1;
+	private final ValueExpression value2;
+
+	public ValueExpression getValue1() {
+		return value1;
+	}
+	public ValueExpression getValue2() {
+		return value2;
+	}
+	
+	BetweenPredicate(
+			Predicand predicand,
+			ValueExpression value1,
+			ValueExpression value2) {
+		this(predicand, value1, value2, false);
+	}
+	
+	BetweenPredicate(
+			Predicand predicand,
+			ValueExpression value1,
+			ValueExpression value2,
+			boolean negate) {
+		super(predicand, null, negate ? PredicateOperator.NOT_BETWEEN : PredicateOperator.BETWEEN);
+		this.value1 = ValueExpression.ifNull(value1);
+		this.value2 = ValueExpression.ifNull(value2);
 	}
 }

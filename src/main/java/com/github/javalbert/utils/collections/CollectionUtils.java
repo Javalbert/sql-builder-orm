@@ -84,6 +84,19 @@ public final class CollectionUtils {
 		return set;
 	}
 	
+	/**
+	 * Also throws if <b>collection</b> is null
+	 * @param collection
+	 * @param message
+	 * @return
+	 */
+	public static <T extends Collection<?>> T illegalArgOnEmpty(T collection, String message) {
+		if (collection == null || collection.isEmpty()) {
+			throw new IllegalArgumentException(message);
+		}
+		return collection;
+	}
+	
 	public static <T> List<T> immutableArrayList(T... items) {
 		return Collections.unmodifiableList(arrayList(items));
 	}

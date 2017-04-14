@@ -29,12 +29,19 @@ public class Predicate implements BooleanExpression {
 		return rightPredicand;
 	}
 	
-	Predicate(Predicand leftPredicand, PredicateOperator operator) {
-		this(leftPredicand, null, operator);
+	Predicate(Predicand predicand, PredicateOperator operator) {
+		this(predicand, null, operator);
 	}
 
 	Predicate(Predicand leftPredicand, Predicand rightPredicand, PredicateOperator operator) {
-		this.leftPredicand = Objects.requireNonNull(leftPredicand, "leftPredicand cannot be null");
+		if (rightPredicand == null) {
+			Objects.requireNonNull(leftPredicand, "leftPredicand cannot be null");
+		}
+		if (leftPredicand == null) {
+			Objects.requireNonNull(rightPredicand, "rightPredicand cannot be null");
+		}
+		
+		this.leftPredicand = leftPredicand;
 		this.operator = Objects.requireNonNull(operator, "operator cannot be null");
 		this.rightPredicand = rightPredicand;
 	}

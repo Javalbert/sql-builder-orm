@@ -13,12 +13,20 @@
 package com.github.javalbert.sqlbuilder.dsl;
 
 public enum PredicateOperator {
+	BETWEEN,
 	EQ,
+	EXISTS,
 	GT,
 	GT_EQ,
+	IN,
 	IS_NOT_NULL,
 	IS_NULL,
+	LIKE,
 	LT,
 	LT_EQ,
-	NOT_EQ
+	NOT_BETWEEN,
+	NOT_EQ,
+	NOT_EXISTS,
+	NOT_IN,
+	NOT_LIKE
 }

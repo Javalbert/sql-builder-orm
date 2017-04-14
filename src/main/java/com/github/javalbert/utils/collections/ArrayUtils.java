@@ -10,21 +10,15 @@
  * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See
  * the License for the specific language governing permissions and limitations under the License.
  *******************************************************************************/
-package com.github.javalbert.sqlbuilder.dsl;
+package com.github.javalbert.utils.collections;
 
-/**
- * Marker interface
- * @author Albert
- *
- */
-public interface ValueExpression {
-	/**
-	 * 
-	 * @param expression
-	 * @return <b>expression</b> if it is not null,
-	 * otherwise return {@code LiteralNull.INSTANCE}
-	 */
-	public static ValueExpression ifNull(ValueExpression expression) {
-		return expression != null ? expression : LiteralNull.INSTANCE;
+public final class ArrayUtils {
+	public static <T> T[] illegalArgOnEmpty(T[] array, String message) {
+		if (array == null || array.length == 0) {
+			throw new IllegalArgumentException(message);
+		}
+		return array;
 	}
+	
+	private ArrayUtils() {}
 }
