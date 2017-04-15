@@ -49,6 +49,10 @@ public class DSL {
 		return condition.grouped();
 	}
 	
+	public static InsertStatement insert(Table table) {
+		return new InsertStatement(table);
+	}
+	
 	public static SetOperation intersect(SelectStatement query) {
 		return new SetOperation(query, SetOperator.INTERSECT);
 	}

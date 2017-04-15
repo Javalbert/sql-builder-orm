@@ -59,6 +59,10 @@ public class CommonTableExpression {
 		return DSL.delete(table).with(this);
 	}
 	
+	public InsertStatement insert(Table table) {
+		return DSL.insert(table).with(this);
+	}
+	
 	public SelectStatement select(SelectColumn<?>...columns) {
 		return DSL.select(columns).with(this);
 	}
