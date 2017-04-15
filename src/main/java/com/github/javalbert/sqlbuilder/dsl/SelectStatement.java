@@ -24,6 +24,7 @@ implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExp
 	private String alias;
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private List<SelectColumn> columns = Collections.EMPTY_LIST;
+	private CteList cteList = CteList.EMPTY;
 	private boolean distinct;
 	@SuppressWarnings("unchecked")
 	private List<TableColumn> groupByColumns = Collections.EMPTY_LIST;
@@ -43,6 +44,9 @@ implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExp
 	@SuppressWarnings("rawtypes")
 	public List<SelectColumn> getColumns() {
 		return columns;
+	}
+	public CteList getCteList() {
+		return cteList;
 	}
 	public boolean isDistinct() {
 		return distinct;
@@ -159,10 +163,23 @@ implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExp
 		return stmt;
 	}
 	
+	public SelectStatement with(CommonTableExpression...ctes) {
+		SelectStatement stmt = copy();
+		stmt.cteList = new CteList(Arrays.asList(ctes));
+		return stmt;
+	}
+	
+	public SelectStatement with(CteList cteList) {
+		SelectStatement stmt = copy();
+		stmt.cteList = cteList;
+		return stmt;
+	}
+	
 	SelectStatement copy() {
 		SelectStatement copy = new SelectStatement();
 		copy.alias = alias;
 		copy.columns = columns;
+		copy.cteList = cteList;
 		copy.distinct = distinct;
 		copy.groupByColumns = groupByColumns;
 		copy.havingCondition = havingCondition;

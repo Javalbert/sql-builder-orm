@@ -40,17 +40,17 @@ implements ExpressionBuilder, Predicand, SelectColumn<Case>, ValueExpression {
 		return whenClauses;
 	}
 
-	public Case() {
+	Case() {
 		this(LiteralNull.INSTANCE);
 	}
 	
-	public Case(Boolean value) {
+	Case(Boolean value) {
 		this(DSL.literal(value));
 	}
-	public Case(Number value) {
+	Case(Number value) {
 		this(DSL.literal(value));
 	}
-	public Case(String value) {
+	Case(String value) {
 		this(DSL.literal(value));
 	}
 	
@@ -60,7 +60,7 @@ implements ExpressionBuilder, Predicand, SelectColumn<Case>, ValueExpression {
 	 * otherwise it is called "searched CASE" expression where each <code>WHEN</code>
 	 * clause uses a boolean expression
 	 */
-	public Case(ValueExpression simpleCaseExpression) {
+	Case(ValueExpression simpleCaseExpression) {
 		this.simpleCaseExpression = ValueExpression.ifNull(simpleCaseExpression);
 	}
 	

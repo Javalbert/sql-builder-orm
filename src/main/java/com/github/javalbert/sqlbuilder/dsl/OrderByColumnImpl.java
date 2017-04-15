@@ -29,7 +29,7 @@ public class OrderByColumnImpl implements OrderByColumn {
 		return sortType;
 	}
 	
-	public OrderByColumnImpl(String label, SortType sortType) {
+	OrderByColumnImpl(String label, SortType sortType) {
 		this.label = Strings.illegalArgOnEmpty(label, "label cannot be null or empty");
 		this.sortType = Objects.requireNonNull(sortType, "sort type cannot be null or empty");
 	}

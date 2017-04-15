@@ -22,6 +22,8 @@ public class LiteralNull extends Literal<LiteralNull, Void> {
 		return literal;
 	}
 	
+	private LiteralNull() {}
+	
 	LiteralNull copy() {
 		LiteralNull copy = new LiteralNull();
 		copy.alias = alias;

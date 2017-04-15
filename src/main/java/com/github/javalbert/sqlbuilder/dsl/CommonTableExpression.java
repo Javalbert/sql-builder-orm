@@ -17,26 +17,25 @@ import java.util.List;
 import java.util.Objects;
 
 import com.github.javalbert.utils.collections.CollectionUtils;
-import com.github.javalbert.utils.string.Strings;
 
 public class CommonTableExpression {
 	@SuppressWarnings("unchecked")
-	private List<String> columns = Collections.EMPTY_LIST;
-	private final String queryName;
+	private List<TableColumn> columns = Collections.EMPTY_LIST;
+	private final Table queryName;
 	private SelectStatement query;
 	
-	public List<String> getColumns() {
+	public List<TableColumn> getColumns() {
 		return columns;
 	}
 	public SelectStatement getQuery() {
 		return query;
 	}
-	public String getQueryName() {
+	public Table getQueryName() {
 		return queryName;
 	}
 	
-	public CommonTableExpression(String queryName) {
-		this.queryName = Strings.illegalArgOnEmpty(queryName, "query name cannot be null or empty");
+	CommonTableExpression(Table queryName) {
+		this.queryName = Objects.requireNonNull(queryName, "query name cannot be null");
 	}
 	
 	public CommonTableExpression as(SelectStatement query) {
@@ -45,15 +44,23 @@ public class CommonTableExpression {
 		return cte;
 	}
 	
-	public CommonTableExpression columns(String...columns) {
+	public CommonTableExpression columns(TableColumn...columns) {
 		CommonTableExpression cte = copy();
 		cte.columns = CollectionUtils.immutableArrayList(columns);
 		return cte;
 	}
 	
-	public CteList with(String queryName) {
+	public CteList with(Table queryName) {
 		return new CteList().add0(this)
 				.with(queryName);
+	}
+	
+	public DeleteStatement delete(Table table) {
+		return DSL.delete(table).with(this);
+	}
+	
+	public SelectStatement select(SelectColumn<?>...columns) {
+		return DSL.select(columns).with(this);
 	}
 	
 	CommonTableExpression copy() {

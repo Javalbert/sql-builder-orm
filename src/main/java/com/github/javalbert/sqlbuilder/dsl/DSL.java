@@ -33,6 +33,10 @@ public class DSL {
 		return Functions.COUNT.call(parameter);
 	}
 	
+	public static DeleteStatement delete(Table table) {
+		return new DeleteStatement(table);
+	}
+	
 	public static SetOperation except(SelectStatement query) {
 		return new SetOperation(query, SetOperator.EXCEPT);
 	}
@@ -109,7 +113,7 @@ public class DSL {
 		return new SetOperation(query, SetOperator.UNION_ALL);
 	}
 	
-	public static CommonTableExpression with(String queryName) {
+	public static CommonTableExpression with(Table queryName) {
 		return new CommonTableExpression(queryName);
 	}
 }

@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Objects;
 
 public class CteList extends AbstractList<CommonTableExpression> {
+	public static final CteList EMPTY = new CteList();
+	
 	private final List<CommonTableExpression> cteList;
 	
 	@SuppressWarnings("unchecked")
@@ -47,21 +49,25 @@ public class CteList extends AbstractList<CommonTableExpression> {
 		return list;
 	}
 
-	public CteList columns(String...columns) {
+	public CteList columns(TableColumn...columns) {
 		CteList list = copy();
 		list.cteList.set(getLastIndex(), getPreviousCte().columns(columns));
 		return list;
 	}
-	
-	public SelectStatement select(SelectColumn<?>...columns) {
-		return DSL.select(columns);
-	}
 
-	public CteList with(String queryName) {
+	public CteList with(Table queryName) {
 		assertPreviousCte();
 		CteList list = copy();
 		list.cteList.add(new CommonTableExpression(queryName));
 		return list;
+	}
+	
+	public DeleteStatement delete(Table table) {
+		return DSL.delete(table).with(this);
+	}
+	
+	public SelectStatement select(SelectColumn<?>...columns) {
+		return DSL.select(columns).with(this);
 	}
 
 	CteList add0(CommonTableExpression cte) {
