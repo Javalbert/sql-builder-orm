@@ -73,6 +73,10 @@ public class CteList extends AbstractList<CommonTableExpression> {
 	public SelectStatement select(SelectColumn<?>...columns) {
 		return DSL.select(columns).with(this);
 	}
+	
+	public UpdateStatement update(Table table) {
+		return DSL.update(table).with(this);
+	}
 
 	CteList add0(CommonTableExpression cte) {
 		CteList list = copy();

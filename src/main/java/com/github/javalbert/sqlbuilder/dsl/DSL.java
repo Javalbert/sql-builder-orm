@@ -117,6 +117,10 @@ public class DSL {
 		return new SetOperation(query, SetOperator.UNION_ALL);
 	}
 	
+	public static UpdateStatement update(Table table) {
+		return new UpdateStatement(table);
+	}
+	
 	public static CommonTableExpression with(Table queryName) {
 		return new CommonTableExpression(queryName);
 	}

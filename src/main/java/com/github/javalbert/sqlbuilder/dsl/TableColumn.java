@@ -48,6 +48,20 @@ implements ExpressionBuilder, OrderByColumn, Predicand, SelectColumn<TableColumn
 		return column;
 	}
 	
+	public SetValue to(Boolean value) {
+		return to(DSL.literal(value));
+	}
+	public SetValue to(Number value) {
+		return to(DSL.literal(value));
+	}
+	public SetValue to(String value) {
+		return to(DSL.literal(value));
+	}
+	
+	public SetValue to(ValueExpression value) {
+		return new SetValue(this, value);
+	}
+	
 	TableColumn copy() {
 		TableColumn copy = new TableColumn();
 		copy.alias = alias;

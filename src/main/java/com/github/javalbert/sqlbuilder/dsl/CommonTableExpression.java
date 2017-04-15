@@ -67,6 +67,10 @@ public class CommonTableExpression {
 		return DSL.select(columns).with(this);
 	}
 	
+	public UpdateStatement update(Table table) {
+		return DSL.update(table).with(this);
+	}
+	
 	CommonTableExpression copy() {
 		CommonTableExpression copy = new CommonTableExpression(queryName);
 		copy.columns = columns;
