@@ -12,9 +12,6 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public interface Predicand {
 	public static <T extends Literal<? extends U, ? extends K>, U, K>
 	Predicand ifNullLiteral(T predicand) {
@@ -69,18 +66,10 @@ public interface Predicand {
 	}
 	
 	default InPredicate in(Number...values) {
-		List<ValueExpression> valueList = new ArrayList<>();
-		for (Number value : values) {
-			valueList.add(DSL.literal(value));
-		}
-		return new InPredicate(this, valueList);
+		return new InPredicate(this, values);
 	}
 	default InPredicate in(String...values) {
-		List<ValueExpression> valueList = new ArrayList<>();
-		for (String value : values) {
-			valueList.add(DSL.literal(value));
-		}
-		return new InPredicate(this, valueList);
+		return new InPredicate(this, values);
 	}
 	
 	default InPredicate in(ValueExpression...values) {
@@ -151,18 +140,10 @@ public interface Predicand {
 	}
 	
 	default InPredicate notIn(Number...values) {
-		List<ValueExpression> valueList = new ArrayList<>();
-		for (Number value : values) {
-			valueList.add(DSL.literal(value));
-		}
-		return new InPredicate(this, valueList, true);
+		return new InPredicate(this, true, values);
 	}
 	default InPredicate notIn(String...values) {
-		List<ValueExpression> valueList = new ArrayList<>();
-		for (String value : values) {
-			valueList.add(DSL.literal(value));
-		}
-		return new InPredicate(this, valueList, true);
+		return new InPredicate(this, true, values);
 	}
 	
 	default InPredicate notIn(ValueExpression...values) {

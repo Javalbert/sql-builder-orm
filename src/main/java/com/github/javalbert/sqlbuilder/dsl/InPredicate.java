@@ -12,14 +12,30 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import com.github.javalbert.utils.collections.ArrayUtils;
 import com.github.javalbert.utils.collections.CollectionUtils;
 
 public class InPredicate extends Predicate {
+	private static List<ValueExpression> valueList(Number...values) {
+		List<ValueExpression> valueList = new ArrayList<>();
+		for (Number value : values) {
+			valueList.add(DSL.literal(value));
+		}
+		return valueList;
+	}
+	
+	private static List<ValueExpression> valueList(String...values) {
+		List<ValueExpression> valueList = new ArrayList<>();
+		for (String value : values) {
+			valueList.add(DSL.literal(value));
+		}
+		return valueList;
+	}
+	
 	private final List<ValueExpression> values;
 	
 	public List<ValueExpression> getValues() {
@@ -33,18 +49,33 @@ public class InPredicate extends Predicate {
 	InPredicate(Predicand predicand, boolean negate, ValueExpression...values) {
 		this(
 				predicand,
-				Collections.unmodifiableList(Arrays.asList(
+				Arrays.asList(
 						ArrayUtils.illegalArgOnEmpty(values, "values cannot be null or empty")
-						)),
+						),
 				negate);
 	}
 
+	InPredicate(Predicand predicand, Number...values) {
+		this(predicand, valueList(values));
+	}
+	InPredicate(Predicand predicand, String...values) {
+		this(predicand, valueList(values));
+	}
+	
 	InPredicate(Predicand predicand, List<ValueExpression> values) {
 		this(predicand, values, false);
 	}
 	
+	InPredicate(Predicand predicand, boolean negate, Number...values) {
+		this(predicand, valueList(values), true);
+	}
+	InPredicate(Predicand predicand, boolean negate, String...values) {
+		this(predicand, valueList(values), true);
+	}
+	
 	InPredicate(Predicand predicand, List<ValueExpression> values, boolean negate) {
 		super(predicand, negate ? PredicateOperator.NOT_IN : PredicateOperator.IN);
-		this.values = CollectionUtils.illegalArgOnEmpty(values, "values cannot be null or empty");
+		this.values = CollectionUtils.immutableArrayList(
+				CollectionUtils.illegalArgOnEmpty(values, "values cannot be null or empty"));
 	}
 }

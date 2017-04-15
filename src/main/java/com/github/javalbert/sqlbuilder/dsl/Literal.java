@@ -26,7 +26,9 @@ implements ExpressionBuilder, Predicand, SelectColumn<I>, ValueExpression {
 	protected String alias;
 	protected T value;
 	
-	protected Literal(T value2) {
+	protected Literal() {}
+	
+	protected Literal(T value) {
 		this.value = Objects.requireNonNull(value, "value cannot be null");
 	}
 	

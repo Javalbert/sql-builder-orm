@@ -12,10 +12,10 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import com.github.javalbert.utils.collections.CollectionUtils;
 import com.github.javalbert.utils.string.Strings;
 
 public class Function
@@ -62,7 +62,7 @@ implements ExpressionBuilder, Predicand, SelectColumn<Function>, ValueExpression
 	
 	public Function call(ValueExpression...parameters) {
 		Function function = copy();
-		function.parameters = Collections.unmodifiableList(Arrays.asList(parameters));
+		function.parameters = CollectionUtils.immutableArrayList(parameters);
 		return function;
 	}
 	

@@ -103,7 +103,7 @@ public abstract class ClassRowMapper {
 	public ClassRowMapper(Class<?> clazz, Vendor vendor) {
 		this.clazz = clazz;
 		
-		fields = Collections.unmodifiableList(Arrays.asList(clazz.getDeclaredFields()));
+		fields = Arrays.asList(clazz.getDeclaredFields());
 		fields.forEach(field -> {
 			field.setAccessible(true);
 			fieldMap.put(field.getName(), field);
@@ -111,7 +111,7 @@ public abstract class ClassRowMapper {
 		
 		try {
 			BeanInfo beanInfo = Introspector.getBeanInfo(clazz);
-			propertyDescriptors = Collections.unmodifiableList(Arrays.asList(beanInfo.getPropertyDescriptors()));
+			propertyDescriptors = Arrays.asList(beanInfo.getPropertyDescriptors());
 			propertyDescriptors.forEach(prop -> propertyDescriptorMap.put(prop.getName(), prop));
 		} catch (IntrospectionException e) {
 			throw new RuntimeException(e);

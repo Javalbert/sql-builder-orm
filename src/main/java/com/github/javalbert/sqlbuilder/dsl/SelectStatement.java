@@ -63,10 +63,13 @@ implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExp
 		return whereCondition;
 	}
 	
+	SelectStatement(SelectColumn<?>...columns) {
+		this(Arrays.asList(columns));
+	}
+	
 	SelectStatement(List<SelectColumn<?>> columns) {
-		this.columns = Collections.unmodifiableList(new ArrayList<>(
-				CollectionUtils.illegalArgOnEmpty(columns, "columns cannot be null or empty")
-				));
+		this.columns = CollectionUtils.immutableArrayList(
+				CollectionUtils.illegalArgOnEmpty(columns, "columns cannot be null or empty"));
 	}
 	
 	private SelectStatement() {}
@@ -98,13 +101,13 @@ implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExp
 		}
 		
 		SelectStatement stmt = copy();
-		stmt.tables = Collections.unmodifiableList(Arrays.asList(tables));
+		stmt.tables = CollectionUtils.immutableArrayList(tables);
 		return stmt;
 	}
 	
 	public SelectStatement groupBy(TableColumn...groupByColumns) {
 		SelectStatement stmt = copy();
-		stmt.groupByColumns = Collections.unmodifiableList(Arrays.asList(groupByColumns));
+		stmt.groupByColumns = CollectionUtils.immutableArrayList(groupByColumns);
 		return stmt;
 	}
 	
@@ -124,13 +127,13 @@ implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExp
 	
 	public SelectStatement orderBy(OrderByColumn...orderByColumns) {
 		SelectStatement stmt = copy();
-		stmt.orderByColumns = Collections.unmodifiableList(Arrays.asList(orderByColumns));
+		stmt.orderByColumns = CollectionUtils.immutableArrayList(orderByColumns);
 		return stmt;
 	}
 	
 	public SelectStatement setOperations(SetOperation...setOperations) {
 		SelectStatement stmt = copy();
-		stmt.setOperations = Collections.unmodifiableList(Arrays.asList(setOperations));
+		stmt.setOperations = CollectionUtils.immutableArrayList(setOperations);
 		return stmt;
 	}
 	

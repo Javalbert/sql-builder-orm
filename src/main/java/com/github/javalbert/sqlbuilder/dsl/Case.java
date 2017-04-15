@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.github.javalbert.utils.collections.CollectionUtils;
+
 public class Case
 implements ExpressionBuilder, Predicand, SelectColumn<Case>, ValueExpression {
 	private String alias;
@@ -102,7 +104,7 @@ implements ExpressionBuilder, Predicand, SelectColumn<Case>, ValueExpression {
 		Case sqlCase = copy();
 
 		final int last = whenClauses.size() - 1;
-		List<When> whenClauses = this.whenClauses.subList(0, last);
+		List<When> whenClauses = CollectionUtils.subArrayList(this.whenClauses, 0, last);
 		whenClauses.add(this.whenClauses.get(last).then(then));
 		sqlCase.whenClauses = Collections.unmodifiableList(whenClauses);
 		
@@ -150,14 +152,14 @@ implements ExpressionBuilder, Predicand, SelectColumn<Case>, ValueExpression {
 	}
 	
 	private void assertSearchedCaseExpression() {
-		if (simpleCaseExpression != null) {
+		if (simpleCaseExpression != LiteralNull.INSTANCE) {
 			throw new IllegalStateException("not allowed to add boolean expression"
 					+ " because this is a \"simple CASE\" expression");
 		}
 	}
 	
 	private void assertSimpleCaseExpression() {
-		if (simpleCaseExpression == null) {
+		if (simpleCaseExpression == LiteralNull.INSTANCE) {
 			throw new IllegalStateException("not allowed to add simple expression"
 					+ " because this is a \"searched CASE\" expression");
 		}

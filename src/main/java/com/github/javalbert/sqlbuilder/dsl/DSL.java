@@ -12,8 +12,6 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-import java.util.Arrays;
-
 public class DSL {
 	public static ColumnAlias alias(String alias) {
 		return new ColumnAlias(alias);
@@ -95,8 +93,8 @@ public class DSL {
 		return select(SelectColumn.ALL);
 	}
 	
-	public static SelectStatement select(@SuppressWarnings("rawtypes") SelectColumn...columns) {
-		return new SelectStatement(Arrays.asList(columns));
+	public static SelectStatement select(SelectColumn<?>...columns) {
+		return new SelectStatement(columns);
 	}
 	
 	public static Function sum(ValueExpression parameter) {
@@ -109,5 +107,9 @@ public class DSL {
 	
 	public static SetOperation unionAll(SelectStatement query) {
 		return new SetOperation(query, SetOperator.UNION_ALL);
+	}
+	
+	public static CommonTableExpression with(String queryName) {
+		return new CommonTableExpression(queryName);
 	}
 }

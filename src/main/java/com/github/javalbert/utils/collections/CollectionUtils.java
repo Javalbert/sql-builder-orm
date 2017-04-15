@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.github.javalbert.sqlbuilder.dsl.When;
+
 @SuppressWarnings({ "unchecked" })
 public final class CollectionUtils {
 	public static final CollectionFactory FACTORY_DEQUE = new CollectionFactory() {
@@ -97,6 +99,10 @@ public final class CollectionUtils {
 		return collection;
 	}
 	
+	public static <T> List<T> immutableArrayList(Collection<? extends T> collection) {
+		return Collections.unmodifiableList(new ArrayList<>(collection));
+	}
+	
 	public static <T> List<T> immutableArrayList(T... items) {
 		return Collections.unmodifiableList(arrayList(items));
 	}
@@ -107,6 +113,14 @@ public final class CollectionUtils {
 	
 	public static <T> Set<T> immutableHashSet(T... items) {
 		return Collections.unmodifiableSet(hashSet(items));
+	}
+
+	public static <T> List<T> subArrayList(List<? extends T> list, int fromIndex, int toIndex) {
+		List<T> newList = new ArrayList<>();
+		for (int i = fromIndex; i < toIndex; i++) {
+			newList.add(list.get(i));
+		}
+		return newList;
 	}
 	
 	private CollectionUtils() {}
