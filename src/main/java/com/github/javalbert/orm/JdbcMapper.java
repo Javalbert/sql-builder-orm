@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -427,14 +427,14 @@ public class JdbcMapper {
 	
 	/* START Package protected methods */
 	
-	<T> void forEach(Class<T> clazz, Select select, ResultSet rs, Consumer<T> consumer) throws SQLException {
+	<T> void forEach(Class<T> clazz, Select select, ResultSet rs, BiConsumer<? super T, ResultSetHelper> consumer) throws SQLException {
 		ResultSetHelper rsHelper = new ResultSetHelper(rs);
 		
 		ClassRowMapping classRowMapping = getClassRowMapping(clazz);
 		List<FieldColumnMapping> columnMappings = getColumnMappings(classRowMapping, select);
 		
 		while (rs.next()) {
-			consumer.accept(createObject(clazz, columnMappings, rsHelper));
+			consumer.accept(createObject(clazz, columnMappings, rsHelper), rsHelper);
 		}
 	}
 	
