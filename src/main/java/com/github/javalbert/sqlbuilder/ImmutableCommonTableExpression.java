@@ -39,4 +39,9 @@ public class ImmutableCommonTableExpression extends CommonTableExpression {
 		}
 		select = cte.getSelect() != null ? cte.getSelect().immutable() : null;
 	}
+	
+	@Override
+	public ImmutableCommonTableExpression immutable() {
+		return this;
+	}
 }

@@ -16,4 +16,9 @@ public class ImmutableMerge extends Merge {
 	public ImmutableMerge(Merge merge) {
 		nodes = NodeUtils.immutableNodes(merge);
 	}
+	
+	@Override
+	public ImmutableMerge immutable() {
+		return this;
+	}
 }

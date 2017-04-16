@@ -36,4 +36,9 @@ public class ImmutableColumn extends Column {
 				column.getName(), 
 				column.getAlias());
 	}
+	
+	@Override
+	public ImmutableColumn immutable() {
+		return this;
+	}
 }

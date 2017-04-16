@@ -25,4 +25,9 @@ public class ImmutableTable extends Table {
 	public ImmutableTable(Table table) {
 		super(table.getName(), table.getAlias());
 	}
+	
+	@Override
+	public ImmutableTable immutable() {
+		return this;
+	}
 }

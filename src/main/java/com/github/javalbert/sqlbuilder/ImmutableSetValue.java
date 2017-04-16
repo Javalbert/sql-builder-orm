@@ -17,6 +17,11 @@ public class ImmutableSetValue extends SetValue {
 		nodes = NodeUtils.immutableNodes(value);
 	}
 	
+	@Override
+	public ImmutableSetValue immutable() {
+		return this;
+	}
+	
 	/* START Fluent API */
 	
 	@Override

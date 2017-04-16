@@ -16,4 +16,9 @@ public class ImmutableUpdate extends Update {
 	public ImmutableUpdate(Update update) {
 		nodes = NodeUtils.immutableNodes(update);
 	}
+	
+	@Override
+	public ImmutableUpdate immutable() {
+		return this;
+	}
 }

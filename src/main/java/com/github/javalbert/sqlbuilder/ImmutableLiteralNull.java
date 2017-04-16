@@ -25,4 +25,9 @@ public class ImmutableLiteralNull extends LiteralNull {
 	public ImmutableLiteralNull(LiteralNull literal) {
 		super(literal);
 	}
+	
+	@Override
+	public ImmutableLiteralNull immutable() {
+		return this;
+	}
 }

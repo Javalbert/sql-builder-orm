@@ -16,4 +16,9 @@ public class ImmutableHaving extends Having {
 	public ImmutableHaving(Condition having) {
 		nodes = NodeUtils.immutableNodes(having);
 	}
+	
+	@Override
+	public ImmutableHaving immutable() {
+		return this;
+	}
 }

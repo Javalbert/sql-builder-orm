@@ -26,4 +26,9 @@ public class ImmutableLiteralString extends LiteralString {
 		super(literal.getValue());
 		alias = literal.getAlias();
 	}
+	
+	@Override
+	public ImmutableLiteralString immutable() {
+		return this;
+	}
 }

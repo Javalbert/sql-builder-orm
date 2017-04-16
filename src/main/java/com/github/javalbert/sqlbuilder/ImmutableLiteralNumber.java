@@ -26,4 +26,9 @@ public class ImmutableLiteralNumber extends LiteralNumber {
 		super(literal.getValue());
 		alias = literal.getAlias();
 	}
+	
+	@Override
+	public ImmutableLiteralNumber immutable() {
+		return this;
+	}
 }

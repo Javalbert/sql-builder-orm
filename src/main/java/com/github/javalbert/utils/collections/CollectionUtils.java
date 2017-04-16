@@ -84,6 +84,23 @@ public final class CollectionUtils {
 		return set;
 	}
 	
+	/**
+	 * Also throws if <b>collection</b> is null
+	 * @param collection
+	 * @param message
+	 * @return
+	 */
+	public static <T> Collection<? extends T> illegalArgOnEmpty(Collection<? extends T> collection, String message) {
+		if (collection == null || collection.isEmpty()) {
+			throw new IllegalArgumentException(message);
+		}
+		return collection;
+	}
+	
+	public static <T> List<T> immutableArrayList(Collection<? extends T> collection) {
+		return Collections.unmodifiableList(new ArrayList<>(collection));
+	}
+	
 	public static <T> List<T> immutableArrayList(T... items) {
 		return Collections.unmodifiableList(arrayList(items));
 	}
@@ -94,6 +111,32 @@ public final class CollectionUtils {
 	
 	public static <T> Set<T> immutableHashSet(T... items) {
 		return Collections.unmodifiableSet(hashSet(items));
+	}
+	
+	public static <T> T lastOrIllegalArg(Collection<? extends T> collection, String message) {
+		if (collection == null || collection.isEmpty()) {
+			throw new IllegalArgumentException(message);
+		}
+		return collection.iterator().next();
+	}
+	
+	public static <T> T lastOrIllegalState(Collection<? extends T> collection, String message) {
+		if (collection == null || collection.isEmpty()) {
+			throw new IllegalStateException(message);
+		}
+		return collection.iterator().next();
+	}
+	
+	public static <T> T lastOrNull(Collection<? extends T> collection) {
+		return collection != null ? collection.iterator().next() : null;
+	}
+
+	public static <T> List<T> subArrayList(List<? extends T> list, int fromIndex, int toIndex) {
+		List<T> newList = new ArrayList<>();
+		for (int i = fromIndex; i < toIndex; i++) {
+			newList.add(list.get(i));
+		}
+		return newList;
 	}
 	
 	private CollectionUtils() {}

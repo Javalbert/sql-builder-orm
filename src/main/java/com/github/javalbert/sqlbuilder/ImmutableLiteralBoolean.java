@@ -26,4 +26,9 @@ public class ImmutableLiteralBoolean extends LiteralBoolean {
 		super(literal.getValue());
 		alias = literal.getAlias();
 	}
+	
+	@Override
+	public ImmutableLiteralBoolean immutable() {
+		return this;
+	}
 }

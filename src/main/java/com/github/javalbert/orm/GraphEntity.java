@@ -30,13 +30,8 @@ public class GraphEntity<T> {
 	public String getTableAlias() { return tableAlias; }
 
 	public GraphEntity(Class<T> entityClass, String tableAlias) {
-		Objects.requireNonNull(entityClass, "entityClass cannot be null");
-		if (Strings.isNullOrEmpty(tableAlias)) {
-			throw new IllegalArgumentException("tableAlias cannot be null or empty");
-		}
-		
-		this.entityClass = entityClass;
-		this.tableAlias = tableAlias;
+		this.entityClass = Objects.requireNonNull(entityClass, "entityClass cannot be null");
+		this.tableAlias = Strings.illegalArgOnEmpty(tableAlias, "tableAlias cannot be null or empty");
 	}
 
 	public Builder isRelatedToMany(GraphEntity<?> relatedEntity) {
