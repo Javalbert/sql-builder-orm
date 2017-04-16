@@ -15,11 +15,10 @@ package com.github.javalbert.sqlbuilder.dsl;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import com.github.javalbert.utils.collections.CollectionUtils;
 
-public class InsertStatement {
+public class InsertStatement implements DMLStatement {
 	/**
 	 * See <a href="https://en.wikipedia.org/wiki/Insert_(SQL)#Default_Values">Default Values</a>.
 	 * <br>Used in the VALUES clause
@@ -50,7 +49,7 @@ public class InsertStatement {
 	}
 	
 	InsertStatement(Table table) {
-		this.table = Objects.requireNonNull(table, "table cannot be null");
+		this.table = table;
 	}
 	
 	public InsertStatement columns(TableColumn...columns) {

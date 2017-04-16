@@ -20,8 +20,14 @@ package com.github.javalbert.sqlbuilder.dsl;
  */
 public interface Aliasable<T> {
 	String getAlias();
+	
 	T as(String alias);
 	
+	/**
+	 * Delegates to {@link Aliasable#as(String)}
+	 * @param alias
+	 * @return
+	 */
 	default T as(ColumnAlias alias) {
 		return as(alias.getAlias());
 	}

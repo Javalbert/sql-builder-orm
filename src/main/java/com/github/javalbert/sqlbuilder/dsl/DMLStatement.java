@@ -16,6 +16,5 @@ package com.github.javalbert.sqlbuilder.dsl;
  * Marker interface
  * @author Albert
  *
- * @param <T> the implementing type
  */
-public interface SelectColumn<T> extends Aliasable<T> {}
+public interface DMLStatement {}

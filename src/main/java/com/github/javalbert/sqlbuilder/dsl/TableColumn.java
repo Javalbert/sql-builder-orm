@@ -16,6 +16,17 @@ import com.github.javalbert.utils.string.Strings;
 
 public class TableColumn
 implements ExpressionBuilder, OrderByColumn, Predicand, SelectColumn<TableColumn>, ValueExpression {
+	public static final TableColumn ALL = new TableColumn() {
+		@Override
+		public String getAlias() {
+			return null;
+		}
+		@Override
+		public TableColumn as(String alias) {
+			return null;
+		}
+	};
+	
 	private String alias;
 	private String name;
 	private TableAlias tableAlias;

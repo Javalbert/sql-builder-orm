@@ -20,7 +20,8 @@ import java.util.List;
 import com.github.javalbert.utils.collections.CollectionUtils;
 
 public class SelectStatement
-implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExpression {
+implements DMLStatement, ExpressionBuilder, Predicand,
+SelectColumn<SelectStatement>, TableReference, ValueExpression {
 	private String alias;
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private List<SelectColumn> columns = Collections.EMPTY_LIST;
@@ -33,6 +34,7 @@ implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExp
 	private List<OrderByColumn> orderByColumns = Collections.EMPTY_LIST;
 	@SuppressWarnings("unchecked")
 	private List<SetOperation> setOperations = Collections.EMPTY_LIST;
+	private TableAlias tableAlias;
 	@SuppressWarnings("unchecked")
 	private List<TableReference> tables = Collections.EMPTY_LIST;
 	private BooleanExpression whereCondition;
@@ -60,6 +62,9 @@ implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExp
 	public List<OrderByColumn> getOrderByColumns() {
 		return orderByColumns;
 	}
+	public TableAlias getTableAlias() {
+		return tableAlias;
+	}
 	public List<TableReference> getTables() {
 		return tables;
 	}
@@ -82,6 +87,17 @@ implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExp
 	public SelectStatement as(String alias) {
 		SelectStatement stmt = copy();
 		stmt.alias = alias;
+		return stmt;
+	}
+	
+	/**
+	 * Used for inline views in FROM clause or source table in MERGE statement
+	 * @param tableAlias
+	 * @return
+	 */
+	public SelectStatement as(TableAlias tableAlias) {
+		SelectStatement stmt = copy();
+		stmt.tableAlias = tableAlias;
 		return stmt;
 	}
 
@@ -185,6 +201,7 @@ implements ExpressionBuilder, Predicand, SelectColumn<SelectStatement>, ValueExp
 		copy.havingCondition = havingCondition;
 		copy.orderByColumns = orderByColumns;
 		copy.setOperations = setOperations;
+		copy.tableAlias = tableAlias;
 		copy.tables = tables;
 		copy.whereCondition = whereCondition;
 		return copy;

@@ -12,6 +12,8 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
+import java.util.Objects;
+
 public class DSL {
 	public static ColumnAlias alias(String alias) {
 		return new ColumnAlias(alias);
@@ -33,6 +35,15 @@ public class DSL {
 		return Functions.COUNT.call(parameter);
 	}
 	
+	/**
+	 * DEFAULT keyword for INSERT statements
+	 * <br>e.g. {@code INSERT ... VALUES (..., DEFAULT, ...)}
+	 * @return {@code InsertStatement.DEFAULT}
+	 */
+	public static ValueExpression sqlDefault() {
+		return InsertStatement.DEFAULT;
+	}
+	
 	public static DeleteStatement delete(Table table) {
 		return new DeleteStatement(table);
 	}
@@ -48,9 +59,16 @@ public class DSL {
 	public static Condition group(Condition condition) {
 		return condition.grouped();
 	}
+
+	/**
+	 * Should only be used for MERGE statements
+	 */
+	public static InsertStatement insert() {
+		return new InsertStatement(null);
+	}
 	
 	public static InsertStatement insert(Table table) {
-		return new InsertStatement(table);
+		return new InsertStatement(Objects.requireNonNull(table, "table cannot be null"));
 	}
 	
 	public static SetOperation intersect(SelectStatement query) {
@@ -77,6 +95,10 @@ public class DSL {
 		return LiteralNull.INSTANCE;
 	}
 	
+	public static MergeStatement merge(Table targetTable) {
+		return new MergeStatement(targetTable);
+	}
+	
 	public static Function max(ValueExpression parameter) {
 		return Functions.MAX.call(parameter);
 	}
@@ -94,15 +116,28 @@ public class DSL {
 	}
 	
 	/**
-	 * {@code SELECT *}
+	 * Shorthand for SQL {@code SELECT *} or Java {@code DSL.select(DSL.star())}
+	 * <br>
+	 * <br>
+	 * Useful for EXISTS predicate
+	 * <br>
+	 * For source table in MERGE statements, use {@code select(myTableAlias.of(star()))}
 	 * @return
 	 */
 	public static SelectStatement select() {
-		return select(SelectColumn.ALL);
+		return select(star());
 	}
 	
 	public static SelectStatement select(SelectColumn<?>...columns) {
 		return new SelectStatement(columns);
+	}
+	
+	/**
+	 * 
+	 * @return {@code TableColumn.ALL}
+	 */
+	public static TableColumn star() {
+		return TableColumn.ALL;
 	}
 	
 	public static Function sum(ValueExpression parameter) {
@@ -116,9 +151,16 @@ public class DSL {
 	public static SetOperation unionAll(SelectStatement query) {
 		return new SetOperation(query, SetOperator.UNION_ALL);
 	}
+
+	/**
+	 * Should only be used for MERGE statements
+	 */
+	public static UpdateStatement update() {
+		return new UpdateStatement(null);
+	}
 	
 	public static UpdateStatement update(Table table) {
-		return new UpdateStatement(table);
+		return new UpdateStatement(Objects.requireNonNull(table, "table cannot be null"));
 	}
 	
 	public static CommonTableExpression with(Table queryName) {

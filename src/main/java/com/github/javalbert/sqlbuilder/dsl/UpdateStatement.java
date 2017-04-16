@@ -14,11 +14,10 @@ package com.github.javalbert.sqlbuilder.dsl;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 import com.github.javalbert.utils.collections.CollectionUtils;
 
-public class UpdateStatement {
+public class UpdateStatement implements DMLStatement {
 	private CteList cteList = CteList.EMPTY;
 	private final Table table;
 	private List<SetValue> values;
@@ -35,7 +34,7 @@ public class UpdateStatement {
 	}
 	
 	UpdateStatement(Table table) {
-		this.table = Objects.requireNonNull(table, "table name cannot be null");
+		this.table = table;
 	}
 	
 	public UpdateStatement set(SetValue...values) {

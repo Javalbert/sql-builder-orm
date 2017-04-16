@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.github.javalbert.sqlbuilder.dsl.When;
-
 @SuppressWarnings({ "unchecked" })
 public final class CollectionUtils {
 	public static final CollectionFactory FACTORY_DEQUE = new CollectionFactory() {
@@ -92,7 +90,7 @@ public final class CollectionUtils {
 	 * @param message
 	 * @return
 	 */
-	public static <T extends Collection<?>> T illegalArgOnEmpty(T collection, String message) {
+	public static <T> Collection<? extends T> illegalArgOnEmpty(Collection<? extends T> collection, String message) {
 		if (collection == null || collection.isEmpty()) {
 			throw new IllegalArgumentException(message);
 		}
@@ -113,6 +111,24 @@ public final class CollectionUtils {
 	
 	public static <T> Set<T> immutableHashSet(T... items) {
 		return Collections.unmodifiableSet(hashSet(items));
+	}
+	
+	public static <T> T lastOrIllegalArg(Collection<? extends T> collection, String message) {
+		if (collection == null || collection.isEmpty()) {
+			throw new IllegalArgumentException(message);
+		}
+		return collection.iterator().next();
+	}
+	
+	public static <T> T lastOrIllegalState(Collection<? extends T> collection, String message) {
+		if (collection == null || collection.isEmpty()) {
+			throw new IllegalStateException(message);
+		}
+		return collection.iterator().next();
+	}
+	
+	public static <T> T lastOrNull(Collection<? extends T> collection) {
+		return collection != null ? collection.iterator().next() : null;
 	}
 
 	public static <T> List<T> subArrayList(List<? extends T> list, int fromIndex, int toIndex) {

@@ -15,7 +15,7 @@ package com.github.javalbert.sqlbuilder.dsl;
 import java.util.Arrays;
 import java.util.Objects;
 
-public class DeleteStatement {
+public class DeleteStatement implements DMLStatement {
 	private CteList cteList = CteList.EMPTY;
 	private final Table table;
 	private BooleanExpression whereCondition;
@@ -30,8 +30,15 @@ public class DeleteStatement {
 		return whereCondition;
 	}
 	
+	/**
+	 * Singleton defined in and used by {@code MergeAction} class
+	 */
+	DeleteStatement() {
+		table = null;
+	}
+	
 	DeleteStatement(Table table) {
-		this.table = Objects.requireNonNull(table, "table name cannot be null");
+		this.table = Objects.requireNonNull(table, "table cannot be null");
 	}
 	
 	public DeleteStatement where(BooleanExpression whereCondition) {
