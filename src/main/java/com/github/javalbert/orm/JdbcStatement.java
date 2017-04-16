@@ -268,7 +268,15 @@ public class JdbcStatement {
 		}
 	}
 	
-	public <T> void forEach(Connection connection, Class<T> clazz, BiConsumer<? super T, ResultSetHelper> consumer)
+	public <T> void forEach(Connection connection, Class<T> clazz, Consumer<? super T> consumer)
+			throws SQLException {
+		forEach(connection, clazz, (obj, rs) -> consumer.accept(obj));
+	}
+	
+	public <T> void forEach(
+			Connection connection,
+			Class<T> clazz,
+			BiConsumer<? super T, ResultSetHelper> consumer)
 			throws SQLException {
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
