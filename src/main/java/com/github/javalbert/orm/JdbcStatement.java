@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -267,7 +268,15 @@ public class JdbcStatement {
 		}
 	}
 	
-	public <T> void forEach(Connection connection, Class<T> clazz, Consumer<T> consumer)
+	public <T> void forEach(Connection connection, Class<T> clazz, Consumer<? super T> consumer)
+			throws SQLException {
+		forEach(connection, clazz, (obj, rs) -> consumer.accept(obj));
+	}
+	
+	public <T> void forEach(
+			Connection connection,
+			Class<T> clazz,
+			BiConsumer<? super T, ResultSetHelper> consumer)
 			throws SQLException {
 		PreparedStatement stmt = null;
 		ResultSet rs = null;

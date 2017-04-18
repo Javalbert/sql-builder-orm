@@ -631,7 +631,7 @@ class JdbcStatementSpec extends Specification {
 			conn = H2.getConnection()
 			mapper.createQuery(mapper.selectFrom(Store.class))
 				.forEach(conn, Store.class, {
-					store ->
+					store, rs ->
 					jsonList.add(gson.toJsonTree(store))
 				})
 		} finally {
