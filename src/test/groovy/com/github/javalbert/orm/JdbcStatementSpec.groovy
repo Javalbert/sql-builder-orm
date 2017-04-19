@@ -9,6 +9,7 @@ import java.sql.Timestamp
 import java.sql.Types
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.function.BiConsumer
 
 import com.github.javalbert.orm.JdbcMapper
 import com.github.javalbert.orm.JdbcStatement
@@ -629,11 +630,15 @@ class JdbcStatementSpec extends Specification {
 		Gson gson = new Gson()
 		try {
 			conn = H2.getConnection()
+			
+			// Had to extract the Groovy closure into a variable because of Ambiguous method error
+			BiConsumer<Store, ResultSetHelper> consumer = {
+				Store store, ResultSetHelper rs ->
+				jsonList.add(gson.toJsonTree(store))
+			}
+			
 			mapper.createQuery(mapper.selectFrom(Store.class))
-				.forEach(conn, Store.class, {
-					store, rs ->
-					jsonList.add(gson.toJsonTree(store))
-				})
+				.forEach(conn, Store.class, consumer)
 		} finally {
 			JdbcUtils.closeQuietly(conn)
 		}
