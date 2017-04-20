@@ -25,8 +25,7 @@ public class InsertStatement implements DMLStatement {
 	 */
 	public static final ValueExpression DEFAULT = new ValueExpression() {};
 	
-	@SuppressWarnings("unchecked")
-	private List<TableColumn> columns = Collections.EMPTY_LIST;
+	private List<TableColumn> columns = Collections.emptyList();
 	private CteList cteList = CteList.EMPTY;
 	private SelectStatement subselect;
 	private final Table table;

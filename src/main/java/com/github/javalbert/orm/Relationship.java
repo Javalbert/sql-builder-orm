@@ -66,7 +66,6 @@ public class Relationship {
 	public GraphEntity getRelatedEntity() { return relatedEntity; }
 	public int getType() { return type; }
 	
-	@SuppressWarnings("unchecked")
 	private Relationship(Builder builder) {
 		batchSize = builder.batchSize;
 		fieldName = builder.fieldName;
@@ -76,7 +75,7 @@ public class Relationship {
 		mapKeyName = builder.mapKeyName;
 		orderByColumns = builder.orderByColumns != null 
 				? new ArrayList<>(builder.orderByColumns) 
-				: Collections.EMPTY_LIST;
+				: Collections.emptyList();
 		ownerEntity = builder.ownerEntity;
 		relatedEntity = builder.relatedEntity;
 		type = builder.type;

@@ -19,8 +19,7 @@ import java.util.Objects;
 import com.github.javalbert.utils.collections.CollectionUtils;
 
 public class CommonTableExpression {
-	@SuppressWarnings("unchecked")
-	private List<TableColumn> columns = Collections.EMPTY_LIST;
+	private List<TableColumn> columns = Collections.emptyList();
 	private final Table queryName;
 	private SelectStatement query;
 	

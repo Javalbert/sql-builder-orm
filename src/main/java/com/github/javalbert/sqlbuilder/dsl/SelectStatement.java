@@ -23,20 +23,16 @@ public class SelectStatement
 implements DMLStatement, ExpressionBuilder, Predicand,
 SelectColumn<SelectStatement>, TableReference, ValueExpression {
 	private String alias;
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private List<SelectColumn> columns = Collections.EMPTY_LIST;
+	@SuppressWarnings("rawtypes")
+	private List<SelectColumn> columns = Collections.emptyList();
 	private CteList cteList = CteList.EMPTY;
 	private boolean distinct;
-	@SuppressWarnings("unchecked")
-	private List<TableColumn> groupByColumns = Collections.EMPTY_LIST;
+	private List<TableColumn> groupByColumns = Collections.emptyList();
 	private BooleanExpression havingCondition;
-	@SuppressWarnings("unchecked")
-	private List<OrderByColumn> orderByColumns = Collections.EMPTY_LIST;
-	@SuppressWarnings("unchecked")
-	private List<SetOperation> setOperations = Collections.EMPTY_LIST;
+	private List<OrderByColumn> orderByColumns = Collections.emptyList();
+	private List<SetOperation> setOperations = Collections.emptyList();
 	private TableAlias tableAlias;
-	@SuppressWarnings("unchecked")
-	private List<TableReference> tables = Collections.EMPTY_LIST;
+	private List<TableReference> tables = Collections.emptyList();
 	private BooleanExpression whereCondition;
 
 	@Override

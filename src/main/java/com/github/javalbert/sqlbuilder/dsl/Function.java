@@ -22,8 +22,7 @@ public class Function
 implements ExpressionBuilder, Predicand, SelectColumn<Function>, ValueExpression {
 	private String alias;
 	private final String name;
-	@SuppressWarnings("unchecked")
-	private List<ValueExpression> parameters = Collections.EMPTY_LIST;
+	private List<ValueExpression> parameters = Collections.emptyList();
 	
 	@Override
 	public String getAlias() {
@@ -47,10 +46,9 @@ implements ExpressionBuilder, Predicand, SelectColumn<Function>, ValueExpression
 		return function;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public Function call() {
 		Function function = copy();
-		function.parameters = Collections.EMPTY_LIST;
+		function.parameters = Collections.emptyList();
 		return function;
 	}
 	

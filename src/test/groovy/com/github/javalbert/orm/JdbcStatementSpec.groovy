@@ -212,7 +212,7 @@ class JdbcStatementSpec extends Specification {
 		
 		when: 'adding two batches of User parameters and executing the batch'
 		Connection conn = null
-		List<int[]> batchCounts = Collections.EMPTY_LIST
+		List<int[]> batchCounts = Collections.emptyList()
 		try {
 			conn = H2.getConnection()
 			batchCounts = mapper.createQuery(insertUser)
@@ -280,7 +280,7 @@ class JdbcStatementSpec extends Specification {
 		}
 		
 		when: 'executing a Select statement, passing our own ArrayList, and returning it with User entities'
-		List<String> users = Collections.EMPTY_LIST
+		List<String> users = Collections.emptyList()
 		try {
 			conn = H2.getConnection()
 			users = mapper.createQuery(mapper.selectFrom(User.class))

@@ -23,8 +23,7 @@ implements ExpressionBuilder, Predicand, SelectColumn<Case>, ValueExpression {
 	private String alias;
 	private ValueExpression elseExpression;
 	private final ValueExpression simpleCaseExpression;
-	@SuppressWarnings("unchecked")
-	private List<When> whenClauses = Collections.EMPTY_LIST;
+	private List<When> whenClauses = Collections.emptyList();
 	
 	@Override
 	public String getAlias() {
