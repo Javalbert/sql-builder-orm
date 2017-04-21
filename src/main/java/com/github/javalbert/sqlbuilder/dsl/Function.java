@@ -31,6 +31,10 @@ implements ExpressionBuilder, Predicand, SelectColumn<Function>, ValueExpression
 	public String getName() {
 		return name;
 	}
+	@Override
+	public int getNodeType() {
+		return TYPE_FUNCTION;
+	}
 	public List<ValueExpression> getParameters() {
 		return parameters;
 	}

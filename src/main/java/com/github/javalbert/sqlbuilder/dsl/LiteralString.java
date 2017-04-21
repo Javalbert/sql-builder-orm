@@ -13,6 +13,11 @@
 package com.github.javalbert.sqlbuilder.dsl;
 
 public class LiteralString extends Literal<LiteralString, String> {
+	@Override
+	public int getNodeType() {
+		return TYPE_LITERAL_STRING;
+	}
+	
 	LiteralString(String value) {
 		super(value);
 	}

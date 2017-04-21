@@ -28,6 +28,10 @@ implements ExpressionBuilder, Predicand, SelectColumn<Expression>, ValueExpressi
 	public ExpressionBuilder getLeft() {
 		return left;
 	}
+	@Override
+	public int getNodeType() {
+		return TYPE_EXPRESSION;
+	}
 	public ExpressionOperator getOperator() {
 		return operator;
 	}

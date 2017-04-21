@@ -15,6 +15,10 @@ package com.github.javalbert.sqlbuilder.dsl;
 import java.util.Objects;
 
 public class ExistsPredicate extends Predicate {
+	@Override
+	public int getNodeType() {
+		return TYPE_PREDICATE_EXISTS;
+	}
 	public SelectStatement getSubquery() {
 		return (SelectStatement)getRightPredicand();
 	}
@@ -29,5 +33,4 @@ public class ExistsPredicate extends Predicate {
 				Objects.requireNonNull(subquery, "subquery cannot be null"),
 				negate ? PredicateOperator.NOT_EXISTS : PredicateOperator.EXISTS);
 	}
-
 }

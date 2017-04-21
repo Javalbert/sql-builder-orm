@@ -23,7 +23,12 @@ public class InsertStatement implements DMLStatement {
 	 * See <a href="https://en.wikipedia.org/wiki/Insert_(SQL)#Default_Values">Default Values</a>.
 	 * <br>Used in the VALUES clause
 	 */
-	public static final ValueExpression DEFAULT = new ValueExpression() {};
+	public static final ValueExpression DEFAULT = new ValueExpression() {
+		@Override
+		public int getNodeType() {
+			return TYPE_INSERT_DEFAULT;
+		};
+	};
 	
 	private List<TableColumn> columns = Collections.emptyList();
 	private CteList cteList = CteList.EMPTY;

@@ -17,7 +17,7 @@ package com.github.javalbert.sqlbuilder.dsl;
  * @author Albert
  *
  */
-public interface ValueExpression {
+public interface ValueExpression extends DSLNode {
 	/**
 	 * 
 	 * @param expression

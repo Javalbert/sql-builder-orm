@@ -55,6 +55,10 @@ SelectColumn<SelectStatement>, TableReference, ValueExpression {
 	public BooleanExpression getHavingCondition() {
 		return havingCondition;
 	}
+	@Override
+	public int getNodeType() {
+		return TYPE_SELECT_STATEMENT;
+	}
 	public List<OrderByColumn> getOrderByColumns() {
 		return orderByColumns;
 	}

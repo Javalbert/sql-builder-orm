@@ -13,19 +13,23 @@
 package com.github.javalbert.sqlbuilder.dsl;
 
 public class Condition implements BooleanExpression {
+	private boolean grouped;
 	private BooleanExpression leftExpression;
 	private LogicalOperator logicalOperator;
-	private boolean grouped;
 	private BooleanExpression rightExpression;
-	
+
+	public boolean isGrouped() {
+		return grouped;
+	}
 	public BooleanExpression getLeftExpression() {
 		return leftExpression;
 	}
 	public LogicalOperator getLogicalOperator() {
 		return logicalOperator;
 	}
-	public boolean isGrouped() {
-		return grouped;
+	@Override
+	public int getNodeType() {
+		return TYPE_CONDITION;
 	}
 	public BooleanExpression getRightExpression() {
 		return rightExpression;

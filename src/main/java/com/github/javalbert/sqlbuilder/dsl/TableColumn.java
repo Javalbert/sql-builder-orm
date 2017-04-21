@@ -39,6 +39,10 @@ implements ExpressionBuilder, OrderByColumn, Predicand, SelectColumn<TableColumn
 		return name;
 	}
 	@Override
+	public int getNodeType() {
+		return TYPE_TABLE_COLUMN;
+	}
+	@Override
 	public String getOrderByColumnLabel() {
 		return !Strings.isNullOrEmpty(alias) ? alias : name;
 	}

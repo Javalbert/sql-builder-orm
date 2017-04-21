@@ -18,4 +18,4 @@ package com.github.javalbert.sqlbuilder.dsl;
  *
  * @param <T> the implementing type
  */
-public interface SelectColumn<T> extends Aliasable<T> {}
+public interface SelectColumn<T> extends Aliasable<T>, DSLNode {}
