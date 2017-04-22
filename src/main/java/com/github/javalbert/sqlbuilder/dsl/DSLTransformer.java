@@ -12,7 +12,10 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
+import java.util.List;
+
 import com.github.javalbert.sqlbuilder.ExpressionBuilding;
+import com.github.javalbert.sqlbuilder.InValues;
 import com.github.javalbert.sqlbuilder.Select;
 import com.github.javalbert.sqlbuilder.SelectList;
 import com.github.javalbert.sqlbuilder.With;
@@ -26,17 +29,15 @@ import com.github.javalbert.sqlbuilder.With;
  *
  */
 public class DSLTransformer {
-	public static final int FLAG_CTE_QUERY = 0x1;
-	
 	public Select buildSelect(SelectStatement stmt) {
-		return buildSelect(stmt, 0);
+		return buildSelect(stmt, false);
 	}
 	
-	public Select buildSelect(SelectStatement stmt, int flags) {
+	public Select buildSelect(SelectStatement stmt, boolean subquery) {
 		// TODO
 		Select select = new Select();
 		
-		if ((flags & FLAG_CTE_QUERY) == 0) {
+		if (!subquery) {
 			With with = buildWith(stmt);
 			if (with != null) {
 				select.with(with);
@@ -48,9 +49,25 @@ public class DSLTransformer {
 		
 		return select;
 	}
+	
+	private com.github.javalbert.sqlbuilder.Predicate buildBetweenPredicate(
+			BetweenPredicate dslPredicate) {
+		com.github.javalbert.sqlbuilder.Predicate predicate = newPredicate(dslPredicate);
+		
+		if (dslPredicate.getOperator() == PredicateOperator.BETWEEN) {
+			predicate.between();
+		} else if (dslPredicate.getOperator() == PredicateOperator.NOT_BETWEEN) {
+			predicate.notBetween();
+		}
+		
+		handleExpressionBuilding(predicate, dslPredicate.getValue1());
+		predicate.and();
+		handleExpressionBuilding(predicate, dslPredicate.getValue2());
+		
+		return predicate;
+	}
 
 	private com.github.javalbert.sqlbuilder.Case buildCase(Case dslCase) {
-		// TODO
 		com.github.javalbert.sqlbuilder.Case sqlCase = new com.github.javalbert.sqlbuilder.Case();
 		
 		boolean simpleCase = dslCase.getSimpleCaseExpression() != null;
@@ -66,40 +83,82 @@ public class DSLTransformer {
 			} else {
 				com.github.javalbert.sqlbuilder.Condition condition = new com.github.javalbert.sqlbuilder.Condition();
 				sqlCase.condition(condition);
-				handleRootCondition(condition, when.getBooleanExpression());
+				handleCondition(condition, when.getBooleanExpression());
 			}
 			
-			sqlCase.then();
+			handleExpressionBuilding(sqlCase.then(), when.getThen());
 		}
 		
-		return sqlCase;
+		if (dslCase.getElseExpression() != null) {
+			handleExpressionBuilding(sqlCase.ifElse(), dslCase.getElseExpression());
+		}
+		
+		return sqlCase.end();
 	}
 
-	/**
-	 * 
-	 * @param rootCondition its called the root because in the SQL builder API,
-	 * the Condition is 
-	 * @param booleanExpression
-	 */
-	private void handleRootCondition(
-			com.github.javalbert.sqlbuilder.Condition rootCondition,
-			BooleanExpression booleanExpression) {
-		// TODO
-		if (booleanExpression.getNodeType() == DSLNode.TYPE_CONDITION) {
-			Condition dslCondition = (Condition)booleanExpression;
-			BooleanExpression left = dslCondition.getLeftExpression();
-			
-		} else if (booleanExpression.getNodeType() == DSLNode.TYPE_PREDICATE) {
-			
-		} else if (booleanExpression.getNodeType() == DSLNode.TYPE_PREDICATE_BETWEEN) {
-			
-		} else if (booleanExpression.getNodeType() == DSLNode.TYPE_PREDICATE_EXISTS) {
-			
-		} else if (booleanExpression.getNodeType() == DSLNode.TYPE_PREDICATE_IN) {
-			
+	private com.github.javalbert.sqlbuilder.Predicate buildExistsPredicate(ExistsPredicate dslPredicate) {
+		com.github.javalbert.sqlbuilder.Predicate predicate = newPredicate(dslPredicate);
+		
+		if (dslPredicate.getOperator() == PredicateOperator.EXISTS) {
+			predicate.exists();
+		} else if (dslPredicate.getOperator() == PredicateOperator.NOT_EXISTS) {
+			predicate.notExists();
 		}
+		
+		return predicate.subquery(buildSelect(dslPredicate.getSubquery(), true));
 	}
 	
+	private com.github.javalbert.sqlbuilder.Function buildFunction(Function dslFunction) {
+		// TODO
+		return null;
+	}
+	
+	/**
+	 * Except for BETWEEN, EXISTS, and IN
+	 * @param condition
+	 * @param predicate
+	 * @return 
+	 */
+	@SuppressWarnings("incomplete-switch")
+	private com.github.javalbert.sqlbuilder.Predicate buildPredicate(Predicate dslPredicate) {
+		com.github.javalbert.sqlbuilder.Predicate predicate = newPredicate(dslPredicate);
+		
+		switch (dslPredicate.getOperator()) {
+			case EQ:
+				predicate.eq();
+				break;
+			case GT:
+				predicate.gt();
+				break;
+			case GT_EQ:
+				predicate.gteq();
+				break;
+			case IS_NOT_NULL:
+				return predicate.isNotNull();
+			case IS_NULL:
+				return predicate.isNull();
+			case LIKE:
+				predicate.like();
+				break;
+			case LT:
+				predicate.lt();
+				break;
+			case LT_EQ:
+				predicate.lteq();
+				break;
+			case NOT_EQ:
+				predicate.noteq();
+				break;
+			case NOT_LIKE:
+				predicate.notLike();
+				break;
+		}
+		
+		handleExpressionBuilding(predicate, dslPredicate.getRightPredicand());
+		
+		return predicate;
+	}
+
 	private SelectList buildSelectList(SelectStatement stmt) {
 		SelectList list = new SelectList();
 		
@@ -127,9 +186,69 @@ public class DSLTransformer {
 			for (TableColumn tableColumn : cte.getColumns()) {
 				with.column(tableColumn.getName());
 			}
-			with.as(buildSelect(cte.getQuery(), FLAG_CTE_QUERY));
+			with.as(buildSelect(cte.getQuery(), true));
 		}
 		return with;
+	}
+	
+	private void handleCondition(
+			com.github.javalbert.sqlbuilder.Condition condition,
+			BooleanExpression booleanExpression) {
+		if (booleanExpression.getNodeType() == DSLNode.TYPE_CONDITION) {
+			Condition dslCondition = (Condition)booleanExpression;
+			
+			if (dslCondition.isGrouped()) {
+				com.github.javalbert.sqlbuilder.Condition nestedCondition = new com.github.javalbert.sqlbuilder.Condition();
+				condition.group(nestedCondition);
+				handleConditionOperator(nestedCondition, dslCondition);
+			} else {
+				handleConditionOperator(condition, dslCondition);
+			}
+		} else if (booleanExpression.getNodeType() == DSLNode.TYPE_PREDICATE) {
+			condition.predicate(buildPredicate((Predicate)booleanExpression));
+		} else if (booleanExpression.getNodeType() == DSLNode.TYPE_PREDICATE_BETWEEN) {
+			condition.predicate(buildBetweenPredicate((BetweenPredicate)booleanExpression));
+		} else if (booleanExpression.getNodeType() == DSLNode.TYPE_PREDICATE_EXISTS) {
+			condition.predicate(buildExistsPredicate((ExistsPredicate)booleanExpression));
+		} else if (booleanExpression.getNodeType() == DSLNode.TYPE_PREDICATE_IN) {
+			condition.predicate(buildInPredicate((InPredicate)booleanExpression));
+		}
+	}
+
+	private com.github.javalbert.sqlbuilder.Predicate buildInPredicate(InPredicate dslPredicate) {
+		com.github.javalbert.sqlbuilder.Predicate predicate = newPredicate(dslPredicate);
+		
+		if (dslPredicate.getOperator() == PredicateOperator.IN) {
+			predicate.in();
+		} else if (dslPredicate.getOperator() == PredicateOperator.NOT_IN) {
+			predicate.notIn();
+		}
+		
+		List<ValueExpression> valueExpressions = dslPredicate.getValues();
+		if (valueExpressions.size() == 1
+				&& valueExpressions.get(0).getNodeType() == DSLNode.TYPE_SELECT_STATEMENT) {
+			return predicate.subquery(buildSelect((SelectStatement)valueExpressions.get(0), true));
+		}
+		
+		InValues values = new InValues();
+		for (ValueExpression valueExpression : valueExpressions) {
+			handleExpressionBuilding(values, valueExpression);
+		}
+		return predicate.values(values);
+	}
+
+	private void handleConditionOperator(
+			com.github.javalbert.sqlbuilder.Condition condition,
+			Condition dslCondition) {
+		handleCondition(condition, dslCondition.getLeftExpression());
+		
+		if (dslCondition.getLogicalOperator() == LogicalOperator.AND) {
+			condition.and();
+		} else if (dslCondition.getLogicalOperator() == LogicalOperator.OR) {
+			condition.or();
+		}
+
+		handleCondition(condition, dslCondition.getRightExpression());
 	}
 	
 	private void handleExpressionBuilding(
@@ -141,6 +260,7 @@ public class DSLTransformer {
 				building.sqlCase(buildCase((Case)dslNode));
 				break;
 			case DSLNode.TYPE_EXPRESSION:
+				building.function(buildFunction((Function)dslNode));
 				break;
 			case DSLNode.TYPE_FUNCTION:
 				break;
@@ -159,5 +279,11 @@ public class DSLTransformer {
 			case DSLNode.TYPE_TABLE_COLUMN:
 				break;
 		}
+	}
+
+	private com.github.javalbert.sqlbuilder.Predicate newPredicate(Predicate dslPredicate) {
+		com.github.javalbert.sqlbuilder.Predicate predicate = new com.github.javalbert.sqlbuilder.Predicate();
+		handleExpressionBuilding(predicate, dslPredicate.getLeftPredicand());
+		return predicate;
 	}
 }

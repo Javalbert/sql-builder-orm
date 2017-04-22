@@ -12,7 +12,7 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-public interface Predicand {
+public interface Predicand extends DSLNode {
 	public static <T extends Literal<? extends U, ? extends K>, U, K>
 	Predicand ifNullLiteral(T predicand) {
 		return predicand != null ? predicand : LiteralNull.INSTANCE;
