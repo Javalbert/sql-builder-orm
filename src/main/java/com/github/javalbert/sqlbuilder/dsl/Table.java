@@ -24,6 +24,10 @@ public class Table implements TableReference {
 	public TableAlias getTableAlias() {
 		return tableAlias;
 	}
+	@Override
+	public int getTableType() {
+		return TYPE_TABLE;
+	}
 	
 	public Table(String name) {
 		this.name = Strings.illegalArgOnEmpty(name, "name cannot be null or empty");
@@ -35,6 +39,10 @@ public class Table implements TableReference {
 		Table table = copy();
 		table.tableAlias = tableAlias;
 		return table;
+	}
+	
+	public TableColumn of(TableColumn column) {
+		return column.table(this);
 	}
 	
 	Table copy() {

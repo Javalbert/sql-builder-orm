@@ -68,6 +68,10 @@ SelectColumn<SelectStatement>, TableReference, ValueExpression {
 	public List<TableReference> getTables() {
 		return tables;
 	}
+	@Override
+	public int getTableType() {
+		return TYPE_INLINE_VIEW;
+	}
 	public BooleanExpression getWhereCondition() {
 		return whereCondition;
 	}

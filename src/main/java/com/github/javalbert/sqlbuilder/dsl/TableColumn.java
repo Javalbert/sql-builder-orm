@@ -29,7 +29,9 @@ implements ExpressionBuilder, OrderByColumn, Predicand, SelectColumn<TableColumn
 	
 	private String alias;
 	private String name;
+	private SortType sortType = SortType.ASC;
 	private TableAlias tableAlias;
+	private String tableName;
 	
 	@Override
 	public String getAlias() {
@@ -40,14 +42,21 @@ implements ExpressionBuilder, OrderByColumn, Predicand, SelectColumn<TableColumn
 	}
 	@Override
 	public int getNodeType() {
-		return TYPE_TABLE_COLUMN;
+		return DSLNode.TYPE_TABLE_COLUMN;
 	}
 	@Override
-	public String getOrderByColumnLabel() {
-		return !Strings.isNullOrEmpty(alias) ? alias : name;
+	public SortType getSortType() {
+		return sortType;
+	}
+	@Override
+	public int getOrderByColumnType() {
+		return OrderByColumn.TYPE_TABLE_COLUMN;
 	}
 	public TableAlias getTableAlias() {
 		return tableAlias;
+	}
+	public String getTableName() {
+		return tableName;
 	}
 	
 	public TableColumn(String name) {
@@ -76,13 +85,36 @@ implements ExpressionBuilder, OrderByColumn, Predicand, SelectColumn<TableColumn
 	public SetValue to(ValueExpression value) {
 		return new SetValue(this, value);
 	}
+
+	@Override
+	public OrderByColumn asc() {
+		TableColumn column = copy();
+		column.sortType = SortType.ASC;
+		return column;
+	}
+	
+	@Override
+	public OrderByColumn desc() {
+		TableColumn column = copy();
+		column.sortType = SortType.DESC;
+		return column;
+	}
 	
 	TableColumn copy() {
 		TableColumn copy = new TableColumn();
 		copy.alias = alias;
 		copy.name = name;
+		copy.sortType = sortType;
 		copy.tableAlias = tableAlias;
+		copy.tableName = tableName;
 		return copy;
+	}
+	
+	TableColumn table(Table table) {
+		TableColumn column = copy();
+		column.tableAlias = table != null ? table.getTableAlias() : null;
+		column.tableName = table != null ? table.getName() : null;
+		return column;
 	}
 
 	TableColumn tableAlias(TableAlias tableAlias) {

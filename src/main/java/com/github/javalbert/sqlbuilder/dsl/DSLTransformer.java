@@ -14,11 +14,18 @@ package com.github.javalbert.sqlbuilder.dsl;
 
 import java.util.List;
 
+import com.github.javalbert.sqlbuilder.ColumnBuilder;
 import com.github.javalbert.sqlbuilder.ExpressionBuilding;
+import com.github.javalbert.sqlbuilder.From;
+import com.github.javalbert.sqlbuilder.GroupBy;
+import com.github.javalbert.sqlbuilder.Having;
 import com.github.javalbert.sqlbuilder.InValues;
+import com.github.javalbert.sqlbuilder.OrderBy;
 import com.github.javalbert.sqlbuilder.Select;
 import com.github.javalbert.sqlbuilder.SelectList;
+import com.github.javalbert.sqlbuilder.Where;
 import com.github.javalbert.sqlbuilder.With;
+import com.github.javalbert.utils.string.Strings;
 
 /**
  * Transforms the internal DSL as defined in <code>dsl</code> package to the more
@@ -46,10 +53,38 @@ public class DSLTransformer {
 		
 		select.list(buildSelectList(stmt));
 		
+		if (!stmt.getTables().isEmpty()) {
+			select.from(buildFrom(stmt));
+		}
+		
+		if (stmt.getWhereCondition() != null) {
+			Where where = new Where();
+			select.where(where);
+			handleCondition(where, stmt.getWhereCondition());
+		}
+		
+		if (!stmt.getGroupByColumns().isEmpty()) {
+			GroupBy groupBy = new GroupBy();
+			select.groupBy(groupBy);
+			
+			for (TableColumn column : stmt.getGroupByColumns()) {
+				handleTableColumn(groupBy, column);
+			}
+		}
+		
+		if (stmt.getHavingCondition() != null) {
+			Having having = new Having();
+			select.having(having);
+			handleCondition(having, stmt.getHavingCondition());
+		}
+		
+		if (!stmt.getOrderByColumns().isEmpty()) {
+			select.orderBy(buildOrderBy(stmt));
+		}
 		
 		return select;
 	}
-	
+
 	private com.github.javalbert.sqlbuilder.Predicate buildBetweenPredicate(
 			BetweenPredicate dslPredicate) {
 		com.github.javalbert.sqlbuilder.Predicate predicate = newPredicate(dslPredicate);
@@ -107,10 +142,83 @@ public class DSLTransformer {
 		
 		return predicate.subquery(buildSelect(dslPredicate.getSubquery(), true));
 	}
+
+	private com.github.javalbert.sqlbuilder.Expression buildExpression(Expression dslExpression) {
+		com.github.javalbert.sqlbuilder.Expression expression = new com.github.javalbert.sqlbuilder.Expression();
+		handleExpressionBuilding(expression, dslExpression.getLeft());
+		
+		switch (dslExpression.getOperator()) {
+			case CONCAT: expression.concat(); break;
+			case DIVIDE: expression.divide(); break;
+			case MINUS: expression.minus(); break;
+			case MOD: expression.mod(); break;
+			case MULTIPLY: expression.multiply(); break;
+			case PLUS: expression.plus(); break;
+		}
+		
+		handleExpressionBuilding(expression, dslExpression.getRight());
+		return expression;
+	}
 	
+	private From buildFrom(SelectStatement stmt) {
+		From from = new From();
+		
+		// Usually just one table reference, but if multiple
+		// then it is of the form "FROM tableRef1, tableRef2, ... "
+		for (TableReference tableReference : stmt.getTables()) {
+			handleTableReference(from, tableReference);
+		}
+		
+		return from;
+	}
+
 	private com.github.javalbert.sqlbuilder.Function buildFunction(Function dslFunction) {
-		// TODO
-		return null;
+		com.github.javalbert.sqlbuilder.Function function = new com.github.javalbert.sqlbuilder.Function(dslFunction.getName());
+		for (ValueExpression parameter : dslFunction.getParameters()) {
+			handleExpressionBuilding(function, parameter);
+		}
+		return function;
+	}
+
+	private com.github.javalbert.sqlbuilder.Predicate buildInPredicate(InPredicate dslPredicate) {
+		com.github.javalbert.sqlbuilder.Predicate predicate = newPredicate(dslPredicate);
+		
+		if (dslPredicate.getOperator() == PredicateOperator.IN) {
+			predicate.in();
+		} else if (dslPredicate.getOperator() == PredicateOperator.NOT_IN) {
+			predicate.notIn();
+		}
+		
+		List<ValueExpression> valueExpressions = dslPredicate.getValues();
+		if (valueExpressions.size() == 1
+				&& valueExpressions.get(0).getNodeType() == DSLNode.TYPE_SELECT_STATEMENT) {
+			return predicate.subquery(buildSelect((SelectStatement)valueExpressions.get(0), true));
+		}
+		
+		InValues values = new InValues();
+		for (ValueExpression valueExpression : valueExpressions) {
+			handleExpressionBuilding(values, valueExpression);
+		}
+		return predicate.values(values);
+	}
+
+	private OrderBy buildOrderBy(SelectStatement stmt) {
+		OrderBy orderBy = new OrderBy();
+		
+		for (OrderByColumn orderByColumn : stmt.getOrderByColumns()) {
+			if (orderByColumn.getOrderByColumnType() == OrderByColumn.TYPE_TABLE_COLUMN) {
+				handleTableColumn(orderBy, (TableColumn)orderByColumn);
+			} else if (orderByColumn.getOrderByColumnType() == OrderByColumn.TYPE_COLUMN_ALIAS) {
+				orderBy.alias(((ColumnAlias)orderByColumn).getAlias());
+			}
+			
+			if (orderByColumn.getSortType() == SortType.ASC) {
+				orderBy.asc();
+			} else if (orderByColumn.getSortType() == SortType.DESC) {
+				orderBy.desc();
+			}
+		}
+		return orderBy;
 	}
 	
 	/**
@@ -166,7 +274,7 @@ public class DSLTransformer {
 			list.distinct();
 		}
 		
-		for (@SuppressWarnings("rawtypes") SelectColumn selectColumn : stmt.getColumns()) {
+		for (SelectColumn<?> selectColumn : stmt.getColumns()) {
 			handleExpressionBuilding(list, selectColumn);
 			list.as(selectColumn.getAlias());
 		}
@@ -215,28 +323,6 @@ public class DSLTransformer {
 		}
 	}
 
-	private com.github.javalbert.sqlbuilder.Predicate buildInPredicate(InPredicate dslPredicate) {
-		com.github.javalbert.sqlbuilder.Predicate predicate = newPredicate(dslPredicate);
-		
-		if (dslPredicate.getOperator() == PredicateOperator.IN) {
-			predicate.in();
-		} else if (dslPredicate.getOperator() == PredicateOperator.NOT_IN) {
-			predicate.notIn();
-		}
-		
-		List<ValueExpression> valueExpressions = dslPredicate.getValues();
-		if (valueExpressions.size() == 1
-				&& valueExpressions.get(0).getNodeType() == DSLNode.TYPE_SELECT_STATEMENT) {
-			return predicate.subquery(buildSelect((SelectStatement)valueExpressions.get(0), true));
-		}
-		
-		InValues values = new InValues();
-		for (ValueExpression valueExpression : valueExpressions) {
-			handleExpressionBuilding(values, valueExpression);
-		}
-		return predicate.values(values);
-	}
-
 	private void handleConditionOperator(
 			com.github.javalbert.sqlbuilder.Condition condition,
 			Condition dslCondition) {
@@ -252,35 +338,99 @@ public class DSLTransformer {
 	}
 	
 	private void handleExpressionBuilding(
-			@SuppressWarnings("rawtypes") ExpressionBuilding building,
+			ExpressionBuilding<?> building,
 			DSLNode dslNode) {
-		// TODO
 		switch (dslNode.getNodeType()) {
 			case DSLNode.TYPE_CASE:
 				building.sqlCase(buildCase((Case)dslNode));
 				break;
 			case DSLNode.TYPE_EXPRESSION:
-				building.function(buildFunction((Function)dslNode));
+				building.expression(buildExpression((Expression)dslNode));
 				break;
 			case DSLNode.TYPE_FUNCTION:
+				building.function(buildFunction((Function)dslNode));
 				break;
 			case DSLNode.TYPE_LITERAL_BOOLEAN:
+				building.literal(((LiteralBoolean)dslNode).getValue());
 				break;
 			case DSLNode.TYPE_LITERAL_NULL:
+				building.literalNull();
 				break;
 			case DSLNode.TYPE_LITERAL_NUMBER:
+				building.literal(((LiteralNumber)dslNode).getValue());
 				break;
 			case DSLNode.TYPE_LITERAL_STRING:
+				building.literal(((LiteralString)dslNode).getValue());
 				break;
 			case DSLNode.TYPE_PARAMETER:
+				building.param(((Parameter)dslNode).getName());
 				break;
 			case DSLNode.TYPE_SELECT_STATEMENT:
+				building.subquery(buildSelect((SelectStatement)dslNode, true));
 				break;
 			case DSLNode.TYPE_TABLE_COLUMN:
+				handleTableColumn(building, (TableColumn)dslNode);
 				break;
 		}
 	}
+	
+	private void handleJoinedTable(From from, JoinedTable joinedTable) {
+		if (joinedTable.isNestedJoin()) {
+			from.leftParens();
+		}
+		
+		handleTableReference(from, joinedTable.getLeftTable());
+		
+		switch (joinedTable.getJoinType()) {
+			case FULL: from.fullOuterJoin(); break;
+			case INNER: from.innerJoin(); break;
+			case LEFT: from.leftOuterJoin(); break;
+			case RIGHT: from.rightOuterJoin(); break;
+		}
+		
+		handleTableReference(from, joinedTable.getRightTable());
+		
+		com.github.javalbert.sqlbuilder.Condition condition = new com.github.javalbert.sqlbuilder.Condition();
+		from.on(condition);
+		handleCondition(condition, joinedTable.getJoinCondition());
+		
+		if (joinedTable.isNestedJoin()) {
+			from.rightParens();
+		}
+	}
+	
+	private void handleTableColumn(
+			ColumnBuilder<?> building,
+			TableColumn tableColumn) {
+		if (tableColumn.getTableAlias() != null) {
+			building.tableAlias(tableColumn.getTableAlias().getAlias());
+		} else if (!Strings.isNullOrEmpty(tableColumn.getTableName())) {
+			building.tableName(tableColumn.getTableName());
+		}
+		
+		building.column(tableColumn.getName());
+	}
 
+	private void handleTableReference(From from, TableReference tableReference) {
+		if (tableReference.getTableType() == TableReference.TYPE_TABLE) {
+			Table table = (Table)tableReference;
+			from.tableName(table.getName());
+			
+			if (table.getTableAlias() != null) {
+				from.as(table.getTableAlias().getAlias());
+			}
+		} else if (tableReference.getTableType() == TableReference.TYPE_JOINED_TABLE) {
+			handleJoinedTable(from, (JoinedTable)tableReference);
+		} else if (tableReference.getTableType() == TableReference.TYPE_INLINE_VIEW) {
+			SelectStatement inlineView = (SelectStatement)tableReference;
+			from.inlineView(buildSelect(inlineView, true));
+			
+			if (inlineView.getTableAlias() != null) {
+				from.as(inlineView.getTableAlias().getAlias());
+			}
+		}
+	}
+	
 	private com.github.javalbert.sqlbuilder.Predicate newPredicate(Predicate dslPredicate) {
 		com.github.javalbert.sqlbuilder.Predicate predicate = new com.github.javalbert.sqlbuilder.Predicate();
 		handleExpressionBuilding(predicate, dslPredicate.getLeftPredicand());

@@ -15,6 +15,12 @@ package com.github.javalbert.sqlbuilder.dsl;
 import java.util.Objects;
 
 public class DSL {
+	/**
+	 * Only useful for specifying alias for {@code TableColumn} objects
+	 * and ORDER BY clause
+	 * @param alias
+	 * @return
+	 */
 	public static ColumnAlias alias(String alias) {
 		return new ColumnAlias(alias);
 	}
@@ -105,6 +111,10 @@ public class DSL {
 	
 	public static Function min(ValueExpression parameter) {
 		return Functions.MIN.call(parameter);
+	}
+	
+	public static JoinedTable nest(JoinedTable joinedTable) {
+		return joinedTable.nested();
 	}
 	
 	public static ExistsPredicate notExists(SelectStatement subquery) {

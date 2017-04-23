@@ -202,6 +202,17 @@ class ImmutabilityTest extends Specification {
 		'on'	|	{ JoinedTable j -> j.on(f.bar.eq(f.bar)) }
 	}
 	
+	def 'DSL.nest(JoinedTable) returns new immutable instance'() {
+		given: 'JoinedTable object'
+		JoinedTable tbl = Foo.leftOuterJoin(Foo)
+		
+		when: 'DSL.nest() method is called with the JoinedTable object'
+		JoinedTable tbl2 = nest(tbl)
+		
+		then: 'the method returned a new JoinedTable instance'
+		tbl2.is(tbl) == false
+	}
+	
 	@Unroll('LiteralBoolean.#methodName returns new immutable instance')
 	def 'Test immutability of LiteralBoolean methods'() {
 		given: 'LiteralBoolean object'
@@ -382,6 +393,22 @@ class ImmutabilityTest extends Specification {
 		where: 'different Table methods'
 		methodName	|	method
 		'as'	|	{ Table t -> t.as(f) }
+	}
+	
+	@Unroll('TableColumn.#methodName returns new immutable instance')
+	def 'Test immutability of TableColumn methods'() {
+		given: 'TableColumn object'
+		TableColumn col = new TableColumn('bar')
+		
+		when: 'a TableColumn method is called'
+		TableColumn col2 = method(col)
+		
+		then: 'the method returned a new TableColumn instance'
+		col2.is(col) == false
+		
+		where: 'different Table methods'
+		methodName	|	method
+		'as'	|	{ TableColumn t -> t.as('') }
 	}
 	
 	@Unroll('TableReference.#methodName returns new immutable instance')

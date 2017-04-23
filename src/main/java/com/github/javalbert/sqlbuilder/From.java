@@ -103,8 +103,7 @@ public class From implements Node<From>, NodeHolder, TableNameSpecifier<From> {
 	}
 
 	public From tableAlias(String alias) {
-		Table table = new Table(null, alias);
-		nodes.add(table);
+		nodes.add(new Table(null, alias));
 		return this;
 	}
 	

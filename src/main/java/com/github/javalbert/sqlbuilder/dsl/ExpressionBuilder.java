@@ -12,7 +12,7 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-public interface ExpressionBuilder {
+public interface ExpressionBuilder extends DSLNode {
 	default Expression concat(String value) {
 		return concat(DSL.literal(value));
 	}

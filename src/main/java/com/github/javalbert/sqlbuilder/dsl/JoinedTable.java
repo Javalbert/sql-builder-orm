@@ -18,6 +18,7 @@ public class JoinedTable implements TableReference {
 	private BooleanExpression joinCondition;
 	private final JoinType joinType;
 	private final TableReference leftTable;
+	private boolean nestedJoin;
 	private final TableReference rightTable;
 	
 	public BooleanExpression getJoinCondition() {
@@ -29,8 +30,15 @@ public class JoinedTable implements TableReference {
 	public TableReference getLeftTable() {
 		return leftTable;
 	}
+	public boolean isNestedJoin() {
+		return nestedJoin;
+	}
 	public TableReference getRightTable() {
 		return rightTable;
+	}
+	@Override
+	public int getTableType() {
+		return TYPE_JOINED_TABLE;
 	}
 	
 	JoinedTable(TableReference leftTable, TableReference rightTable, JoinType joinType) {
@@ -48,6 +56,13 @@ public class JoinedTable implements TableReference {
 	JoinedTable copy() {
 		JoinedTable copy = new JoinedTable(leftTable, rightTable, joinType);
 		copy.joinCondition = joinCondition;
+		copy.nestedJoin = nestedJoin;
 		return copy;
+	}
+	
+	JoinedTable nested() {
+		JoinedTable joinedTable = copy();
+		joinedTable.nestedJoin = true;
+		return joinedTable;
 	}
 }
