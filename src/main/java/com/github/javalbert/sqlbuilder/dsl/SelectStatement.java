@@ -21,7 +21,7 @@ import com.github.javalbert.utils.collections.CollectionUtils;
 
 public class SelectStatement
 implements DMLStatement, ExpressionBuilder, Predicand,
-SelectColumn<SelectStatement>, TableReference, ValueExpression {
+SelectColumn<SelectStatement>, TableReference, ValueExpression, WithClause {
 	private String alias;
 	@SuppressWarnings("rawtypes")
 	private List<SelectColumn> columns = Collections.emptyList();
@@ -43,6 +43,7 @@ SelectColumn<SelectStatement>, TableReference, ValueExpression {
 	public List<SelectColumn> getColumns() {
 		return columns;
 	}
+	@Override
 	public CteList getCteList() {
 		return cteList;
 	}
@@ -61,6 +62,9 @@ SelectColumn<SelectStatement>, TableReference, ValueExpression {
 	}
 	public List<OrderByColumn> getOrderByColumns() {
 		return orderByColumns;
+	}
+	public List<SetOperation> getSetOperations() {
+		return setOperations;
 	}
 	public TableAlias getTableAlias() {
 		return tableAlias;

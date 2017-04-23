@@ -15,6 +15,7 @@ package com.github.javalbert.sqlbuilder.dsl;
 import java.util.List;
 
 import com.github.javalbert.sqlbuilder.ColumnBuilder;
+import com.github.javalbert.sqlbuilder.Delete;
 import com.github.javalbert.sqlbuilder.ExpressionBuilding;
 import com.github.javalbert.sqlbuilder.From;
 import com.github.javalbert.sqlbuilder.GroupBy;
@@ -36,19 +37,31 @@ import com.github.javalbert.utils.string.Strings;
  *
  */
 public class DSLTransformer {
-	public Select buildSelect(SelectStatement stmt) {
-		return buildSelect(stmt, false);
+	/* START Public methods */
+	
+	public Delete buildDelete(DeleteStatement stmt) {
+		Delete delete = new Delete();
+		
+		With with = buildWith(stmt);
+		if (with != null) {
+			delete.with(with);
+		}
+		
+		delete.tableName(stmt.getTable().getName());
+		
+		Where where = new Where();
+		delete.where(where);
+		handleCondition(where, stmt.getWhereCondition());
+		
+		return delete;
 	}
 	
-	public Select buildSelect(SelectStatement stmt, boolean subquery) {
-		// TODO
+	public Select buildSelect(SelectStatement stmt) {
 		Select select = new Select();
 		
-		if (!subquery) {
-			With with = buildWith(stmt);
-			if (with != null) {
-				select.with(with);
-			}
+		With with = buildWith(stmt);
+		if (with != null) {
+			select.with(with);
 		}
 		
 		select.list(buildSelectList(stmt));
@@ -82,8 +95,16 @@ public class DSLTransformer {
 			select.orderBy(buildOrderBy(stmt));
 		}
 		
+		if (!stmt.getSetOperations().isEmpty()) {
+			handleSetOperations(select, stmt);
+		}
+		
 		return select;
 	}
+	
+	/* END Public methods */
+	
+	/* START Private methods */
 
 	private com.github.javalbert.sqlbuilder.Predicate buildBetweenPredicate(
 			BetweenPredicate dslPredicate) {
@@ -140,7 +161,7 @@ public class DSLTransformer {
 			predicate.notExists();
 		}
 		
-		return predicate.subquery(buildSelect(dslPredicate.getSubquery(), true));
+		return predicate.subquery(buildSelect(dslPredicate.getSubquery()));
 	}
 
 	private com.github.javalbert.sqlbuilder.Expression buildExpression(Expression dslExpression) {
@@ -192,7 +213,7 @@ public class DSLTransformer {
 		List<ValueExpression> valueExpressions = dslPredicate.getValues();
 		if (valueExpressions.size() == 1
 				&& valueExpressions.get(0).getNodeType() == DSLNode.TYPE_SELECT_STATEMENT) {
-			return predicate.subquery(buildSelect((SelectStatement)valueExpressions.get(0), true));
+			return predicate.subquery(buildSelect((SelectStatement)valueExpressions.get(0)));
 		}
 		
 		InValues values = new InValues();
@@ -266,7 +287,7 @@ public class DSLTransformer {
 		
 		return predicate;
 	}
-
+	
 	private SelectList buildSelectList(SelectStatement stmt) {
 		SelectList list = new SelectList();
 		
@@ -282,7 +303,7 @@ public class DSLTransformer {
 		return list;
 	}
 
-	private With buildWith(SelectStatement stmt) {
+	private With buildWith(WithClause stmt) {
 		CteList cteList = stmt.getCteList();
 		if (cteList.isEmpty()) {
 			return null;
@@ -294,7 +315,7 @@ public class DSLTransformer {
 			for (TableColumn tableColumn : cte.getColumns()) {
 				with.column(tableColumn.getName());
 			}
-			with.as(buildSelect(cte.getQuery(), true));
+			with.as(buildSelect(cte.getQuery()));
 		}
 		return with;
 	}
@@ -366,7 +387,7 @@ public class DSLTransformer {
 				building.param(((Parameter)dslNode).getName());
 				break;
 			case DSLNode.TYPE_SELECT_STATEMENT:
-				building.subquery(buildSelect((SelectStatement)dslNode, true));
+				building.subquery(buildSelect((SelectStatement)dslNode));
 				break;
 			case DSLNode.TYPE_TABLE_COLUMN:
 				handleTableColumn(building, (TableColumn)dslNode);
@@ -398,6 +419,23 @@ public class DSLTransformer {
 			from.rightParens();
 		}
 	}
+
+	private void handleSetOperations(
+			Select select,
+			SelectStatement stmt) {
+		for (SetOperation setOperation : stmt.getSetOperations()) {
+			if (setOperation.getOperator() == SetOperator.EXCEPT) {
+				select.except();
+			} else if (setOperation.getOperator() == SetOperator.INTERSECT) {
+				select.intersect();
+			} else if (setOperation.getOperator() == SetOperator.UNION) {
+				select.union();
+			} else if (setOperation.getOperator() == SetOperator.UNION_ALL) {
+				select.unionAll();
+			}
+			select.query(buildSelect(setOperation.getQuery()));
+		}
+	}
 	
 	private void handleTableColumn(
 			ColumnBuilder<?> building,
@@ -423,7 +461,7 @@ public class DSLTransformer {
 			handleJoinedTable(from, (JoinedTable)tableReference);
 		} else if (tableReference.getTableType() == TableReference.TYPE_INLINE_VIEW) {
 			SelectStatement inlineView = (SelectStatement)tableReference;
-			from.inlineView(buildSelect(inlineView, true));
+			from.inlineView(buildSelect(inlineView));
 			
 			if (inlineView.getTableAlias() != null) {
 				from.as(inlineView.getTableAlias().getAlias());
@@ -436,4 +474,6 @@ public class DSLTransformer {
 		handleExpressionBuilding(predicate, dslPredicate.getLeftPredicand());
 		return predicate;
 	}
+	
+	/* END Private methods */
 }

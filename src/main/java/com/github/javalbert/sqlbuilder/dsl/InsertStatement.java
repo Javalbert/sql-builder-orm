@@ -18,7 +18,7 @@ import java.util.List;
 
 import com.github.javalbert.utils.collections.CollectionUtils;
 
-public class InsertStatement implements DMLStatement {
+public class InsertStatement implements DMLStatement, WithClause {
 	/**
 	 * See <a href="https://en.wikipedia.org/wiki/Insert_(SQL)#Default_Values">Default Values</a>.
 	 * <br>Used in the VALUES clause
@@ -39,6 +39,7 @@ public class InsertStatement implements DMLStatement {
 	public List<TableColumn> getColumns() {
 		return columns;
 	}
+	@Override
 	public CteList getCteList() {
 		return cteList;
 	}

@@ -17,12 +17,13 @@ import java.util.List;
 
 import com.github.javalbert.utils.collections.CollectionUtils;
 
-public class UpdateStatement implements DMLStatement {
+public class UpdateStatement implements DMLStatement, WithClause {
 	private CteList cteList = CteList.EMPTY;
 	private final Table table;
 	private List<SetValue> values;
 	private BooleanExpression whereCondition;
 	
+	@Override
 	public CteList getCteList() {
 		return cteList;
 	}
