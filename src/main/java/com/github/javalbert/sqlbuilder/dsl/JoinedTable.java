@@ -38,7 +38,7 @@ public class JoinedTable implements TableReference {
 	}
 	@Override
 	public int getTableType() {
-		return TYPE_JOINED_TABLE;
+		return TABLE_JOINED_TABLE;
 	}
 	
 	JoinedTable(TableReference leftTable, TableReference rightTable, JoinType joinType) {

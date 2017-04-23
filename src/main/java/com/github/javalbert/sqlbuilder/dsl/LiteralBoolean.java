@@ -18,7 +18,7 @@ public class LiteralBoolean extends Literal<LiteralBoolean, Boolean> {
 
 	@Override
 	public int getNodeType() {
-		return TYPE_LITERAL_BOOLEAN;
+		return NODE_LITERAL_BOOLEAN;
 	}
 	
 	LiteralBoolean(Boolean value) {

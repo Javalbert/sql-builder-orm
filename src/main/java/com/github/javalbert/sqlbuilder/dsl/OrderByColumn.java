@@ -13,8 +13,8 @@
 package com.github.javalbert.sqlbuilder.dsl;
 
 public interface OrderByColumn {
-	public static final int TYPE_TABLE_COLUMN = 1;
-	public static final int TYPE_COLUMN_ALIAS = 2;
+	public static final int ORDER_TABLE_COLUMN = 1;
+	public static final int ORDER_COLUMN_ALIAS = 2;
 	
 	int getOrderByColumnType();
 	SortType getSortType();

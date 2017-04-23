@@ -23,7 +23,7 @@ implements ExpressionBuilder, Predicand, ValueExpression {
 	}
 	@Override
 	public int getNodeType() {
-		return TYPE_PARAMETER;
+		return NODE_PARAMETER;
 	}
 	
 	public Parameter(String name) {

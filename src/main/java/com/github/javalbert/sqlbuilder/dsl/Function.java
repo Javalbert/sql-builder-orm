@@ -33,7 +33,7 @@ implements ExpressionBuilder, Predicand, SelectColumn<Function>, ValueExpression
 	}
 	@Override
 	public int getNodeType() {
-		return TYPE_FUNCTION;
+		return NODE_FUNCTION;
 	}
 	public List<ValueExpression> getParameters() {
 		return parameters;

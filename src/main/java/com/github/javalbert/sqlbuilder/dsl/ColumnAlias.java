@@ -23,7 +23,7 @@ public class ColumnAlias implements OrderByColumn {
 	}
 	@Override
 	public int getOrderByColumnType() {
-		return TYPE_COLUMN_ALIAS;
+		return ORDER_COLUMN_ALIAS;
 	}
 	@Override
 	public SortType getSortType() {

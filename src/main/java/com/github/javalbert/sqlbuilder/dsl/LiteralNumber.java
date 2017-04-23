@@ -15,7 +15,7 @@ package com.github.javalbert.sqlbuilder.dsl;
 public class LiteralNumber extends Literal<LiteralNumber, Number> {
 	@Override
 	public int getNodeType() {
-		return TYPE_LITERAL_NUMBER;
+		return NODE_LITERAL_NUMBER;
 	}
 	
 	LiteralNumber(Number value) {

@@ -17,7 +17,7 @@ import java.util.Objects;
 public class ExistsPredicate extends Predicate {
 	@Override
 	public int getNodeType() {
-		return TYPE_PREDICATE_EXISTS;
+		return NODE_PREDICATE_EXISTS;
 	}
 	public SelectStatement getSubquery() {
 		return (SelectStatement)getRightPredicand();

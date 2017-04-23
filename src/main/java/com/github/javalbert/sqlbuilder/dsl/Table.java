@@ -26,7 +26,7 @@ public class Table implements TableReference {
 	}
 	@Override
 	public int getTableType() {
-		return TYPE_TABLE;
+		return TABLE_TABLE;
 	}
 	
 	public Table(String name) {

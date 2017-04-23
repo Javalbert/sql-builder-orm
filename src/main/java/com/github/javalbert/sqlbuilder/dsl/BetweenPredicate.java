@@ -18,7 +18,7 @@ public class BetweenPredicate extends Predicate {
 
 	@Override
 	public int getNodeType() {
-		return TYPE_PREDICATE_BETWEEN;
+		return NODE_PREDICATE_BETWEEN;
 	}
 	public ValueExpression getValue1() {
 		return value1;

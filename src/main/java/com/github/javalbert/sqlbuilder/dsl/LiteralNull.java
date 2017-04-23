@@ -17,7 +17,7 @@ public class LiteralNull extends Literal<LiteralNull, Void> {
 	
 	@Override
 	public int getNodeType() {
-		return TYPE_LITERAL_NULL;
+		return NODE_LITERAL_NULL;
 	}
 	
 	@Override

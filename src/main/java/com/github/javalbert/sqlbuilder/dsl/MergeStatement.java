@@ -24,7 +24,11 @@ public class MergeStatement implements DMLStatement {
 	private BooleanExpression searchCondition;
 	private TableReference sourceTable;
 	private final Table targetTable;
-	
+
+	@Override
+	public int getDmlType() {
+		return DML_MERGE;
+	}
 	public List<MergeAction> getMergeActions() {
 		return mergeActions;
 	}

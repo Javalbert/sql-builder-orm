@@ -26,7 +26,7 @@ public class InsertStatement implements DMLStatement, WithClause {
 	public static final ValueExpression DEFAULT = new ValueExpression() {
 		@Override
 		public int getNodeType() {
-			return TYPE_INSERT_DEFAULT;
+			return NODE_INSERT_DEFAULT;
 		};
 	};
 	
@@ -42,6 +42,10 @@ public class InsertStatement implements DMLStatement, WithClause {
 	@Override
 	public CteList getCteList() {
 		return cteList;
+	}
+	@Override
+	public int getDmlType() {
+		return DML_INSERT;
 	}
 	public SelectStatement getSubselect() {
 		return subselect;

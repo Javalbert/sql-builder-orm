@@ -15,15 +15,21 @@ package com.github.javalbert.sqlbuilder.dsl;
 import java.util.List;
 
 import com.github.javalbert.sqlbuilder.ColumnBuilder;
+import com.github.javalbert.sqlbuilder.ColumnList;
+import com.github.javalbert.sqlbuilder.ColumnValues;
 import com.github.javalbert.sqlbuilder.Delete;
 import com.github.javalbert.sqlbuilder.ExpressionBuilding;
 import com.github.javalbert.sqlbuilder.From;
 import com.github.javalbert.sqlbuilder.GroupBy;
 import com.github.javalbert.sqlbuilder.Having;
 import com.github.javalbert.sqlbuilder.InValues;
+import com.github.javalbert.sqlbuilder.Insert;
+import com.github.javalbert.sqlbuilder.Merge;
 import com.github.javalbert.sqlbuilder.OrderBy;
 import com.github.javalbert.sqlbuilder.Select;
 import com.github.javalbert.sqlbuilder.SelectList;
+import com.github.javalbert.sqlbuilder.SetValues;
+import com.github.javalbert.sqlbuilder.Update;
 import com.github.javalbert.sqlbuilder.Where;
 import com.github.javalbert.sqlbuilder.With;
 import com.github.javalbert.utils.string.Strings;
@@ -47,13 +53,95 @@ public class DSLTransformer {
 			delete.with(with);
 		}
 		
-		delete.tableName(stmt.getTable().getName());
+		if (stmt.getTable() != null) {
+			// Should only be null for MERGE statement
+			delete.tableName(stmt.getTable().getName());
+		}
 		
 		Where where = new Where();
 		delete.where(where);
 		handleCondition(where, stmt.getWhereCondition());
 		
 		return delete;
+	}
+	
+	public Insert buildInsert(InsertStatement stmt) {
+		Insert insert = new Insert();
+		
+		With with = buildWith(stmt);
+		if (with != null) {
+			insert.with(with);
+		}
+		
+		if (stmt.getTable() != null) {
+			// Should only be null for MERGE statement
+			insert.into(stmt.getTable().getName());
+		}
+		
+		if (!stmt.getColumns().isEmpty()) {
+			ColumnList columns = new ColumnList();
+			insert.columns(columns);
+			
+			for (TableColumn tableColumn : stmt.getColumns()) {
+				columns.column(tableColumn.getName());
+			}
+		}
+		
+		if (!stmt.getValues().isEmpty()) {
+			ColumnValues values = new ColumnValues();
+			insert.values(values);
+			
+			for (ValueExpression value : stmt.getValues()) {
+				handleExpressionBuilding(values, value);
+			}
+		} else if (stmt.getSubselect() != null) {
+			insert.subselect(buildSelect(stmt.getSubselect()));
+		}
+		
+		return insert;
+	}
+	
+	public Merge buildMerge(MergeStatement stmt) {
+		Merge merge = new Merge();
+		
+		merge.tableName(stmt.getTargetTable().getName());
+		
+		TableReference sourceTable = stmt.getSourceTable();
+		if (sourceTable.getTableType() == TableReference.TABLE_TABLE) {
+			merge.using(((Table)sourceTable).getName());
+		} else if (sourceTable.getTableType() == TableReference.TABLE_INLINE_VIEW) {
+			merge.using(buildSelect((SelectStatement)sourceTable));
+		}
+		
+		com.github.javalbert.sqlbuilder.Condition searchCondition = new com.github.javalbert.sqlbuilder.Condition();
+		merge.on(searchCondition);
+		handleCondition(searchCondition, stmt.getSearchCondition());
+		
+		for (MergeAction action : stmt.getMergeActions()) {
+			if (action.isWhenMatched()) {
+				merge.whenMatched();
+			} else {
+				merge.whenNotMatched();
+			}
+			
+			if (action.getSearchCondition() != null) {
+				com.github.javalbert.sqlbuilder.Condition actionCondition = new com.github.javalbert.sqlbuilder.Condition();
+				merge.and(actionCondition);
+				handleCondition(actionCondition, action.getSearchCondition());
+			}
+			merge.then();
+			
+			DMLStatement dmlAction = action.getDmlStatement();
+			if (dmlAction.getDmlType() == DMLStatement.DML_INSERT) {
+				merge.insert(buildInsert(((InsertStatement)dmlAction)));
+			} else if (dmlAction.getDmlType() == DMLStatement.DML_UPDATE) {
+				merge.update(buildUpdate(((UpdateStatement)dmlAction)));
+			} else if (dmlAction.getDmlType() == DMLStatement.DML_DELETE) {
+				merge.delete();
+			}
+		}
+		
+		return merge;
 	}
 	
 	public Select buildSelect(SelectStatement stmt) {
@@ -100,6 +188,40 @@ public class DSLTransformer {
 		}
 		
 		return select;
+	}
+	
+	public Update buildUpdate(UpdateStatement stmt) {
+		Update update = new Update();
+		
+		With with = buildWith(stmt);
+		if (with != null) {
+			update.with(with);
+		}
+		
+		if (stmt.getTable() != null) {
+			// Should only be null for MERGE statement
+			update.tableName(stmt.getTable().getName());
+		}
+		
+		if (!stmt.getValues().isEmpty()) {
+			SetValues values = new SetValues();
+			update.set(values);
+			
+			for (SetValue value : stmt.getValues()) {
+				com.github.javalbert.sqlbuilder.SetValue setValue = new com.github.javalbert.sqlbuilder.SetValue();
+				
+				setValue.column(value.getColumn().getName());
+				handleExpressionBuilding(setValue, value.getValue());
+				
+				values.add(setValue);
+			}
+		}
+		
+		Where where = new Where();
+		update.where(where);
+		handleCondition(where, stmt.getWhereCondition());
+		
+		return update;
 	}
 	
 	/* END Public methods */
@@ -212,7 +334,7 @@ public class DSLTransformer {
 		
 		List<ValueExpression> valueExpressions = dslPredicate.getValues();
 		if (valueExpressions.size() == 1
-				&& valueExpressions.get(0).getNodeType() == DSLNode.TYPE_SELECT_STATEMENT) {
+				&& valueExpressions.get(0).getNodeType() == DSLNode.NODE_SELECT_STATEMENT) {
 			return predicate.subquery(buildSelect((SelectStatement)valueExpressions.get(0)));
 		}
 		
@@ -227,9 +349,9 @@ public class DSLTransformer {
 		OrderBy orderBy = new OrderBy();
 		
 		for (OrderByColumn orderByColumn : stmt.getOrderByColumns()) {
-			if (orderByColumn.getOrderByColumnType() == OrderByColumn.TYPE_TABLE_COLUMN) {
+			if (orderByColumn.getOrderByColumnType() == OrderByColumn.ORDER_TABLE_COLUMN) {
 				handleTableColumn(orderBy, (TableColumn)orderByColumn);
-			} else if (orderByColumn.getOrderByColumnType() == OrderByColumn.TYPE_COLUMN_ALIAS) {
+			} else if (orderByColumn.getOrderByColumnType() == OrderByColumn.ORDER_COLUMN_ALIAS) {
 				orderBy.alias(((ColumnAlias)orderByColumn).getAlias());
 			}
 			
@@ -323,7 +445,7 @@ public class DSLTransformer {
 	private void handleCondition(
 			com.github.javalbert.sqlbuilder.Condition condition,
 			BooleanExpression booleanExpression) {
-		if (booleanExpression.getNodeType() == DSLNode.TYPE_CONDITION) {
+		if (booleanExpression.getNodeType() == DSLNode.NODE_CONDITION) {
 			Condition dslCondition = (Condition)booleanExpression;
 			
 			if (dslCondition.isGrouped()) {
@@ -333,13 +455,13 @@ public class DSLTransformer {
 			} else {
 				handleConditionOperator(condition, dslCondition);
 			}
-		} else if (booleanExpression.getNodeType() == DSLNode.TYPE_PREDICATE) {
+		} else if (booleanExpression.getNodeType() == DSLNode.NODE_PREDICATE) {
 			condition.predicate(buildPredicate((Predicate)booleanExpression));
-		} else if (booleanExpression.getNodeType() == DSLNode.TYPE_PREDICATE_BETWEEN) {
+		} else if (booleanExpression.getNodeType() == DSLNode.NODE_PREDICATE_BETWEEN) {
 			condition.predicate(buildBetweenPredicate((BetweenPredicate)booleanExpression));
-		} else if (booleanExpression.getNodeType() == DSLNode.TYPE_PREDICATE_EXISTS) {
+		} else if (booleanExpression.getNodeType() == DSLNode.NODE_PREDICATE_EXISTS) {
 			condition.predicate(buildExistsPredicate((ExistsPredicate)booleanExpression));
-		} else if (booleanExpression.getNodeType() == DSLNode.TYPE_PREDICATE_IN) {
+		} else if (booleanExpression.getNodeType() == DSLNode.NODE_PREDICATE_IN) {
 			condition.predicate(buildInPredicate((InPredicate)booleanExpression));
 		}
 	}
@@ -362,34 +484,34 @@ public class DSLTransformer {
 			ExpressionBuilding<?> building,
 			DSLNode dslNode) {
 		switch (dslNode.getNodeType()) {
-			case DSLNode.TYPE_CASE:
+			case DSLNode.NODE_CASE:
 				building.sqlCase(buildCase((Case)dslNode));
 				break;
-			case DSLNode.TYPE_EXPRESSION:
+			case DSLNode.NODE_EXPRESSION:
 				building.expression(buildExpression((Expression)dslNode));
 				break;
-			case DSLNode.TYPE_FUNCTION:
+			case DSLNode.NODE_FUNCTION:
 				building.function(buildFunction((Function)dslNode));
 				break;
-			case DSLNode.TYPE_LITERAL_BOOLEAN:
+			case DSLNode.NODE_LITERAL_BOOLEAN:
 				building.literal(((LiteralBoolean)dslNode).getValue());
 				break;
-			case DSLNode.TYPE_LITERAL_NULL:
+			case DSLNode.NODE_LITERAL_NULL:
 				building.literalNull();
 				break;
-			case DSLNode.TYPE_LITERAL_NUMBER:
+			case DSLNode.NODE_LITERAL_NUMBER:
 				building.literal(((LiteralNumber)dslNode).getValue());
 				break;
-			case DSLNode.TYPE_LITERAL_STRING:
+			case DSLNode.NODE_LITERAL_STRING:
 				building.literal(((LiteralString)dslNode).getValue());
 				break;
-			case DSLNode.TYPE_PARAMETER:
+			case DSLNode.NODE_PARAMETER:
 				building.param(((Parameter)dslNode).getName());
 				break;
-			case DSLNode.TYPE_SELECT_STATEMENT:
+			case DSLNode.NODE_SELECT_STATEMENT:
 				building.subquery(buildSelect((SelectStatement)dslNode));
 				break;
-			case DSLNode.TYPE_TABLE_COLUMN:
+			case DSLNode.NODE_TABLE_COLUMN:
 				handleTableColumn(building, (TableColumn)dslNode);
 				break;
 		}
@@ -450,16 +572,16 @@ public class DSLTransformer {
 	}
 
 	private void handleTableReference(From from, TableReference tableReference) {
-		if (tableReference.getTableType() == TableReference.TYPE_TABLE) {
+		if (tableReference.getTableType() == TableReference.TABLE_TABLE) {
 			Table table = (Table)tableReference;
 			from.tableName(table.getName());
 			
 			if (table.getTableAlias() != null) {
 				from.as(table.getTableAlias().getAlias());
 			}
-		} else if (tableReference.getTableType() == TableReference.TYPE_JOINED_TABLE) {
+		} else if (tableReference.getTableType() == TableReference.TABLE_JOINED_TABLE) {
 			handleJoinedTable(from, (JoinedTable)tableReference);
-		} else if (tableReference.getTableType() == TableReference.TYPE_INLINE_VIEW) {
+		} else if (tableReference.getTableType() == TableReference.TABLE_INLINE_VIEW) {
 			SelectStatement inlineView = (SelectStatement)tableReference;
 			from.inlineView(buildSelect(inlineView));
 			

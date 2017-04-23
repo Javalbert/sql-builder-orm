@@ -24,6 +24,10 @@ public class DeleteStatement implements DMLStatement, WithClause {
 	public CteList getCteList() {
 		return cteList;
 	}
+	@Override
+	public int getDmlType() {
+		return DML_DELETE;
+	}
 	public Table getTable() {
 		return table;
 	}

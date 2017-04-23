@@ -27,8 +27,15 @@ public class UpdateStatement implements DMLStatement, WithClause {
 	public CteList getCteList() {
 		return cteList;
 	}
+	@Override
+	public int getDmlType() {
+		return DML_UPDATE;
+	}
 	public Table getTable() {
 		return table;
+	}
+	public List<SetValue> getValues() {
+		return values;
 	}
 	public BooleanExpression getWhereCondition() {
 		return whereCondition;

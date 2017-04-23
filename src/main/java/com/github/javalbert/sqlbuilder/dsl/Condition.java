@@ -29,7 +29,7 @@ public class Condition implements BooleanExpression {
 	}
 	@Override
 	public int getNodeType() {
-		return TYPE_CONDITION;
+		return NODE_CONDITION;
 	}
 	public BooleanExpression getRightExpression() {
 		return rightExpression;

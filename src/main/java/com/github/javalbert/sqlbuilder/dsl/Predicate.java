@@ -24,7 +24,7 @@ public class Predicate implements BooleanExpression {
 	}
 	@Override
 	public int getNodeType() {
-		return TYPE_PREDICATE;
+		return NODE_PREDICATE;
 	}
 	public PredicateOperator getOperator() {
 		return operator;

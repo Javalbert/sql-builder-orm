@@ -42,7 +42,7 @@ implements ExpressionBuilder, OrderByColumn, Predicand, SelectColumn<TableColumn
 	}
 	@Override
 	public int getNodeType() {
-		return DSLNode.TYPE_TABLE_COLUMN;
+		return NODE_TABLE_COLUMN;
 	}
 	@Override
 	public SortType getSortType() {
@@ -50,7 +50,7 @@ implements ExpressionBuilder, OrderByColumn, Predicand, SelectColumn<TableColumn
 	}
 	@Override
 	public int getOrderByColumnType() {
-		return OrderByColumn.TYPE_TABLE_COLUMN;
+		return ORDER_TABLE_COLUMN;
 	}
 	public TableAlias getTableAlias() {
 		return tableAlias;

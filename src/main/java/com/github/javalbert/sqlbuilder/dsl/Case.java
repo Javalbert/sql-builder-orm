@@ -34,7 +34,7 @@ implements ExpressionBuilder, Predicand, SelectColumn<Case>, ValueExpression {
 	}
 	@Override
 	public int getNodeType() {
-		return TYPE_CASE;
+		return NODE_CASE;
 	}
 	public ValueExpression getSimpleCaseExpression() {
 		return simpleCaseExpression;

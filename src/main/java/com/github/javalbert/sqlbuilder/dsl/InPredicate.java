@@ -40,7 +40,7 @@ public class InPredicate extends Predicate {
 	
 	@Override
 	public int getNodeType() {
-		return TYPE_PREDICATE_IN;
+		return NODE_PREDICATE_IN;
 	}
 	public List<ValueExpression> getValues() {
 		return values;

@@ -30,7 +30,7 @@ implements ExpressionBuilder, Predicand, SelectColumn<Expression>, ValueExpressi
 	}
 	@Override
 	public int getNodeType() {
-		return TYPE_EXPRESSION;
+		return NODE_EXPRESSION;
 	}
 	public ExpressionOperator getOperator() {
 		return operator;

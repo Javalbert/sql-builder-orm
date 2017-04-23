@@ -50,6 +50,10 @@ SelectColumn<SelectStatement>, TableReference, ValueExpression, WithClause {
 	public boolean isDistinct() {
 		return distinct;
 	}
+	@Override
+	public int getDmlType() {
+		return DML_SELECT;
+	}
 	public List<TableColumn> getGroupByColumns() {
 		return groupByColumns;
 	}
@@ -58,7 +62,7 @@ SelectColumn<SelectStatement>, TableReference, ValueExpression, WithClause {
 	}
 	@Override
 	public int getNodeType() {
-		return TYPE_SELECT_STATEMENT;
+		return NODE_SELECT_STATEMENT;
 	}
 	public List<OrderByColumn> getOrderByColumns() {
 		return orderByColumns;
@@ -74,7 +78,7 @@ SelectColumn<SelectStatement>, TableReference, ValueExpression, WithClause {
 	}
 	@Override
 	public int getTableType() {
-		return TYPE_INLINE_VIEW;
+		return TABLE_INLINE_VIEW;
 	}
 	public BooleanExpression getWhereCondition() {
 		return whereCondition;
