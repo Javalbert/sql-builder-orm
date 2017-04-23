@@ -21,6 +21,10 @@ implements ExpressionBuilder, Predicand, ValueExpression {
 	public String getName() {
 		return name;
 	}
+	@Override
+	public int getNodeType() {
+		return NODE_PARAMETER;
+	}
 	
 	public Parameter(String name) {
 		this.name = Strings.illegalArgOnEmpty(name, "name cannot be null or empty");

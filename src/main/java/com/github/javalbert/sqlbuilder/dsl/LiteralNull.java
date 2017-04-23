@@ -16,6 +16,11 @@ public class LiteralNull extends Literal<LiteralNull, Void> {
 	public static final LiteralNull INSTANCE = new LiteralNull();
 	
 	@Override
+	public int getNodeType() {
+		return NODE_LITERAL_NULL;
+	}
+	
+	@Override
 	public LiteralNull as(String alias) {
 		LiteralNull literal = copy();
 		literal.alias = alias;

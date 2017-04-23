@@ -12,7 +12,7 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-public interface BooleanExpression {
+public interface BooleanExpression extends DSLNode {
 	default Condition and(BooleanExpression booleanExpression) {
 		return new Condition(this, booleanExpression, LogicalOperator.AND);
 	}

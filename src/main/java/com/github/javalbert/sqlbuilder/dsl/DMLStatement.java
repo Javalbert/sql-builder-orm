@@ -13,8 +13,15 @@
 package com.github.javalbert.sqlbuilder.dsl;
 
 /**
- * Marker interface
  * @author Albert
  *
  */
-public interface DMLStatement {}
+public interface DMLStatement {
+	public static final int DML_SELECT = 1;
+	public static final int DML_INSERT = 2;
+	public static final int DML_UPDATE = 3;
+	public static final int DML_DELETE = 4;
+	public static final int DML_MERGE = 5;
+	
+	int getDmlType();
+}

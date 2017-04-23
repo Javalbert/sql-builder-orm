@@ -22,6 +22,10 @@ public class Predicate implements BooleanExpression {
 	public Predicand getLeftPredicand() {
 		return leftPredicand;
 	}
+	@Override
+	public int getNodeType() {
+		return NODE_PREDICATE;
+	}
 	public PredicateOperator getOperator() {
 		return operator;
 	}

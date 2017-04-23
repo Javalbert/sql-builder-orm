@@ -17,17 +17,25 @@ import java.util.List;
 
 import com.github.javalbert.utils.collections.CollectionUtils;
 
-public class UpdateStatement implements DMLStatement {
+public class UpdateStatement implements DMLStatement, WithClause {
 	private CteList cteList = CteList.EMPTY;
 	private final Table table;
 	private List<SetValue> values;
 	private BooleanExpression whereCondition;
 	
+	@Override
 	public CteList getCteList() {
 		return cteList;
 	}
+	@Override
+	public int getDmlType() {
+		return DML_UPDATE;
+	}
 	public Table getTable() {
 		return table;
+	}
+	public List<SetValue> getValues() {
+		return values;
 	}
 	public BooleanExpression getWhereCondition() {
 		return whereCondition;

@@ -24,9 +24,8 @@ public class CteList extends AbstractList<CommonTableExpression> {
 	
 	private final List<CommonTableExpression> cteList;
 	
-	@SuppressWarnings("unchecked")
 	CteList() {
-		this(Collections.EMPTY_LIST);
+		this(Collections.emptyList());
 	}
 	
 	CteList(Collection<CommonTableExpression> ctes) {

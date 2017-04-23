@@ -15,13 +15,18 @@ package com.github.javalbert.sqlbuilder.dsl;
 import java.util.Arrays;
 import java.util.Objects;
 
-public class DeleteStatement implements DMLStatement {
+public class DeleteStatement implements DMLStatement, WithClause {
 	private CteList cteList = CteList.EMPTY;
 	private final Table table;
 	private BooleanExpression whereCondition;
 	
+	@Override
 	public CteList getCteList() {
 		return cteList;
+	}
+	@Override
+	public int getDmlType() {
+		return DML_DELETE;
 	}
 	public Table getTable() {
 		return table;

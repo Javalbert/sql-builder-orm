@@ -21,22 +21,18 @@ import com.github.javalbert.utils.collections.CollectionUtils;
 
 public class SelectStatement
 implements DMLStatement, ExpressionBuilder, Predicand,
-SelectColumn<SelectStatement>, TableReference, ValueExpression {
+SelectColumn<SelectStatement>, TableReference, ValueExpression, WithClause {
 	private String alias;
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private List<SelectColumn> columns = Collections.EMPTY_LIST;
+	@SuppressWarnings("rawtypes")
+	private List<SelectColumn> columns = Collections.emptyList();
 	private CteList cteList = CteList.EMPTY;
 	private boolean distinct;
-	@SuppressWarnings("unchecked")
-	private List<TableColumn> groupByColumns = Collections.EMPTY_LIST;
+	private List<TableColumn> groupByColumns = Collections.emptyList();
 	private BooleanExpression havingCondition;
-	@SuppressWarnings("unchecked")
-	private List<OrderByColumn> orderByColumns = Collections.EMPTY_LIST;
-	@SuppressWarnings("unchecked")
-	private List<SetOperation> setOperations = Collections.EMPTY_LIST;
+	private List<OrderByColumn> orderByColumns = Collections.emptyList();
+	private List<SetOperation> setOperations = Collections.emptyList();
 	private TableAlias tableAlias;
-	@SuppressWarnings("unchecked")
-	private List<TableReference> tables = Collections.EMPTY_LIST;
+	private List<TableReference> tables = Collections.emptyList();
 	private BooleanExpression whereCondition;
 
 	@Override
@@ -47,11 +43,16 @@ SelectColumn<SelectStatement>, TableReference, ValueExpression {
 	public List<SelectColumn> getColumns() {
 		return columns;
 	}
+	@Override
 	public CteList getCteList() {
 		return cteList;
 	}
 	public boolean isDistinct() {
 		return distinct;
+	}
+	@Override
+	public int getDmlType() {
+		return DML_SELECT;
 	}
 	public List<TableColumn> getGroupByColumns() {
 		return groupByColumns;
@@ -59,14 +60,25 @@ SelectColumn<SelectStatement>, TableReference, ValueExpression {
 	public BooleanExpression getHavingCondition() {
 		return havingCondition;
 	}
+	@Override
+	public int getNodeType() {
+		return NODE_SELECT_STATEMENT;
+	}
 	public List<OrderByColumn> getOrderByColumns() {
 		return orderByColumns;
+	}
+	public List<SetOperation> getSetOperations() {
+		return setOperations;
 	}
 	public TableAlias getTableAlias() {
 		return tableAlias;
 	}
 	public List<TableReference> getTables() {
 		return tables;
+	}
+	@Override
+	public int getTableType() {
+		return TABLE_INLINE_VIEW;
 	}
 	public BooleanExpression getWhereCondition() {
 		return whereCondition;

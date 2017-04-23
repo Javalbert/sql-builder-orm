@@ -13,16 +13,12 @@
 package com.github.javalbert.sqlbuilder.dsl;
 
 public interface OrderByColumn {
-	String getOrderByColumnLabel();
-	default SortType getSortType() {
-		return SortType.ASC;
-	}
+	public static final int ORDER_TABLE_COLUMN = 1;
+	public static final int ORDER_COLUMN_ALIAS = 2;
 	
-	default OrderByColumn asc() {
-		return new OrderByColumnImpl(getOrderByColumnLabel(), SortType.ASC);
-	}
+	int getOrderByColumnType();
+	SortType getSortType();
 	
-	default OrderByColumn desc() {
-		return new OrderByColumnImpl(getOrderByColumnLabel(), SortType.DESC);
-	}
+	OrderByColumn asc();
+	OrderByColumn desc();
 }

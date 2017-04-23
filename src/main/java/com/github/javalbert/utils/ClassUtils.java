@@ -20,7 +20,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 
-@SuppressWarnings({ "rawtypes", "unchecked" })
+@SuppressWarnings("rawtypes")
 public final class ClassUtils {
 	public static final String NAME_BOOLEAN = "boolean";
 	public static final String NAME_DOUBLE = "double";
@@ -61,7 +61,7 @@ public final class ClassUtils {
     
 	private static List<Class> findClasses(File directory, String packageName) throws ClassNotFoundException {
         if (!directory.exists()) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
         
         List<Class> classes = new ArrayList<>();

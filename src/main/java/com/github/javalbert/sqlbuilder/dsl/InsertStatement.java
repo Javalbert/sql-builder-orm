@@ -18,15 +18,19 @@ import java.util.List;
 
 import com.github.javalbert.utils.collections.CollectionUtils;
 
-public class InsertStatement implements DMLStatement {
+public class InsertStatement implements DMLStatement, WithClause {
 	/**
 	 * See <a href="https://en.wikipedia.org/wiki/Insert_(SQL)#Default_Values">Default Values</a>.
 	 * <br>Used in the VALUES clause
 	 */
-	public static final ValueExpression DEFAULT = new ValueExpression() {};
+	public static final ValueExpression DEFAULT = new ValueExpression() {
+		@Override
+		public int getNodeType() {
+			return NODE_INSERT_DEFAULT;
+		};
+	};
 	
-	@SuppressWarnings("unchecked")
-	private List<TableColumn> columns = Collections.EMPTY_LIST;
+	private List<TableColumn> columns = Collections.emptyList();
 	private CteList cteList = CteList.EMPTY;
 	private SelectStatement subselect;
 	private final Table table;
@@ -35,8 +39,13 @@ public class InsertStatement implements DMLStatement {
 	public List<TableColumn> getColumns() {
 		return columns;
 	}
+	@Override
 	public CteList getCteList() {
 		return cteList;
+	}
+	@Override
+	public int getDmlType() {
+		return DML_INSERT;
 	}
 	public SelectStatement getSubselect() {
 		return subselect;

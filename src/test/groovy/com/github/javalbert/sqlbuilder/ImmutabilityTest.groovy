@@ -123,7 +123,7 @@ class ImmutabilityTest extends Specification {
 		
 		where: 'each of the CommonTableExpression methods can throw exception'
 		methodName	|	cteMethod
-		'setColumns'	|	{ CommonTableExpression c -> c.setColumns(Collections.EMPTY_LIST) }
+		'setColumns'	|	{ CommonTableExpression c -> c.setColumns(Collections.emptyList()) }
 		'setName'	|	{ CommonTableExpression c -> c.setName('') }
 		'setSelect'	|	{ CommonTableExpression c -> c.setSelect(new Select()) }
 	}

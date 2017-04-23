@@ -16,16 +16,41 @@ import com.github.javalbert.utils.string.Strings;
 
 public class ColumnAlias implements OrderByColumn {
 	private final String alias;
+	private SortType sortType = SortType.ASC;
 
 	public String getAlias() {
 		return alias;
 	}
 	@Override
-	public String getOrderByColumnLabel() {
-		return alias;
+	public int getOrderByColumnType() {
+		return ORDER_COLUMN_ALIAS;
+	}
+	@Override
+	public SortType getSortType() {
+		return sortType;
 	}
 	
 	public ColumnAlias(String alias) {
 		this.alias = Strings.illegalArgOnEmpty(alias, "alias cannot be null or empty");
+	}
+	
+	@Override
+	public OrderByColumn asc() {
+		ColumnAlias columnAlias = copy();
+		columnAlias.sortType = SortType.ASC;
+		return columnAlias;
+	}
+	
+	@Override
+	public OrderByColumn desc() {
+		ColumnAlias columnAlias = copy();
+		columnAlias.sortType = SortType.DESC;
+		return columnAlias;
+	}
+	
+	ColumnAlias copy() {
+		ColumnAlias copy = new ColumnAlias(alias);
+		copy.sortType = sortType;
+		return copy;
 	}
 }

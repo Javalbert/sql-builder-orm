@@ -20,12 +20,15 @@ import java.util.Objects;
 import com.github.javalbert.utils.collections.CollectionUtils;
 
 public class MergeStatement implements DMLStatement {
-	@SuppressWarnings("unchecked")
-	private List<MergeAction> mergeActions = Collections.EMPTY_LIST;
+	private List<MergeAction> mergeActions = Collections.emptyList();
 	private BooleanExpression searchCondition;
 	private TableReference sourceTable;
 	private final Table targetTable;
-	
+
+	@Override
+	public int getDmlType() {
+		return DML_MERGE;
+	}
 	public List<MergeAction> getMergeActions() {
 		return mergeActions;
 	}

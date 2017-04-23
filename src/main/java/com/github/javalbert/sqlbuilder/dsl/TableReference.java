@@ -13,6 +13,12 @@
 package com.github.javalbert.sqlbuilder.dsl;
 
 public interface TableReference {
+	public static final int TABLE_TABLE = 1;
+	public static final int TABLE_JOINED_TABLE = 2;
+	public static final int TABLE_INLINE_VIEW = 3;
+	
+	int getTableType();
+	
 	default JoinedTable fullOuterJoin(TableReference table) {
 		return new JoinedTable(this, table, JoinType.FULL);
 	}

@@ -16,6 +16,11 @@ public class LiteralBoolean extends Literal<LiteralBoolean, Boolean> {
 	public static final LiteralBoolean TRUE = new LiteralBoolean(Boolean.TRUE);
 	public static final LiteralBoolean FALSE = new LiteralBoolean(Boolean.FALSE);
 
+	@Override
+	public int getNodeType() {
+		return NODE_LITERAL_BOOLEAN;
+	}
+	
 	LiteralBoolean(Boolean value) {
 		super(value);
 	}

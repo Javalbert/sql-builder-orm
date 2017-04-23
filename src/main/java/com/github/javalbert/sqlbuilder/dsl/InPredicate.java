@@ -38,6 +38,10 @@ public class InPredicate extends Predicate {
 	
 	private final List<ValueExpression> values;
 	
+	@Override
+	public int getNodeType() {
+		return NODE_PREDICATE_IN;
+	}
 	public List<ValueExpression> getValues() {
 		return values;
 	}
