@@ -113,18 +113,18 @@ public final class CollectionUtils {
 		return Collections.unmodifiableSet(hashSet(items));
 	}
 	
-	public static <T> T lastOrIllegalArg(Collection<? extends T> collection, String message) {
-		if (collection == null || collection.isEmpty()) {
+	public static <T> T lastOrIllegalArg(List<? extends T> list, String message) {
+		if (list == null || list.isEmpty()) {
 			throw new IllegalArgumentException(message);
 		}
-		return collection.iterator().next();
+		return list.get(list.size() - 1);
 	}
 	
-	public static <T> T lastOrIllegalState(Collection<? extends T> collection, String message) {
-		if (collection == null || collection.isEmpty()) {
+	public static <T> T lastOrIllegalState(List<? extends T> list, String message) {
+		if (list == null || list.isEmpty()) {
 			throw new IllegalStateException(message);
 		}
-		return collection.iterator().next();
+		return list.get(list.size() - 1);
 	}
 	
 	public static <T> T lastOrNull(Collection<? extends T> collection) {

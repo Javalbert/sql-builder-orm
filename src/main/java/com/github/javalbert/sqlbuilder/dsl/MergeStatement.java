@@ -53,15 +53,15 @@ public class MergeStatement implements DMLStatement {
 	}
 	
 	public MergeStatement then(InsertStatement statement) {
-		return newMergeAction(lastAction().insert(statement));
+		return replaceMergeAction(lastAction().insert(statement));
 	}
 	
 	public MergeStatement then(UpdateStatement statement) {
-		return newMergeAction(lastAction().update(statement));
+		return replaceMergeAction(lastAction().update(statement));
 	}
 	
 	public MergeStatement thenDelete() {
-		return newMergeAction(lastAction().delete());
+		return replaceMergeAction(lastAction().delete());
 	}
 	
 	public MergeStatement using(SelectStatement sourceTable) {
@@ -107,13 +107,17 @@ public class MergeStatement implements DMLStatement {
 	}
 	
 	private MergeStatement newMergeAction(boolean whenMatched, BooleanExpression searchCondition) {
-		return newMergeAction(new MergeAction(whenMatched).and(searchCondition));
-	}
-	
-	private MergeStatement newMergeAction(MergeAction mergeAction) {
 		MergeStatement stmt = copy();
 		List<MergeAction> mergeActions = new ArrayList<>(stmt.mergeActions);
-		mergeActions.add(mergeAction);
+		mergeActions.add(new MergeAction(whenMatched).and(searchCondition));
+		stmt.mergeActions = CollectionUtils.immutableArrayList(mergeActions);
+		return stmt;
+	}
+	
+	private MergeStatement replaceMergeAction(MergeAction mergeAction) {
+		MergeStatement stmt = copy();
+		List<MergeAction> mergeActions = new ArrayList<>(stmt.mergeActions);
+		mergeActions.set(mergeActions.size() - 1, mergeAction);
 		stmt.mergeActions = CollectionUtils.immutableArrayList(mergeActions);
 		return stmt;
 	}

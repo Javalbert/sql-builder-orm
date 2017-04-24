@@ -58,9 +58,11 @@ public class DSLTransformer {
 			delete.tableName(stmt.getTable().getName());
 		}
 		
-		Where where = new Where();
-		delete.where(where);
-		handleCondition(where, stmt.getWhereCondition());
+		if (stmt.getWhereCondition() != null) {
+			Where where = new Where();
+			delete.where(where);
+			handleCondition(where, stmt.getWhereCondition());
+		}
 		
 		return delete;
 	}
@@ -217,9 +219,11 @@ public class DSLTransformer {
 			}
 		}
 		
-		Where where = new Where();
-		update.where(where);
-		handleCondition(where, stmt.getWhereCondition());
+		if (stmt.getWhereCondition() != null) {
+			Where where = new Where();
+			update.where(where);
+			handleCondition(where, stmt.getWhereCondition());
+		}
 		
 		return update;
 	}
