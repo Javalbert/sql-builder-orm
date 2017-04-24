@@ -9,13 +9,15 @@ import com.github.javalbert.sqlbuilder.Insert
 import com.github.javalbert.sqlbuilder.Merge
 import com.github.javalbert.sqlbuilder.Select
 import com.github.javalbert.sqlbuilder.Update
-
+import com.github.javalbert.sqlbuilder.Where
 import spock.lang.Specification
 
 class DSLTransformerSpec extends Specification {
 	private static final Table Foo = new Table("Foo");
 	
 	private static final FooTableAlias f = new FooTableAlias();
+	
+	private static final TableColumn bar = new TableColumn("bar")
 	
 	public static class FooTableAlias extends TableAlias {
 		public final TableColumn bar = of(new TableColumn("bar"));
@@ -123,5 +125,87 @@ class DSLTransformerSpec extends Specification {
 		
 		then: 'Update object was built'
 		update != null == true
+	}
+	
+	def 'Read BETWEEN predicate and verify sqlbuilder nodes'() {
+		given: 'DeleteStatement with BETWEEN predicate'
+		DeleteStatement stmt = delete(Foo)
+				.where(f.bar.between(1, 2))
+		
+		when: 'Delete object is built and BETWEEN predicate is retrieved from WHERE clause'
+		Delete delete = dslTransformer.buildDelete(stmt)
+		// nodes[1] instanceof Where
+		com.github.javalbert.sqlbuilder.Predicate between = delete.nodes[1].nodes[0]
+		
+		then: 'the f.bar should be between 1 and 2'
+		between.nodes[2].value == 1
+		between.nodes[4].value == 2
+	}
+	
+	def 'Read "simple case" expression and verify sqlbuilder nodes'() {
+		given: 'SelectStatement with CASE expression with f.bar as the simple expression'
+		SelectStatement stmt = select(
+			sqlCase(f.bar)
+				.when(1).then('One')
+				.when(2).then('Two')
+				.ifElse('Zero')
+			)
+		
+		when: 'Select is built and the Case is retrieved'
+		Select select = dslTransformer.buildSelect(stmt)
+		com.github.javalbert.sqlbuilder.Case caseExp = select.nodes[0].nodes[0]
+		
+		then: 'the simple expression being evaluated is column "bar"'
+		caseExp.nodes[0].name == 'bar'
+		
+		and: 'WHEN conditions check for 1 and 2 numeric literals'
+		caseExp.nodes[2].value == 1
+		caseExp.nodes[6].value == 2
+		
+		and: 'THEN expressions return string literals "One" or "Two" respectively'
+		caseExp.nodes[4].value == 'One'
+		caseExp.nodes[8].value == 'Two'
+		
+		and: 'an ELSE expression returns "Zero"'
+		caseExp.nodes[10].value == 'Zero'
+	}
+	
+	def 'Read "searched case" expression and verify sqlbuilder nodes'() {
+		given: 'SelectStatement with CASE expression with if-else-if boolean expression structure'
+		SelectStatement stmt = select(
+			sqlCase()
+				.when(f.bar.gt(9)).then('> 9')
+				.when(f.bar.lt(0)).then('< 1')
+			)
+		
+		when: 'Select is built and the Case is retrieved'
+		Select select = dslTransformer.buildSelect(stmt)
+		com.github.javalbert.sqlbuilder.Case caseExp = select.nodes[0].nodes[0]
+		
+		then: 'the first Case node is the WHEN clause constant token, not a simple expression'
+		caseExp.nodes[0] == com.github.javalbert.sqlbuilder.Case.WHEN
+		
+		and: 'the second Case node is a boolean expression'
+		caseExp.nodes[1] instanceof com.github.javalbert.sqlbuilder.Condition
+	}
+	
+	def 'Read EXISTS predicate and verify sqlbuilder nodes'() {
+		given: 'DeleteStatement with EXISTS predicate'
+		DeleteStatement stmt = delete(Foo)
+				.where(exists(
+					select()
+					.from(Foo)
+					.where(Foo.of(bar).gt(bar))
+					))
+		
+		when: 'Delete is built and EXISTS Predicate object is retrieved'
+		Delete delete = dslTransformer.buildDelete(stmt)
+		com.github.javalbert.sqlbuilder.Predicate exists = delete.nodes[1].nodes[0]
+		
+		then: 'first node of predicate is PredicateOperator.EXISTS constant'
+		exists.nodes[0] == com.github.javalbert.sqlbuilder.PredicateOperator.EXISTS
+		
+		and: 'second node is the subquery'
+		exists.nodes[1] instanceof Select
 	}
 }

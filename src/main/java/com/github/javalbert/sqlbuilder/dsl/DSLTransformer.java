@@ -252,7 +252,7 @@ public class DSLTransformer {
 	private com.github.javalbert.sqlbuilder.Case buildCase(Case dslCase) {
 		com.github.javalbert.sqlbuilder.Case sqlCase = new com.github.javalbert.sqlbuilder.Case();
 		
-		boolean simpleCase = dslCase.getSimpleCaseExpression() != null;
+		boolean simpleCase = dslCase.getSimpleCaseExpression() != LiteralNull.INSTANCE;
 		if (simpleCase) {
 			handleExpressionBuilding(sqlCase, dslCase.getSimpleCaseExpression());
 		}
@@ -279,7 +279,7 @@ public class DSLTransformer {
 	}
 
 	private com.github.javalbert.sqlbuilder.Predicate buildExistsPredicate(ExistsPredicate dslPredicate) {
-		com.github.javalbert.sqlbuilder.Predicate predicate = newPredicate(dslPredicate);
+		com.github.javalbert.sqlbuilder.Predicate predicate = new com.github.javalbert.sqlbuilder.Predicate();
 		
 		if (dslPredicate.getOperator() == PredicateOperator.EXISTS) {
 			predicate.exists();
