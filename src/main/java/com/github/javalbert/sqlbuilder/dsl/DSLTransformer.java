@@ -292,18 +292,28 @@ public class DSLTransformer {
 
 	private com.github.javalbert.sqlbuilder.Expression buildExpression(Expression dslExpression) {
 		com.github.javalbert.sqlbuilder.Expression expression = new com.github.javalbert.sqlbuilder.Expression();
-		handleExpressionBuilding(expression, dslExpression.getLeft());
 		
-		switch (dslExpression.getOperator()) {
-			case CONCAT: expression.concat(); break;
-			case DIVIDE: expression.divide(); break;
-			case MINUS: expression.minus(); break;
-			case MOD: expression.mod(); break;
-			case MULTIPLY: expression.multiply(); break;
-			case PLUS: expression.plus(); break;
+		for (ExpressionNode node : dslExpression.getNodes()) {
+			if (node.getExpressionType() == ExpressionNode.EXPRESSION_OPERAND) {
+				handleExpressionBuilding(expression, (ExpressionBuilder)node);
+			} else if (node.getExpressionType() == ExpressionNode.EXPRESSION_OPERATOR) {
+				ExpressionOperator operator = ((ExpressionOperatorNode)node).getExpressionOperator();
+				
+				switch (operator) {
+					case CONCAT: expression.concat(); break;
+					case DIVIDE: expression.divide(); break;
+					case MINUS: expression.minus(); break;
+					case MOD: expression.mod(); break;
+					case MULTIPLY: expression.multiply(); break;
+					case PLUS: expression.plus(); break;
+				}
+			} else if (node.getExpressionType() == ExpressionNode.EXPRESSION_EXPRESSION) {
+				com.github.javalbert.sqlbuilder.Expression nestedExpression = new com.github.javalbert.sqlbuilder.Expression();
+				expression.expression(nestedExpression);
+				handleExpressionBuilding(nestedExpression, (Expression)node);
+			}
 		}
 		
-		handleExpressionBuilding(expression, dslExpression.getRight());
 		return expression;
 	}
 	

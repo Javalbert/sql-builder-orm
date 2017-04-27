@@ -61,6 +61,9 @@ public class JoinedTable implements TableReference {
 	}
 	
 	JoinedTable nested() {
+		if (nestedJoin) {
+			return this;
+		}
 		JoinedTable joinedTable = copy();
 		joinedTable.nestedJoin = true;
 		return joinedTable;

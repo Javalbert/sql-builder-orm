@@ -2,6 +2,7 @@ package com.github.javalbert.sqlbuilder.dsl
 
 import static com.github.javalbert.sqlbuilder.dsl.DSL.*
 
+import com.github.javalbert.sqlbuilder.ArithmeticOperator
 import com.github.javalbert.sqlbuilder.ColumnList
 import com.github.javalbert.sqlbuilder.ColumnValues
 import com.github.javalbert.sqlbuilder.Delete
@@ -207,5 +208,38 @@ class DSLTransformerSpec extends Specification {
 		
 		and: 'second node is the subquery'
 		exists.nodes[1] instanceof Select
+	}
+	
+	def 'Read expression with string concatenation and verify sqlbuilder nodes'() {
+		given: 'SelectStatement with string concatenation'
+		SelectStatement stmt = select(
+			f.bar.concat(' ').concat(f.bar)
+			).from(Foo)
+		
+		when: 'Select is built and Expression is retrieved'
+		Select select = dslTransformer.buildSelect(stmt)
+		com.github.javalbert.sqlbuilder.Expression expression = select.nodes[0].nodes[0]
+		
+		then: 'first node and fifth nodes are column f.bar'
+		expression.nodes[0].name == 'bar'
+		expression.nodes[4].name == 'bar'
+	}
+	
+	def 'Read expression with arithmetic operators and nested expressions'() {
+		given: 'SelectStatement with arithmetic operations'
+		SelectStatement stmt = select(
+			f.bar.multiply(literal(1).plus(f.bar))
+			).from(Foo)
+		
+		when: 'Select is built and Expression is retrieved'
+		Select select = dslTransformer.buildSelect(stmt)
+		com.github.javalbert.sqlbuilder.Expression expression = select.nodes[0].nodes[0]
+		
+		then: 'first node is f.bar and second node is the multiplication operator'
+		expression.nodes[0].name == 'bar'
+		expression.nodes[1] == ArithmeticOperator.MULTIPLY
+		
+		and: 'third node is a nested expression'
+		expression.nodes[2] instanceof com.github.javalbert.sqlbuilder.Expression
 	}
 }

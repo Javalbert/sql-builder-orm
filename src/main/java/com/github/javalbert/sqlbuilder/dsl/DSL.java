@@ -65,6 +65,10 @@ public class DSL {
 	public static Condition group(Condition condition) {
 		return condition.grouped();
 	}
+	
+	public static Expression group(Expression expression) {
+		return expression.grouped();
+	}
 
 	/**
 	 * Should only be used for MERGE statements

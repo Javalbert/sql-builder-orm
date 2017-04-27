@@ -12,12 +12,13 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-public interface ExpressionBuilder extends DSLNode {
+public interface ExpressionBuilder extends DSLNode, ExpressionNode {
 	default Expression concat(String value) {
 		return concat(DSL.literal(value));
 	}
 	
 	default Expression concat(ExpressionBuilder right) {
+		right = Utils.groupExpression(right);
 		return new Expression(this, right, ExpressionOperator.CONCAT);
 	}
 	
@@ -26,6 +27,7 @@ public interface ExpressionBuilder extends DSLNode {
 	}
 	
 	default Expression divide(ExpressionBuilder right) {
+		right = Utils.groupExpression(right);
 		return new Expression(this, right, ExpressionOperator.DIVIDE);
 	}
 	
@@ -34,6 +36,7 @@ public interface ExpressionBuilder extends DSLNode {
 	}
 	
 	default Expression minus(ExpressionBuilder right) {
+		right = Utils.groupExpression(right);
 		return new Expression(this, right, ExpressionOperator.MINUS);
 	}
 	
@@ -42,6 +45,7 @@ public interface ExpressionBuilder extends DSLNode {
 	}
 	
 	default Expression mod(ExpressionBuilder right) {
+		right = Utils.groupExpression(right);
 		return new Expression(this, right, ExpressionOperator.MOD);
 	}
 	
@@ -50,6 +54,7 @@ public interface ExpressionBuilder extends DSLNode {
 	}
 	
 	default Expression multiply(ExpressionBuilder right) {
+		right = Utils.groupExpression(right);
 		return new Expression(this, right, ExpressionOperator.MULTIPLY);
 	}
 	
@@ -58,6 +63,7 @@ public interface ExpressionBuilder extends DSLNode {
 	}
 	
 	default Expression plus(ExpressionBuilder right) {
+		right = Utils.groupExpression(right);
 		return new Expression(this, right, ExpressionOperator.PLUS);
 	}
 }
