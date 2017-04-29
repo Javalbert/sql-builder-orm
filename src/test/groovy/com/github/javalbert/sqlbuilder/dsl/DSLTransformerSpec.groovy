@@ -6,11 +6,14 @@ import com.github.javalbert.sqlbuilder.ArithmeticOperator
 import com.github.javalbert.sqlbuilder.ColumnList
 import com.github.javalbert.sqlbuilder.ColumnValues
 import com.github.javalbert.sqlbuilder.Delete
+import com.github.javalbert.sqlbuilder.From
 import com.github.javalbert.sqlbuilder.Insert
+import com.github.javalbert.sqlbuilder.Join
 import com.github.javalbert.sqlbuilder.Merge
 import com.github.javalbert.sqlbuilder.Select
 import com.github.javalbert.sqlbuilder.Update
-import com.github.javalbert.sqlbuilder.Where
+import com.github.javalbert.sqlbuilder.vendor.ANSI
+
 import spock.lang.Specification
 
 class DSLTransformerSpec extends Specification {
@@ -241,5 +244,45 @@ class DSLTransformerSpec extends Specification {
 		
 		and: 'third node is a nested expression'
 		expression.nodes[2] instanceof com.github.javalbert.sqlbuilder.Expression
+	}
+	
+	def 'Read FROM clause and verify sqlbuilder nodes'() {
+		given: 'SelectStatement'
+		SelectStatement stmt = select(f.bar)
+				.from(
+					Foo,
+					Foo.innerJoin(Foo).on(f.bar.eq(f.bar)),
+					select(f.bar).as(f)
+					)
+		
+		when: 'Select is built and From is retrieved'
+		Select select = dslTransformer.buildSelect(stmt)
+		From from = select.nodes[1]
+		
+		then: 'first node is table Foo'
+		from.nodes[0].name == 'Foo'
+		
+		and: 'third node is an inner join'
+		from.nodes[2] == Join.INNER_JOIN
+		
+		and: 'sixth node is an inline view'
+		from.nodes[5] instanceof Select
+	}
+	
+	def 'Read FROM clause with nested join syntax'() {
+		given: 'SelectStatement'
+		SelectStatement stmt = select(f.bar)
+				.from(
+					Foo.leftOuterJoin(Foo.innerJoin(Foo).on(f.bar.eq(f.bar))
+						).on(f.bar.eq(f.bar))
+					)
+		
+		when: 'Select is built and From is retrieved'
+		Select select = dslTransformer.buildSelect(stmt)
+		From from = select.nodes[1]
+		
+		then: 'third and eighth nodes are left and right parentheses respectively'
+		from.nodes[2] == From.LEFT_PARENTHESIS
+		from.nodes[7] == From.RIGHT_PARENTHESIS
 	}
 }

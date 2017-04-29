@@ -18,5 +18,10 @@ final class Utils {
 				? ((Expression)right).grouped() : right;
 	}
 	
+	static TableReference nestedJoin(TableReference table) {
+		return table.getTableType() == TableReference.TABLE_JOINED_TABLE
+				? ((JoinedTable)table).nested() : table;
+	}
+	
 	private Utils() {}
 }

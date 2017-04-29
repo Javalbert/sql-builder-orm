@@ -20,18 +20,18 @@ public interface TableReference {
 	int getTableType();
 	
 	default JoinedTable fullOuterJoin(TableReference table) {
-		return new JoinedTable(this, table, JoinType.FULL);
+		return new JoinedTable(this, Utils.nestedJoin(table), JoinType.FULL);
 	}
 	
 	default JoinedTable innerJoin(TableReference table) {
-		return new JoinedTable(this, table, JoinType.INNER);
+		return new JoinedTable(this, Utils.nestedJoin(table), JoinType.INNER);
 	}
 	
 	default JoinedTable leftOuterJoin(TableReference table) {
-		return new JoinedTable(this, table, JoinType.LEFT);
+		return new JoinedTable(this, Utils.nestedJoin(table), JoinType.LEFT);
 	}
 	
 	default JoinedTable rightOuterJoin(TableReference table) {
-		return new JoinedTable(this, table, JoinType.RIGHT);
+		return new JoinedTable(this, Utils.nestedJoin(table), JoinType.RIGHT);
 	}
 }

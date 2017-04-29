@@ -21,7 +21,7 @@ class ANSISpec extends Specification {
 	}
 	
 	def 'Check string equality for SELECT statement with two nested JOIN groups'() {
-		given: 'A Select object representing the SQL string from the last example at http://sqlity.net/en/1435/a-join-a-day-nested-joins/'
+		given: 'Select object representing the SQL string from the last example at http://sqlity.net/en/1435/a-join-a-day-nested-joins/'
 		Select select = new Select().list(new SelectList()
 			.tableAlias('pers').column('FirstName')
 			.tableAlias('pers').column('LastName')
@@ -61,5 +61,30 @@ class ANSISpec extends Specification {
 		
 		then: 'SQL strings match'
 		sql == reprint
+	}
+	
+	def 'Check multiple table references separated by commas in FROM clause, are separated'() {
+		given: 'Select object with a FROM clause referencing a table, a joined table, and an inline view'
+		Select select = new Select()
+		.list(new SelectList()
+			.tableAlias('a').column('a1')
+		).from(new From()
+			.tableName('TableA').as('a')
+			.tableName('TableB').as('b').innerJoin().tableName('TableC').as('c').on(new Condition().predicate(
+				new Predicate().tableAlias('b').column('id').eq().tableAlias('c').column('bid'))
+			).inlineView(
+				new Select().list(new SelectList()
+					.column('*')
+				).from(new From()
+					.tableName('TableD')
+				)
+			).as('d')
+		)
+		
+		when: 'the SQL string parsed from Select object'
+		String sql = vendor.print(select)
+		
+		then: 'SQL string is equal to "SELECT a.a1 FROM TableA a, TableB b INNER JOIN TableC c ON b.id = c.bid, (SELECT * FROM TableD) AS d"'
+		sql == 'SELECT a.a1 FROM TableA a, TableB b INNER JOIN TableC c ON b.id = c.bid, (SELECT * FROM TableD) AS d'
 	}
 }
