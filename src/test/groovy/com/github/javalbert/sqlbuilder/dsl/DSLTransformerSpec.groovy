@@ -7,6 +7,7 @@ import com.github.javalbert.sqlbuilder.ColumnList
 import com.github.javalbert.sqlbuilder.ColumnValues
 import com.github.javalbert.sqlbuilder.Delete
 import com.github.javalbert.sqlbuilder.From
+import com.github.javalbert.sqlbuilder.InValues
 import com.github.javalbert.sqlbuilder.Insert
 import com.github.javalbert.sqlbuilder.Join
 import com.github.javalbert.sqlbuilder.Merge
@@ -284,5 +285,67 @@ class DSLTransformerSpec extends Specification {
 		then: 'third and eighth nodes are left and right parentheses respectively'
 		from.nodes[2] == From.LEFT_PARENTHESIS
 		from.nodes[7] == From.RIGHT_PARENTHESIS
+	}
+	
+	def 'Read function and verify sqlbuilder nodes'() {
+		given: 'A COALESCE() function'
+		Function coalesce = new Function('COALESCE')
+		
+		and: 'SelectStatement which calls COALESCE() function'
+		SelectStatement stmt = select(
+			coalesce.call(f.bar, literal('Foobar'))
+			).from(Foo)
+		
+		when: 'Select is built and sqlbuilder.Function is retrieved'
+		Select select = dslTransformer.buildSelect(stmt)
+		com.github.javalbert.sqlbuilder.Function function = select.nodes[0].nodes[0]
+		
+		then: "Function's name is 'COALESCE'"
+		function.name == 'COALESCE'
+		
+		and: 'first parameter is column f.bar'
+		function.nodes[0].prefixValue == 'f'
+		function.nodes[0].name == 'bar'
+		
+		and: 'second parameter is string literal "Foobar"'
+		function.nodes[1].value == 'Foobar'
+	}
+	
+	def 'Read IN predicate and verify sqlbuilder nodes'() {
+		given: 'DeleteStatement with IN predicate with string values'
+		DeleteStatement stmt = delete(Foo)
+		.where(bar.in('Started', 'Completed'))
+		
+		when: 'Delete is built and Predicate is retrieved from Condition'
+		Delete delete = dslTransformer.buildDelete(stmt)
+		com.github.javalbert.sqlbuilder.Predicate predicate = delete.nodes[1].nodes[0]
+		
+		then: 'second node in Predicate is IN keyword'
+		predicate.nodes[1] == com.github.javalbert.sqlbuilder.PredicateOperator.IN
+		
+		and: 'and IN predicate contains values "Started" and "Completed"'
+		InValues values = predicate.nodes[2]
+		values.nodes[0].value == 'Started'
+		values.nodes[1].value == 'Completed'
+	}
+	
+	def 'Read NOT IN predicate with subquery'() {
+		given: 'SelectStatement with NOT IN subquery'
+		SelectStatement stmt = select(f.bar)
+				.from(Foo)
+				.where(f.bar.notIn(
+					select(f.bar)
+					.from(Foo)
+					))
+		
+		when: 'Select is built and Predicate is retrieved'
+		Select select = dslTransformer.buildSelect(stmt)
+		com.github.javalbert.sqlbuilder.Predicate predicate = select.nodes[2].nodes[0]
+		
+		then: 'second node in Predicate is NOT IN keyword'
+		predicate.nodes[1] == com.github.javalbert.sqlbuilder.PredicateOperator.NOT_IN
+		
+		and: 'third node is the subquery'
+		predicate.nodes[2] instanceof Select
 	}
 }
