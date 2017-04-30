@@ -11,11 +11,17 @@ import com.github.javalbert.sqlbuilder.InValues
 import com.github.javalbert.sqlbuilder.Insert
 import com.github.javalbert.sqlbuilder.Join
 import com.github.javalbert.sqlbuilder.Merge
+import com.github.javalbert.sqlbuilder.OrderBy
 import com.github.javalbert.sqlbuilder.Select
+import com.github.javalbert.sqlbuilder.SelectList
+import com.github.javalbert.sqlbuilder.SortType
 import com.github.javalbert.sqlbuilder.Update
+import com.github.javalbert.sqlbuilder.Where
+import com.github.javalbert.sqlbuilder.With
 import com.github.javalbert.sqlbuilder.vendor.ANSI
 
 import spock.lang.Specification
+import spock.lang.Unroll
 
 class DSLTransformerSpec extends Specification {
 	private static final Table Foo = new Table("Foo");
@@ -347,5 +353,138 @@ class DSLTransformerSpec extends Specification {
 		
 		and: 'third node is the subquery'
 		predicate.nodes[2] instanceof Select
+	}
+	
+	def 'Read ORDER BY and verify sqlbuilder nodes'() {
+		given: 'SelectStatement with ORDER BY with TableColumn.asc() and ColumnAlias.desc()'
+		SelectStatement stmt = select(f.bar)
+			.from(Foo)
+			.orderBy(f.bar.asc(),
+				new ColumnAlias('Foobar').desc())
+		
+		when: 'Select is built and OrderBy is retrieved'
+		Select select = dslTransformer.buildSelect(stmt)
+		OrderBy orderBy = select.nodes[2]
+		
+		then: 'first node is table column "bar" in ascending order'
+		orderBy.nodes[0].name == 'bar'
+		orderBy.nodes[1] == SortType.ASC
+		
+		and: 'second node is column alias "Foobar" in ascending order'
+		orderBy.nodes[2].alias == 'Foobar'
+		orderBy.nodes[3] == SortType.DESC
+	}
+	
+	@Unroll('Read "#predicateName" predicate producing operator #predicateOperator.token')
+	def 'Read different predicates except for BETWEEN, EXISTS, and IN'() {
+		given: 'SelectStatement'
+		SelectStatement stmt = select(f.bar)
+				.from(Foo)
+				.where(
+					method()
+					)
+		
+		when: 'Select is built and Where retrieved'
+		Select select = dslTransformer.buildSelect(stmt)
+		Where where = select.nodes[2]
+		
+		then: 'first predicate is ='
+		where.nodes[0].nodes[1] == predicateOperator
+		
+		where: 'a predicate Groovy closure is called and produced predicate operator'
+		predicateName	|	method	||	predicateOperator
+		'equals'	|	{ -> f.bar.eq('') }	||	com.github.javalbert.sqlbuilder.PredicateOperator.EQ
+		'greater than'	|	{ -> f.bar.gt('') }	||	com.github.javalbert.sqlbuilder.PredicateOperator.GT
+		'greater than or equal to'	|	{ -> f.bar.gteq('') }	||	com.github.javalbert.sqlbuilder.PredicateOperator.GT_EQ
+		'IS NOT NULL'	|	{ -> f.bar.isNotNull() }	||	com.github.javalbert.sqlbuilder.PredicateOperator.IS_NOT_NULL
+		'IS NULL'	|	{ -> f.bar.isNull() }	||	com.github.javalbert.sqlbuilder.PredicateOperator.IS_NULL
+		'LIKE'	|	{ -> f.bar.like('') }	||	com.github.javalbert.sqlbuilder.PredicateOperator.LIKE
+		'less than'	|	{ -> f.bar.lt('') }	||	com.github.javalbert.sqlbuilder.PredicateOperator.LT
+		'less than or equal to'	|	{ -> f.bar.lteq('') }	||	com.github.javalbert.sqlbuilder.PredicateOperator.LT_EQ
+		'not equal'	|	{ -> f.bar.noteq('') }	||	com.github.javalbert.sqlbuilder.PredicateOperator.NOT_EQ
+		'NOT LIKE'	|	{ -> f.bar.notLike('') }	||	com.github.javalbert.sqlbuilder.PredicateOperator.NOT_LIKE
+	}
+	
+	def 'Transform dsl.SelectStatement with DISTINCT keyword and column alias in SelectList'() {
+		given: 'SelectStatement'
+		SelectStatement stmt = select(f.bar.as('Foobar'))
+			.from(Foo)
+			.distinct(true)
+		
+		when: 'Select is built and SelectList is retrieved'
+		Select select = dslTransformer.buildSelect(stmt)
+		SelectList selectList = select.nodes[0]
+		
+		then: 'first node is DISTINCT constant token'
+		selectList.nodes[0] == SelectList.DISTINCT
+		
+		and: 'second node is "f.bar" table column with alias "Foobar"'
+		selectList.nodes[1].alias == 'Foobar'
+	}
+	
+	def 'Transform dsl.SelectStatement with WITH clause'() {
+		given: 'SelectStatement prepended with common table expression'
+		SelectStatement stmt = with(Foo).columns(f.bar)
+				.as(select(f.bar).from(Foo))
+				.select(f.bar)
+				.from(Foo)
+		
+		when: 'Select is built and With is retrieved'
+		Select select = dslTransformer.buildSelect(stmt)
+		With with = select.nodes[0]
+		
+		then: 'CTE is named "Foo"'
+		with.nodes[0].name == 'Foo'
+		
+		and: 'CTE contains column "bar"'
+		with.nodes[0].columns.contains('bar')
+		
+		and: 'CTE query is not null'
+		with.nodes[0].select instanceof Select
+	}
+	
+	def 'Read nested conditions'() {
+		given: 'SelectStatement whose WHERE clause contains a nested (wrapped in parentheses) condition'
+		SelectStatement stmt = select(f.bar)
+				.from(Foo)
+				.where(f.bar.eq('')
+					.and(f.bar.isNull().or(f.bar.eq('')))
+					)
+		
+		when: 'Select is built and Where is retrieved'
+		Select select = dslTransformer.buildSelect(stmt)
+		Where where = select.nodes[2]
+		
+		then: "3rd node is the Condition \"(f.bar IS NULL OR f.bar = '')\""
+		where.nodes[2] instanceof com.github.javalbert.sqlbuilder.Condition
+	}
+	
+	def 'Transform dsl.SelectStatement with set operations'() {
+		given: 'SelectStatement'
+		SelectStatement stmt = select(f.bar)
+				.from(Foo)
+				.except(select(f.bar)
+				.from(Foo))
+				.intersect(select(f.bar)
+				.from(Foo))
+				.union(select(f.bar)
+				.from(Foo))
+				.unionAll(select(f.bar)
+				.from(Foo))
+		
+		when: 'Select is built'
+		Select select = dslTransformer.buildSelect(stmt)
+		
+		then: 'third node is EXCEPT set operation'
+		select.nodes[2] == com.github.javalbert.sqlbuilder.SetOperator.EXCEPT
+		
+		then: 'fifth node is EXCEPT set operation'
+		select.nodes[4] == com.github.javalbert.sqlbuilder.SetOperator.INTERSECT
+		
+		then: 'seventh node is EXCEPT set operation'
+		select.nodes[6] == com.github.javalbert.sqlbuilder.SetOperator.UNION
+		
+		then: 'ninth node is EXCEPT set operation'
+		select.nodes[8] == com.github.javalbert.sqlbuilder.SetOperator.UNION_ALL
 	}
 }

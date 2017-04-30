@@ -13,6 +13,11 @@
 package com.github.javalbert.sqlbuilder.dsl;
 
 final class Utils {
+	static BooleanExpression groupExpression(BooleanExpression booleanExpression) {
+		return booleanExpression.getNodeType() == DSLNode.NODE_CONDITION
+				? ((Condition)booleanExpression).grouped() : booleanExpression;
+	}
+	
 	static ExpressionBuilder groupExpression(ExpressionBuilder right) {
 		return right.getExpressionType() == ExpressionNode.EXPRESSION_EXPRESSION
 				? ((Expression)right).grouped() : right;
