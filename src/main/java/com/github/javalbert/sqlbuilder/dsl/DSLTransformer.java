@@ -43,7 +43,30 @@ import com.github.javalbert.utils.string.Strings;
  *
  */
 public class DSLTransformer {
+	/**
+	 * There is no need for instance variables for now
+	 * so everyone should use this
+	 */
+	public static final DSLTransformer INSTANCE = new DSLTransformer();
+	
 	/* START Public methods */
+	
+	@SuppressWarnings("rawtypes")
+	public com.github.javalbert.sqlbuilder.DMLStatement build(DMLStatement stmt) {
+		if (stmt.getDmlType() == DMLStatement.DML_SELECT) {
+			return buildSelect((SelectStatement)stmt);
+		} else if (stmt.getDmlType() == DMLStatement.DML_INSERT) {
+			return buildInsert((InsertStatement)stmt);
+		} else if (stmt.getDmlType() == DMLStatement.DML_UPDATE) {
+			return buildUpdate((UpdateStatement)stmt);
+		} else if (stmt.getDmlType() == DMLStatement.DML_DELETE) {
+			return buildDelete((DeleteStatement)stmt);
+		} else if (stmt.getDmlType() == DMLStatement.DML_MERGE) {
+			return buildMerge((MergeStatement)stmt);
+		}
+		// Should not happen
+		return null;
+	}
 	
 	public Delete buildDelete(DeleteStatement stmt) {
 		Delete delete = new Delete();

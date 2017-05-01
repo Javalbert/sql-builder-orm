@@ -49,6 +49,7 @@ import com.github.javalbert.sqlbuilder.NodeVisitor;
 import com.github.javalbert.sqlbuilder.Param;
 import com.github.javalbert.sqlbuilder.Select;
 import com.github.javalbert.sqlbuilder.SqlStatement;
+import com.github.javalbert.sqlbuilder.dsl.DSLTransformer;
 import com.github.javalbert.sqlbuilder.parser.SqlParser;
 import com.github.javalbert.utils.ClassUtils;
 import com.github.javalbert.utils.jdbc.JdbcUtils;
@@ -191,6 +192,10 @@ public class JdbcStatement {
 	
 	public JdbcStatement(JdbcMapper jdbcMapper) {
 		this(jdbcMapper, (SqlStatement<?>)null);
+	}
+	
+	public JdbcStatement(JdbcMapper jdbcMapper, com.github.javalbert.sqlbuilder.dsl.DMLStatement stmt) {
+		this(jdbcMapper, DSLTransformer.INSTANCE.build(stmt));
 	}
 	
 	/**
