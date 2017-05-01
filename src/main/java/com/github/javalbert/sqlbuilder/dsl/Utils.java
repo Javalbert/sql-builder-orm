@@ -12,26 +12,21 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-public interface TableReference {
-	public static final int TABLE_TABLE = 1;
-	public static final int TABLE_JOINED_TABLE = 2;
-	public static final int TABLE_INLINE_VIEW = 3;
-	
-	int getTableType();
-	
-	default JoinedTable fullOuterJoin(TableReference table) {
-		return new JoinedTable(this, Utils.nestedJoin(table), JoinType.FULL);
+final class Utils {
+	static BooleanExpression groupExpression(BooleanExpression booleanExpression) {
+		return booleanExpression.getNodeType() == DSLNode.NODE_CONDITION
+				? ((Condition)booleanExpression).grouped() : booleanExpression;
 	}
 	
-	default JoinedTable innerJoin(TableReference table) {
-		return new JoinedTable(this, Utils.nestedJoin(table), JoinType.INNER);
+	static ExpressionBuilder groupExpression(ExpressionBuilder right) {
+		return right.getExpressionType() == ExpressionNode.EXPRESSION_EXPRESSION
+				? ((Expression)right).grouped() : right;
 	}
 	
-	default JoinedTable leftOuterJoin(TableReference table) {
-		return new JoinedTable(this, Utils.nestedJoin(table), JoinType.LEFT);
+	static TableReference nestedJoin(TableReference table) {
+		return table.getTableType() == TableReference.TABLE_JOINED_TABLE
+				? ((JoinedTable)table).nested() : table;
 	}
 	
-	default JoinedTable rightOuterJoin(TableReference table) {
-		return new JoinedTable(this, Utils.nestedJoin(table), JoinType.RIGHT);
-	}
+	private Utils() {}
 }

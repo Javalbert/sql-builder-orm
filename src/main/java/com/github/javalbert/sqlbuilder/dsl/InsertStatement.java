@@ -34,7 +34,7 @@ public class InsertStatement implements DMLStatement, WithClause {
 	private CteList cteList = CteList.EMPTY;
 	private SelectStatement subselect;
 	private final Table table;
-	private List<ValueExpression> values;
+	private List<ValueExpression> values = Collections.emptyList();
 	
 	public List<TableColumn> getColumns() {
 		return columns;

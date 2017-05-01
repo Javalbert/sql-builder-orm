@@ -190,6 +190,10 @@ public class JdbcMapper {
 		return createQuery((SqlStatement<?>)null);
 	}
 	
+	public JdbcStatement createQuery(com.github.javalbert.sqlbuilder.dsl.DMLStatement stmt) {
+		return new JdbcStatement(this, stmt);
+	}
+	
 	public JdbcStatement createQuery(SqlStatement<?> sqlStatement) {
 		return new JdbcStatement(this, sqlStatement);
 	}

@@ -51,6 +51,9 @@ public class Condition implements BooleanExpression {
 	}
 	
 	Condition grouped() {
+		if (grouped) {
+			return this;
+		}
 		Condition condition = copy();
 		condition.grouped = true;
 		return condition;

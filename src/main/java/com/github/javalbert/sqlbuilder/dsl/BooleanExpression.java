@@ -14,10 +14,10 @@ package com.github.javalbert.sqlbuilder.dsl;
 
 public interface BooleanExpression extends DSLNode {
 	default Condition and(BooleanExpression booleanExpression) {
-		return new Condition(this, booleanExpression, LogicalOperator.AND);
+		return new Condition(this, Utils.groupExpression(booleanExpression), LogicalOperator.AND);
 	}
 	
 	default Condition or(BooleanExpression booleanExpression) {
-		return new Condition(this, booleanExpression, LogicalOperator.OR);
+		return new Condition(this, Utils.groupExpression(booleanExpression), LogicalOperator.OR);
 	}
 }

@@ -43,7 +43,30 @@ import com.github.javalbert.utils.string.Strings;
  *
  */
 public class DSLTransformer {
+	/**
+	 * There is no need for instance variables for now
+	 * so everyone should use this
+	 */
+	public static final DSLTransformer INSTANCE = new DSLTransformer();
+	
 	/* START Public methods */
+	
+	@SuppressWarnings("rawtypes")
+	public com.github.javalbert.sqlbuilder.DMLStatement build(DMLStatement stmt) {
+		if (stmt.getDmlType() == DMLStatement.DML_SELECT) {
+			return buildSelect((SelectStatement)stmt);
+		} else if (stmt.getDmlType() == DMLStatement.DML_INSERT) {
+			return buildInsert((InsertStatement)stmt);
+		} else if (stmt.getDmlType() == DMLStatement.DML_UPDATE) {
+			return buildUpdate((UpdateStatement)stmt);
+		} else if (stmt.getDmlType() == DMLStatement.DML_DELETE) {
+			return buildDelete((DeleteStatement)stmt);
+		} else if (stmt.getDmlType() == DMLStatement.DML_MERGE) {
+			return buildMerge((MergeStatement)stmt);
+		}
+		// Should not happen
+		return null;
+	}
 	
 	public Delete buildDelete(DeleteStatement stmt) {
 		Delete delete = new Delete();
@@ -58,9 +81,11 @@ public class DSLTransformer {
 			delete.tableName(stmt.getTable().getName());
 		}
 		
-		Where where = new Where();
-		delete.where(where);
-		handleCondition(where, stmt.getWhereCondition());
+		if (stmt.getWhereCondition() != null) {
+			Where where = new Where();
+			delete.where(where);
+			handleCondition(where, stmt.getWhereCondition());
+		}
 		
 		return delete;
 	}
@@ -217,9 +242,11 @@ public class DSLTransformer {
 			}
 		}
 		
-		Where where = new Where();
-		update.where(where);
-		handleCondition(where, stmt.getWhereCondition());
+		if (stmt.getWhereCondition() != null) {
+			Where where = new Where();
+			update.where(where);
+			handleCondition(where, stmt.getWhereCondition());
+		}
 		
 		return update;
 	}
@@ -248,7 +275,7 @@ public class DSLTransformer {
 	private com.github.javalbert.sqlbuilder.Case buildCase(Case dslCase) {
 		com.github.javalbert.sqlbuilder.Case sqlCase = new com.github.javalbert.sqlbuilder.Case();
 		
-		boolean simpleCase = dslCase.getSimpleCaseExpression() != null;
+		boolean simpleCase = dslCase.getSimpleCaseExpression() != LiteralNull.INSTANCE;
 		if (simpleCase) {
 			handleExpressionBuilding(sqlCase, dslCase.getSimpleCaseExpression());
 		}
@@ -275,7 +302,7 @@ public class DSLTransformer {
 	}
 
 	private com.github.javalbert.sqlbuilder.Predicate buildExistsPredicate(ExistsPredicate dslPredicate) {
-		com.github.javalbert.sqlbuilder.Predicate predicate = newPredicate(dslPredicate);
+		com.github.javalbert.sqlbuilder.Predicate predicate = new com.github.javalbert.sqlbuilder.Predicate();
 		
 		if (dslPredicate.getOperator() == PredicateOperator.EXISTS) {
 			predicate.exists();
@@ -288,18 +315,28 @@ public class DSLTransformer {
 
 	private com.github.javalbert.sqlbuilder.Expression buildExpression(Expression dslExpression) {
 		com.github.javalbert.sqlbuilder.Expression expression = new com.github.javalbert.sqlbuilder.Expression();
-		handleExpressionBuilding(expression, dslExpression.getLeft());
 		
-		switch (dslExpression.getOperator()) {
-			case CONCAT: expression.concat(); break;
-			case DIVIDE: expression.divide(); break;
-			case MINUS: expression.minus(); break;
-			case MOD: expression.mod(); break;
-			case MULTIPLY: expression.multiply(); break;
-			case PLUS: expression.plus(); break;
+		for (ExpressionNode node : dslExpression.getNodes()) {
+			if (node.getExpressionType() == ExpressionNode.EXPRESSION_OPERAND) {
+				handleExpressionBuilding(expression, (ExpressionBuilder)node);
+			} else if (node.getExpressionType() == ExpressionNode.EXPRESSION_OPERATOR) {
+				ExpressionOperator operator = ((ExpressionOperatorNode)node).getExpressionOperator();
+				
+				switch (operator) {
+					case CONCAT: expression.concat(); break;
+					case DIVIDE: expression.divide(); break;
+					case MINUS: expression.minus(); break;
+					case MOD: expression.mod(); break;
+					case MULTIPLY: expression.multiply(); break;
+					case PLUS: expression.plus(); break;
+				}
+			} else if (node.getExpressionType() == ExpressionNode.EXPRESSION_EXPRESSION) {
+				com.github.javalbert.sqlbuilder.Expression nestedExpression = new com.github.javalbert.sqlbuilder.Expression();
+				expression.expression(nestedExpression);
+				handleExpressionBuilding(nestedExpression, (Expression)node);
+			}
 		}
 		
-		handleExpressionBuilding(expression, dslExpression.getRight());
 		return expression;
 	}
 	

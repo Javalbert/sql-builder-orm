@@ -12,26 +12,12 @@
  *******************************************************************************/
 package com.github.javalbert.sqlbuilder.dsl;
 
-public interface TableReference {
-	public static final int TABLE_TABLE = 1;
-	public static final int TABLE_JOINED_TABLE = 2;
-	public static final int TABLE_INLINE_VIEW = 3;
+public interface ExpressionNode {
+	public static final int EXPRESSION_OPERAND = 1;
+	public static final int EXPRESSION_OPERATOR = 2;
+	public static final int EXPRESSION_EXPRESSION = 3;
 	
-	int getTableType();
-	
-	default JoinedTable fullOuterJoin(TableReference table) {
-		return new JoinedTable(this, Utils.nestedJoin(table), JoinType.FULL);
-	}
-	
-	default JoinedTable innerJoin(TableReference table) {
-		return new JoinedTable(this, Utils.nestedJoin(table), JoinType.INNER);
-	}
-	
-	default JoinedTable leftOuterJoin(TableReference table) {
-		return new JoinedTable(this, Utils.nestedJoin(table), JoinType.LEFT);
-	}
-	
-	default JoinedTable rightOuterJoin(TableReference table) {
-		return new JoinedTable(this, Utils.nestedJoin(table), JoinType.RIGHT);
+	default int getExpressionType() {
+		return EXPRESSION_OPERAND;
 	}
 }
